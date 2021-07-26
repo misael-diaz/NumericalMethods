@@ -29,8 +29,8 @@ export module nonlinear_solvers ;
 
 
 export namespace nlsolver {
-	double bisect ( double&, double&, double f(const double&) ) ;
-	double regfal ( double&, double&, double f(const double&) ) ;
+	double bisect ( double, double, double f(const double&) ) ;
+	double regfal ( double, double, double f(const double&) ) ;
 }
 
 
@@ -52,7 +52,7 @@ double interp   ( double&, double&, double&, double f(const double&) ) ;
 
 
 // implementations
-double nlsolver::bisect ( double& lb, double& ub, double f(const double&) )
+double nlsolver::bisect ( double lb, double ub, double f(const double&) )
 {	// Bisection Method
 
 	int n = 0 ;
@@ -70,7 +70,7 @@ double nlsolver::bisect ( double& lb, double& ub, double f(const double&) )
 }
 
 
-double nlsolver::regfal ( double& lb, double& ub, double f(const double&) )
+double nlsolver::regfal ( double lb, double ub, double f(const double&) )
 {	// Regula Falsi Method
 
 	int n = 0 ;

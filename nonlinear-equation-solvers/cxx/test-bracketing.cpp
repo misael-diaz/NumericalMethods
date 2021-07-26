@@ -41,7 +41,6 @@ int main() {
 	try {
 		lb = 2.0e-2 ;	ub = 7.0e-2 ;
         	x1 = nlsolver::bisect (lb, ub, f) ;	// bisection
-		lb = 2.0e-2 ;	ub = 7.0e-2 ;
         	x2 = nlsolver::regfal (lb, ub, f) ;	// regula falsi
 	} catch (std::runtime_error& err) {
 		std::cout << err.what() << std::endl ;
