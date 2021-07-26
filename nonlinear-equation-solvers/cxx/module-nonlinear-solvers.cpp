@@ -36,7 +36,7 @@ export namespace nlsolver {
 
 // constants
 const int MAX_ITER = 100 ;
-const double TOL = 1.0e-6 ;
+const double TOL = 1.0e-8 ;
 
 
 // declarations (prototypes)
