@@ -1,0 +1,43 @@
+#
+# source: make-inc
+# author: misael-diaz
+# date:   2021/07/20
+#
+# Synopsis:
+# Defines the include file for building the program with GNU make.
+#
+# Copyright (c) 2021 Misael Diaz-Maldonado
+#
+# This file is released under the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# installation path of c++ compiler
+INSTDIR       = /opt/gcc/gcc-11.1.0/bin
+LIBSTDCXX_DIR = /opt/gcc/gcc-11.1.0/lib/../lib64 
+
+# c++ compiler
+CXX     = $(INSTDIR)/g++
+
+# options
+CXXOPT  = -fmodules-ts -g -Wall -O0
+
+
+# sources
+NL_SOLVERS_MOD      = module-nonlinear-solvers.cpp
+TEST_BRACKETING_CXX = test-bracketing.cpp
+
+
+# objects
+NL_SOLVERS_OBJ      = module_nonlinear_solvers.o
+TEST_BRACKETING_OBJ = test_bracketing.o
+OBJECTS = $(NL_SOLVERS_OBJ) $(TEST_BRACKETING_OBJ)
+
+
+# executables
+TEST_BRACKETING_EXE = test-bracketing
+TESTS = $(TEST_BRACKETING_EXE)
+
+# gcm cache
+GCM_CACHE = gcm.cache
