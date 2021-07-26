@@ -22,23 +22,26 @@
  *
  */
 
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 import nonlinear_solvers ;
 int main() {
-	// Solves for the positive root of f(x) = (x + 1) * (x - 1)
+	// Solves for the positive root of the nonlinear function f(x)
 	
 	
-	// lambda function, f(x) = (x + 1) * (x - 1) = x * x - 1
-	auto f = [](const double& x) -> double { return (x * x - 1.0) ; } ;
+	auto f = [](const double& x) -> double {
+	    return ( 1.0 / sqrt(x) + 2.0 * log10(0.024651/3.7 +
+	             2.51/(9655526.5 * sqrt(x) ) ) ) ;
+	} ;
 	double lb, ub ;		// lower and upper bounds [lb, ub]
 	double x1, x2 ;		// numerical approximation of the root
 
 
 	try {
-		lb = 0.2 ;	ub = 1.5 ;
+		lb = 2.0e-2 ;	ub = 7.0e-2 ;
         	x1 = nlsolver::bisect (lb, ub, f) ;	// bisection
-		lb = 0.2 ;	ub = 1.5 ;
+		lb = 2.0e-2 ;	ub = 7.0e-2 ;
         	x2 = nlsolver::regfal (lb, ub, f) ;	// regula falsi
 	} catch (std::runtime_error& err) {
 		std::cout << err.what() << std::endl ;
