@@ -1,0 +1,39 @@
+#
+# source: make-inc
+# author: misael-diaz
+# date:   2021/07/20
+#
+# Synopsis:
+# Defines the include file for building the program with GNU make.
+#
+# Copyright (c) 2021 Misael Diaz-Maldonado
+#
+# This file is released under the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# FORTRAN Compiler
+FC = gfortran
+
+# options
+FCOPT = -ffree-form -g -Wall -O0
+
+# libraries
+LIBS =
+
+
+# sources
+NL_SOLVERS_SRC      = nlsolvers.for
+TEST_BRACKETING_SRC = test_solvers.for
+
+
+# objects
+NL_SOLVERS_OBJ      = nlsolvers.o
+TEST_BRACKETING_OBJ = test_solvers.o
+OBJECTS = $(NL_SOLVERS_OBJ) $(TEST_BRACKETING_OBJ)
+
+
+# executables
+TEST_BRACKETING_EXE = test-bracketing
+TESTS = $(TEST_BRACKETING_EXE)
