@@ -40,3 +40,10 @@ f = @(x) 1.0 / sqrt(x) + 2.0 * log10(0.024651/3.7 + ...
 x = bisect(a, b, f)	% Bisection
 x = regfal(a, b, f)	% Regula Falsi (or False Position)
 x = shifter(a, b, f)	% Hybrid
+
+
+% tests throwing exceptions (interval [a, b] does not contain a root)
+% a = 6.0e-2;	b = 9.0e-2;
+% x = bisect(a, b, f)	passed
+% x = regfal(a, b, f)	passed
+% x = shifter(a, b, f)	passed
