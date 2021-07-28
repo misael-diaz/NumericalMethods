@@ -44,6 +44,11 @@ int main() {
 	printf("x: %12.6f %12.6f\n", x1, x2) ;
 	printf("f(x): %24.6e %24.6e\n", f(x1), f(x2) ) ;
 
+
+/*      tests non-enclosing interval        */
+//	lb = 6.0e-2 ;	ub = 7.0e-2 ;
+//	x1 = bisect (lb, ub, f) ;	passed
+//	x2 = regfal (lb, ub, f) ;	passed
 	return 0 ;
 }
 
