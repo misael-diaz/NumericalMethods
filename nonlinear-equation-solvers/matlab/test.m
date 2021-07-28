@@ -2,9 +2,10 @@
 % ME 2020 FA21
 % Prof. M Diaz-Maldonado
 %
+% source: test.m
 %
 % Synopsis:
-% Tests Bisection and Regula Falsi methods.
+% Tests bracketing methods.
 % 
 %
 % Copyright (c) 2021 Misael Diaz-Maldonado
