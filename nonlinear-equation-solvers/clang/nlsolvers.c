@@ -31,12 +31,12 @@
 double bisect ( double lb, double ub, double f(const double) )
 {	// Bisection Method
 
-	check_bracket (lb, ub, f) ;
+	char nm[] = "Bisection" ;
+	check_bracket (lb, ub, f, nm) ;
 	check_bounds  (&lb, &ub) ;
 
 	int n = 0 ;
 	double xm, fm ;
-	char nm[] = "Bisection" ;
 
         do fm = bisector (&lb, &ub, &xm, f) ;
         while (++n != MAX_ITER && fm > TOL) ;
@@ -50,12 +50,12 @@ double bisect ( double lb, double ub, double f(const double) )
 double regfal ( double lb, double ub, double f(const double) )
 {	// Regula Falsi Method
 
-	check_bracket (lb, ub, f) ;
+	char nm[] = "Regula-Falsi" ;
+	check_bracket (lb, ub, f, nm) ;
 	check_bounds  (&lb, &ub) ;
 
 	int n = 0 ;
 	double xn, fn ;
-	char nm[] = "Regula-Falsi" ;
 
         do fn = interp (&lb, &ub, &xn, f) ;
         while (++n != MAX_ITER && fn > TOL) ;
@@ -129,10 +129,13 @@ double interp ( double *lb, double *ub, double *xn,
 }
 
 
-void check_bracket ( double lb, double ub, double f(const double) ) {
+void check_bracket ( double lb, double ub,
+		     double f(const double), char nm[] )
+{
 	// complains if there's no root in given interval and aborts
 	if ( f(lb) * f(ub) > 0. ) {
-		fprintf(stderr, "\nNo root in given interval ... \n") ;
+		fprintf(stderr, "\n%s Method:\n", nm) ;
+		fprintf(stderr, "No root in given interval ... \n") ;
 		fprintf(stderr, "Try again, aborting execution ... \n\n") ;
 		exit(EXIT_FAILURE) ;
 	}

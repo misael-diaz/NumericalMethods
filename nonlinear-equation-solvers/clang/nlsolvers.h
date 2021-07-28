@@ -39,6 +39,6 @@ void   report   (const int n, char nm[]) ;
 double bisector ( double*, double*, double*, double f(const double) ) ;
 double interp   ( double*, double*, double*, double f(const double) ) ;
 
-void check_bracket ( double, double, double f(const double) ) ;
+void check_bracket ( double, double, double f(const double), char nm[] ) ;
 void check_bounds  ( double*, double* ) ;
 #endif
