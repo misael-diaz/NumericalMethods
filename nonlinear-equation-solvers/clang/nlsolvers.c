@@ -32,6 +32,7 @@ double bisect ( double lb, double ub, double f(const double) )
 {	// Bisection Method
 
 	check_bracket (lb, ub, f) ;
+	check_bounds  (&lb, &ub) ;
 
 	int n = 0 ;
 	double xm, fm ;
@@ -49,6 +50,7 @@ double regfal ( double lb, double ub, double f(const double) )
 {	// Regula Falsi Method
 
 	check_bracket (lb, ub, f) ;
+	check_bounds  (&lb, &ub) ;
 
 	int n = 0 ;
 	double xn, fn ;
@@ -133,9 +135,20 @@ void check_bracket ( double lb, double ub, double f(const double) ) {
 	}
 }
 
+
+void check_bounds ( double *lb, double *ub ) {
+	// ensures that the lower bound is less than the upper bound.
+	double up = *lb ;
+	if ( *lb > *ub ) {
+		*lb = *ub ;
+		*ub =  up ;
+	}
+}
+
+
 /*
  * TODO:
- * [ ] Implement guards against "empty" ranges (lower > upper bound)
+ * [x] Implement guards against "empty" ranges (lower > upper bound)
  * [x] Implement guards against applying the method on an interval
  *     that does not enclose a root.
  * [ ] Define default values for the tolerance and maximum number of
