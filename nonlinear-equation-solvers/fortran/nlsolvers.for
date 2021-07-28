@@ -26,7 +26,7 @@
 module nlsolvers
     use, intrinsic :: iso_fortran_env, only: int32, real64
     implicit none
-    public
+    private
 
     ! constants
     real(kind = real64), parameter :: TOL = 1.0e-8_real64
@@ -41,8 +41,8 @@ module nlsolvers
         end function
     end interface
 
-    private :: TOL
-    private :: MAX_ITER
+    public :: bisect
+    public :: regfal
     contains
 
 
@@ -52,6 +52,8 @@ module nlsolvers
             real(kind = real64):: a, b                  ! bounds aliases
             real(kind = real64):: x                     ! root approximate
             integer(kind = int32):: n                   ! iterations
+
+            call bracket_check (lb, ub, fp)
 
             ! checks bounds
             if (lb < ub) then
@@ -89,6 +91,8 @@ module nlsolvers
             real(kind = real64):: a, b                  ! bounds aliases
             real(kind = real64):: x                     ! root approximate
             integer(kind = int32):: n                   ! iterations
+
+            call bracket_check (lb, ub, fp)
 
             ! checks bounds
             if (lb < ub) then
@@ -134,10 +138,25 @@ module nlsolvers
         end subroutine
 
 
+        subroutine bracket_check (lb, ub, fp)
+            ! complains if there's no root in given interval [lb, ub].
+            real(kind = real64), intent(in) :: lb, ub
+            procedure(fun), pointer :: fp
+            character(len=*), parameter :: errmsg = &
+                & "no root exists in given interval"
+
+            if ( fp(lb) * fp(ub) > 0.0_real64 ) then
+                error stop errmsg
+            end if
+
+            return
+        end subroutine
+
+
 end module
 
 
 
 ! TODO:
-! [ ] guard against non-existing root in given interval using error stop
+! [x] guard against non-existing root in given interval using error stop
 ! [ ] consider adding tutorial-like comments at the end of the source

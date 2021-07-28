@@ -19,15 +19,19 @@
  *     Scientists, 3rd edition.
  * [1] A Koenig and B Moo, Accelerated C++ Practical Programming by
  *     Example.
+ * [2] www.geeksforgeeks.org/error-handling-c-programs
  *
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "nlsolvers.h"
 
 // implementations
 double bisect ( double lb, double ub, double f(const double) )
 {	// Bisection Method
+
+	check_bracket (lb, ub, f) ;
 
 	int n = 0 ;
 	double xm, fm ;
@@ -43,6 +47,8 @@ double bisect ( double lb, double ub, double f(const double) )
 
 double regfal ( double lb, double ub, double f(const double) )
 {	// Regula Falsi Method
+
+	check_bracket (lb, ub, f) ;
 
 	int n = 0 ;
 	double xn, fn ;
@@ -118,10 +124,19 @@ double interp ( double *lb, double *ub, double *xn,
 }
 
 
+void check_bracket ( double lb, double ub, double f(const double) ) {
+	// complains if there's no root in given interval and aborts
+	if ( f(lb) * f(ub) > 0. ) {
+		fprintf(stderr, "\nNo root in given interval ... \n") ;
+		fprintf(stderr, "Try again, aborting execution ... \n\n") ;
+		exit(EXIT_FAILURE) ;
+	}
+}
+
 /*
  * TODO:
  * [ ] Implement guards against "empty" ranges (lower > upper bound)
- * [ ] Implement guards against applying the method on an interval
+ * [x] Implement guards against applying the method on an interval
  *     that does not enclose a root.
  * [ ] Define default values for the tolerance and maximum number of
  *     iterations. The user may wish to override these parameters so these

@@ -1,10 +1,10 @@
-% Applied Numerical Analysis                                 July 26, 2021
+% Applied Numerical Analysis                                 July 28, 2021
 % ME 2020 FA21
 % Prof. M Diaz-Maldonado
 %
 %
 % Synopsis:
-% Possible implementation of the Regula Falsi method in MATLAB.
+% Implements a hybrid from the bisection and the regula falsi methods.
 % 
 %
 % Copyright (c) 2021 Misael Diaz-Maldonado
@@ -20,9 +20,9 @@
 %
 
 
-function x = regfal(a, b, f)
+function x = shifter(a, b, f)
 %    Synopsis:
-%    Regula Falsi Method. Finds the root of the function f(x) enclosed by
+%    Shifter Method. Finds the root of the function f(x) enclosed by
 %    the interval [a, b].
 %
 %    inputs:
@@ -58,7 +58,15 @@ end
 
 
 n = 1;
-x = ( a * f(b) - b * f(a) ) / ( f(b) - f(a) );
+% shifts towards the step (presumably) closest to the root
+x1 = 0.5 * (a + b);
+x2 = ( a * f(b) - b * f(a) ) / ( f(b) - f(a) );
+if ( abs(f(x1)) < abs(f(x2)) )
+    x = x1;
+else
+    x = x2;
+end
+
 while ( n ~= MAX_ITER && abs( f(x) ) > TOL )
 
     % updates the bracketing interval
@@ -68,7 +76,13 @@ while ( n ~= MAX_ITER && abs( f(x) ) > TOL )
         a = x;
     end
 
-    x = ( a * f(b) - b * f(a) ) / ( f(b) - f(a) );
+    x1 = 0.5 * (a + b);
+    x2 = ( a * f(b) - b * f(a) ) / ( f(b) - f(a) );
+    if ( abs(f(x1)) < abs(f(x2)) )
+        x = x1;
+    else
+        x = x2;
+    end
     n = n + 1;
 end
 

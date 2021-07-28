@@ -28,4 +28,4 @@ $(TEST_BRACKETING_OBJ): $(NL_SOLVERS_SRC) $(TEST_BRACKETING_SRC)
 	$(FC) $(FCOPT) -c $(TEST_BRACKETING_SRC) -o $(TEST_BRACKETING_OBJ)
 
 clean:
-	/bin/rm -rf *.o $(TESTS)
+	/bin/rm -rf *.o *.mod $(TESTS)

@@ -39,4 +39,5 @@ void   report   (const int n) ;
 double bisector ( double*, double*, double*, double f(const double) ) ;
 double interp   ( double*, double*, double*, double f(const double) ) ;
 
+void check_bracket ( double, double, double f(const double) ) ;
 #endif

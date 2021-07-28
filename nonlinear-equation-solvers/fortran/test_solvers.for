@@ -70,4 +70,11 @@ program tests
 
     print *, "x: ", x1, x2
     print *, "f(x): ", fp(x1), fp(x2)
+
+
+!   tests for non-enclosing intervals
+!   lb = 6.0e-2_real64
+!   ub = 7.0e-2_real64
+!   x1 = bisect (lb, ub, fp)    passed
+!   x2 = regfal (lb, ub, fp)    passed
 end program
