@@ -50,7 +50,10 @@ end
 
 if ( f(a) * f(b) > 0 )
     % complains if there's no root in the given interval
-    fprintf('>> No roots exists the given interval [a, b].\n');
+    errID  = 'NonlinearSolver:BracketingException';
+    errMSG = 'No roots exists in the given interval [a, b]';
+    except = MException(errID, errMSG);
+    throw(except);
     return
 end
 
