@@ -25,27 +25,21 @@
  */
 
 #include <cmath>
-#include <vector>
-#include <numeric>
 #include <iomanip>
 #include <iostream>
-#include <algorithm>
-/* import numerical_integrators ; */
+import numerical_integrators ;
 #define absval(x) (x < 0.)? -x: x
 
 using std::cout ;
 using std::endl ;
-//using std::iota ;
-//using std::vector ;
-//using std::transform ;
 using std::fixed ;
 using std::scientific ;
 using std::streamsize ;
 using std::setprecision ;
 
-double lsum (double, double, const int, double f (const double&) ) ;
-double rsum (double, double, const int, double f (const double&) ) ;
-double trap (double, double, const int, double f (const double&) ) ;
+using numint::lsum ;
+using numint::rsum ;
+using numint::trap ;
 
 void error (double exact, double numeric[3], double err[3]) ;
 void report (double ni[3], double err[3]) ;
@@ -106,88 +100,7 @@ void error (double exact, double numeric[3], double err[3]) {
 }
 
 
-// implementation of numerical integration techniques
-double lsum (double a, double b, const int N, double f (const double&) ) {
-	// Left Riemann Sum
-	// Integrates f(x) in the interval [a, b] using N intervals.
-
-	std::vector<int> idx(N+1) ;
-	std::vector<double> x(N+1) ;
-	std::iota(idx.begin(), idx.end(), 0) ;
-	double dx = (b - a) / ( (double) N ) ;	// step
-
-	// transforms index into a vector x = [a, b] of N + 1 elements
-	auto t = [&a, &dx](const int& i) -> double {
-		return (a + i * dx) ;
-	} ;
-
-	std::transform(idx.begin(), idx.end(), x.begin(), t) ;
-	// transforms x -> f(x)
-	std::transform(x.begin(), x.end(), x.begin(), f) ;
-
-	double sum = 0 ;
-	sum = std::accumulate(x.begin(), x.begin() + x.size() - 1, sum) ;
-
-	return (dx * sum) ;
-}
-
-
-double rsum (double a, double b, const int N, double f (const double&) ) {
-	// Right Riemann Sum
-	// Integrates f(x) in the interval [a, b] using N intervals.
-
-	std::vector<int> idx(N+1) ;
-	std::vector<double> x(N+1) ;
-	std::iota(idx.begin(), idx.end(), 0) ;
-	double dx = (b - a) / ( (double) N ) ;
-
-	auto t = [&a, &dx](const int& i) -> double {
-		return (a + i * dx) ;
-	} ;
-
-	std::transform(idx.begin(), idx.end(), x.begin(), t) ;
-	std::transform(x.begin(), x.end(), x.begin(), f) ;
-
-	double sum = 0 ;
-	sum = std::accumulate(x.begin() + 1, x.begin() + x.size(), sum) ;
-
-	return (dx * sum) ;
-}
-
-
-double trap (double a, double b, const int N, double f (const double&) ) {
-	// Trapezoid Method
-	// Integrates f(x) in the interval [a, b] using N intervals.
-	
-	std::vector<int> idx(N+1) ;
-	std::vector<double> x(N+1) ;
-	std::iota(idx.begin(), idx.end(), 0) ;
-	double dx = (b - a) / ( (double) N ) ;
-
-	auto t = [&a, &dx](const int& i) -> double {
-		return (a + i * dx) ;
-	} ;
-
-	std::transform(idx.begin(), idx.end(), x.begin(), t) ;
-	std::transform(x.begin(), x.end(), x.begin(), f) ;
-
-	double s = 0 ;
-	s = std::accumulate(x.begin() + 1, x.begin() + x.size() - 1, s) ;
-	s = f(a) + (2.0 * s) + f(b) ;
-
-	return (0.5 * dx * s) ;
-}
-
-
 /*
  * TODO:
- * [ ] partition numerical methods into a module (since c++20)
- */
-
-
-/*
- * Comments:
- * Using fully qualified names inside methods in anticipation of the
- * partitioning.
- *
+ * [x] partition numerical methods into a module (since c++20)
  */

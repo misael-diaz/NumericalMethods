@@ -7,7 +7,7 @@
  *
  * Synopsis:
  * Implements (some) numerical integration techniques.
- * 
+ *
  *
  * Copyright (c) 2021 Misael Diaz-Maldonado
  *
@@ -24,160 +24,95 @@
  *
  */
 
+
 module ;
-#include <iostream>
-#include <stdexcept>
+#include <vector>
+#include <numeric>
+#include <algorithm>
 export module numerical_integrators ;
 
 
 export namespace numint {
-	double bisect ( double, double, double f(const double&) ) ;
-	double regfal ( double, double, double f(const double&) ) ;
+	double lsum( double, double, const int, double f(const double&) ) ;
+	double rsum( double, double, const int, double f(const double&) ) ;
+	double trap( double, double, const int, double f(const double&) ) ;
 }
-
-
-// constants
-const int MAX_ITER = 100 ;
-const double TOL = 1.0e-8 ;
-
-
-// declarations (prototypes)
-void report (const int& n) ;
-void check_bounds ( double& lb, double& ub ) ;
-
-void check_bracket ( const double& lb, const double& ub,
-	             double f(const double&) ) ;
-
-double bisector ( double&, double&, double&, double f(const double&) ) ;
-double interp   ( double&, double&, double&, double f(const double&) ) ;
-
 
 
 // implementations
-double numint::bisect ( double lb, double ub, double f(const double&) )
-{	// Bisection Method
-
-	int n = 0 ;
-	double xm, fm ;
-
-	check_bounds  (lb, ub) ;
-	check_bracket (lb, ub, f) ;
-
-        do fm = bisector (lb, ub, xm, f) ;
-        while (++n != MAX_ITER && fm > TOL) ;
-
-	report (n) ;
-	return xm ;
-
-}
-
-
-double numint::regfal ( double lb, double ub, double f(const double&) )
-{	// Regula Falsi Method
-
-	int n = 0 ;
-	double xn, fn ;
-
-	check_bounds  (lb, ub) ;
-	check_bracket (lb, ub, f) ;
-
-        do fn = interp (lb, ub, xn, f) ;
-        while (++n != MAX_ITER && fn > TOL) ;
-
-	report (n) ;
-	return xn ;
-
-}
-
-void check_bounds ( double& lb, double& ub ) {
-	// ensures the (given) interval is properly bounded [lower, upper]
-	double low = ub ;
-	if (lb > ub) {
-		ub = lb ;
-		lb = low ;
-	}
-}
-
-
-void check_bracket ( const double& lb, const double& ub, 
-		     double f(const double&) ) {
-	// complains if there's no root in given interval
-	if ( f(lb) * f(ub) > 0. ) {
-		std::cout << "no root enclosed in " 
-		          << "[" << lb << ", " << ub << "]" << std::endl ;
-		throw std::runtime_error("no root in given interval") ;
-	}
-	
-}
-
-
-void report (const int& n) {
-	// reports if the method has been successful
-	if (n != MAX_ITER) {
-		std::cout << "solution found in " << n << " "
-			  << "iterations" << std::endl ;
-	} else {
-		std::cout << "method failed to find the root, " 
-		    "you may try a narrower interval" << std::endl ;
-	}
-}
-
-
-double bisector ( double& lb, double& ub, double& xm, 
-		  double f(const double&) )
+double numint::lsum (double a, double b, const int N,
+		     double f (const double&) )
 {
+	// Left Riemann Sum
+	// Integrates f(x) in the interval [a, b] using N intervals.
 
-/*
- * Synopsis:
- * Approximates the root of the nonlinear equation f(x) with the middle
- * value, xm = (lb + ub) / 2, where `lb' and `ub' are the lower
- * and upper bounds, respectively, of the bracketing interval [lb, ub].
- * As a side effect it returns |f(xm)|, where |*| = abs(*), and `*' is
- * a wildcard.
- *
- * input/output:
- * lb		lower bound, intent(inout)
- * ub           upper bound, intent(inout)
- * xm           middle value, intent(out)
- *
- * NOTE:
- * f(x) is a function pointer (last argument) bound to the user-defined
- * function representing the nonlinear equation to be solved.
- *
- */
+	std::vector<int> idx(N+1) ;
+	std::vector<double> x(N+1) ;
+	std::iota(idx.begin(), idx.end(), 0) ;
+	double dx = (b - a) / ( (double) N ) ;  // step
+
+
+	// transforms index into a vector x = [a, b] of N + 1 elements
+	auto t = [&a, &dx](const int& i) -> double {
+		return (a + i * dx) ;
+	} ;
+
+
+	std::transform(idx.begin(), idx.end(), x.begin(), t) ;
+	// transforms x -> f(x)
+	std::transform(x.begin(), x.end(), x.begin(), f) ;
+
+
+	double sum = 0 ;
+	sum = std::accumulate(x.begin(), x.begin() + x.size() - 1, sum) ;
+	return (dx * sum) ;
+}
+
+
+double numint::rsum (double a, double b, const int N,
+		     double f (const double&) )
+{
+	// Right Riemann Sum
+	// Integrates f(x) in the interval [a, b] using N intervals.
+
+	std::vector<int> idx(N+1) ;
+	std::vector<double> x(N+1) ;
+	std::iota(idx.begin(), idx.end(), 0) ;
+	double dx = (b - a) / ( (double) N ) ;
 	
-        xm = 0.5 * (lb + ub) ;
-	double fm = f(xm) ;
+	auto t = [&a, &dx](const int& i) -> double {
+		return (a + i * dx) ;
+	} ;
 
-	/* chooses the (root) bracketing interval */
-	if (f(lb) * fm < 0.) 	
-		ub = xm ;
-	else
-		lb = xm ;
+	std::transform(idx.begin(), idx.end(), x.begin(), t) ;
+	std::transform(x.begin(), x.end(), x.begin(), f) ;
 
-
-	return (fm < 0.) ? fm = -fm: fm ;	// implements abs(x)
+	double sum = 0 ;
+	sum = std::accumulate(x.begin() + 1, x.begin() + x.size(), sum) ;
+	return (dx * sum) ;
 }
 
 
-double interp ( double& lb, double& ub, double& xn,
-		double f(const double&) )
-{	// like bisector but uses interpolation to approximate the root
-        xn = ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) ) ;
-	double fn = f(xn) ;
+double numint::trap (double a, double b, const int N,
+		     double f (const double&) )
+{
+	// Trapezoid Method
+	// Integrates f(x) in the interval [a, b] using N intervals.
 
-	if (f(lb) * fn < 0.)
-		ub = xn ;
-	else
-		lb = xn ;
+	std::vector<int> idx(N+1) ;
+	std::vector<double> x(N+1) ;
+	std::iota(idx.begin(), idx.end(), 0) ;
+	double dx = (b - a) / ( (double) N ) ;
 
-	return (fn < 0.) ? fn = -fn: fn ;
+	auto t = [&a, &dx](const int& i) -> double {
+		return (a + i * dx) ;
+	} ;
+
+	std::transform(idx.begin(), idx.end(), x.begin(), t) ;
+	std::transform(x.begin(), x.end(), x.begin(), f) ;
+
+	double s = 0 ;
+	s = std::accumulate(x.begin() + 1, x.begin() + x.size() - 1, s) ;
+	s = f(a) + (2.0 * s) + f(b) ;
+	return (0.5 * dx * s) ;
 }
-
-
-/*
- * Comments:
- * The intention is to use this module as a reference, it's not actually
- * imported by the main program.
- *
- */
