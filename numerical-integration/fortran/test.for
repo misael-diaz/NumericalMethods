@@ -33,8 +33,8 @@ module objfun
     contains
         function fun(x) result(f)
             ! Synopsis: Defines the nonlinear function, f(x)
-            real(kind = real64), intent(in) :: x(:)
-            real(kind = real64):: f(size(x))
+            real(kind = real64), intent(in) :: x
+            real(kind = real64):: f
             f = dexp(x)
             return
         end function

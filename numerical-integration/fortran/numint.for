@@ -33,8 +33,8 @@ module num_integrators
         function fun(x) result(f)
             use, intrinsic :: iso_fortran_env, only: real64
             implicit none
-            real(kind = real64), intent(in) :: x(:)
-            real(kind = real64) :: f(size(x))
+            real(kind = real64), intent(in) :: x
+            real(kind = real64) :: f
         end function
     end interface
 
@@ -51,11 +51,18 @@ module num_integrators
             integer(kind = int32):: i                   ! counter
             real(kind = real64):: ni                    ! numeric integral
             real(kind = real64):: dx                    ! step
-            real(kind = real64):: x(n + 1)              ! values
+            real(kind = real64):: x                     ! values
+            real(kind = real64):: s                     ! accumulator
 
             dx = (ub - lb) / real(n, kind = real64)
-            x(:) = [(lb + real(i, kind = real64) * dx, i = 0, n)]
-            ni = dx * sum( fp( x(1:n) ) )
+
+            s = 0.0_real64
+            do i = 0, n - 1
+                x = lb + real(i, kind = real64) * dx
+                s = s + fp(x)
+            end do
+            ni = dx * s
+
             return
         end function
 
@@ -67,11 +74,18 @@ module num_integrators
             integer(kind = int32):: i
             real(kind = real64):: ni
             real(kind = real64):: dx
-            real(kind = real64):: x(n + 1)
+            real(kind = real64):: x
+            real(kind = real64):: s
 
             dx = (ub - lb) / real(n, kind = real64)
-            x(:) = [(lb + real(i, kind = real64) * dx, i = 0, n)]
-            ni = dx * sum( fp( x(2:n+1) ) )
+
+            s = 0.0_real64
+            do i = 1, n
+                x = lb + real(i, kind = real64) * dx
+                s = s + fp(x)
+            end do
+            ni = dx * s
+
             return
         end function
 
@@ -83,26 +97,20 @@ module num_integrators
             integer(kind = int32):: i
             real(kind = real64):: ni
             real(kind = real64):: dx
-            real(kind = real64):: x(n + 1)
+            real(kind = real64):: x
+            real(kind = real64):: s
 
             dx = (ub - lb) / real(n, kind = real64)
-            x(:) = [(lb + real(i, kind = real64) * dx, i = 0, n)]
-            ni = sum( fp( x(1:1) ) ) + 2.0_real64 * sum( fp(x(2:n)) ) + &
-               & sum( fp( x(n+1:n+1) ) )
-            ni = 0.5_real64 * dx * ni
+
+            s = 0.0_real64
+            do i = 1, n - 1
+                x = lb + real(i, kind = real64) * dx
+                s = s + 2.0_real64 * fp(x)
+            end do
+            ni = 0.5_real64 * dx * ( fp(lb) + s + fp(ub) )
+
             return
         end function
 
 
 end module
-
-
-! Comments:
-! Had to resort to some gimmicks to reduce rank-1 arrays into scalars while
-! keeping the number of lines of code to a minimum.
-!
-!
-! Warnings:
-! Watch out for stack overflows if using too many intervals for numerical
-! integration. If you really need that many you would have to allocate the
-! arrays in the heap via the allocate statement.
