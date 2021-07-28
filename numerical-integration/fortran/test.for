@@ -32,7 +32,8 @@ module objfun
     public
     contains
         function fun(x) result(f)
-            ! Synopsis: Defines the nonlinear function, f(x)
+            ! Synopsis:
+            ! Defines the nonlinear function, f(x), to be integrated.
             real(kind = real64), intent(in) :: x
             real(kind = real64):: f
             f = dexp(x)
@@ -50,21 +51,29 @@ program tests
     use objfun, only: fun
     implicit none
     procedure(fun), pointer :: fp => null()
-    real(kind = real64) :: a, b, ni(3)
+    real(kind = real64) :: a, b, ei, ni(3), err(3)
     integer(kind = int32), parameter :: n = 255
 
-    fp => fun
-    a = 0.0_real64
-    b = 1.0_real64
-    ni(1) = lsum (a, b, n, fp)        ! Left Riemann
-    ni(2) = rsum (a, b, n, fp)        ! Right Riemann
-    ni(3) = trap (a, b, n, fp)        ! Trapezoid Method
+    fp => fun                   ! associates f[unction] p[ointer] to f(x)
+    a = 0.0_real64              ! lower integration limit
+    b = 1.0_real64              ! upper integration limit
+    ei = fp(b) - fp(a)          ! exact integral for f(x)
 
-    print '(1X, A, F8.6)', "Left  Riemann:    ", ni(1)
-    print '(1X, A, F8.6)', "Right Riemann:    ", ni(2)
-    print '(1X, A, F8.6)', "Trapezoid Method: ", ni(3)
+    ni(1) = lsum (a, b, n, fp)  ! Left Riemann
+    ni(2) = rsum (a, b, n, fp)  ! Right Riemann
+    ni(3) = trap (a, b, n, fp)  ! Trapezoid Method
+
+    err = abs(ei - ni) / ei * 100.0_real64
+
+    print *, new_line('N')
+    print '(A, 7X, A, 10X, A)', "Numerical Method", "Result", "% Error"
+    print '(A)', "----------------------------------------------------"
+    print '(A, F12.6, 8X, E9.3)', "Left  Riemann:    ", ni(1), err(1)
+    print '(A, F12.6, 8X, E9.3)', "Right Riemann:    ", ni(2), err(2)
+    print '(A, F12.6, 8X, E9.3)', "Trapezoid Method: ", ni(3), err(3)
+    print *, new_line('N')
 end program
 
 
 ! TODO:
-! [ ] tabulate results as in the other tests.
+! [x] tabulate results as in the other tests.
