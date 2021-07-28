@@ -157,7 +157,8 @@ void check_bounds ( double *lb, double *ub ) {
  * [ ] Define default values for the tolerance and maximum number of
  *     iterations. The user may wish to override these parameters so these
  *     must be included in the argument lists. Use the constants as default
- *     values for these parameters.
+ *     values for these parameters. Consider implementing a configuration
+ *     struct.
  * [x] report function should display the name of the numerical method
  *
  */
