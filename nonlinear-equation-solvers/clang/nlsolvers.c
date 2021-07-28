@@ -36,11 +36,12 @@ double bisect ( double lb, double ub, double f(const double) )
 
 	int n = 0 ;
 	double xm, fm ;
+	char nm[] = "Bisection" ;
 
         do fm = bisector (&lb, &ub, &xm, f) ;
         while (++n != MAX_ITER && fm > TOL) ;
 
-	report (n) ;
+	report (n, nm) ;
 	return xm ;
 
 }
@@ -54,18 +55,20 @@ double regfal ( double lb, double ub, double f(const double) )
 
 	int n = 0 ;
 	double xn, fn ;
+	char nm[] = "Regula-Falsi" ;
 
         do fn = interp (&lb, &ub, &xn, f) ;
         while (++n != MAX_ITER && fn > TOL) ;
 
-	report (n) ;
+	report (n, nm) ;
 	return xn ;
 
 }
 
-void report (const int n) {
+void report (const int n, char nm[]) {
 	// reports if the method has been successful
 	if (n != MAX_ITER) {
+		printf("%s Method:\n", nm) ;
 		printf("solution found in %d iterations\n", n) ;
 	} else {
 		printf("method failed to find the root, ") ; 
@@ -155,6 +158,6 @@ void check_bounds ( double *lb, double *ub ) {
  *     iterations. The user may wish to override these parameters so these
  *     must be included in the argument lists. Use the constants as default
  *     values for these parameters.
- * [ ] report function should display the name of the numerical method
+ * [x] report function should display the name of the numerical method
  *
  */

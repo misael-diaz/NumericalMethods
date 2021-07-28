@@ -35,7 +35,7 @@
 
 double bisect   ( double, double, double f(const double) ) ;
 double regfal   ( double, double, double f(const double) ) ;
-void   report   (const int n) ;
+void   report   (const int n, char nm[]) ;
 double bisector ( double*, double*, double*, double f(const double) ) ;
 double interp   ( double*, double*, double*, double f(const double) ) ;
 
