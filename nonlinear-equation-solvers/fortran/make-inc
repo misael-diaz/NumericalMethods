@@ -14,10 +14,10 @@
 #
 
 # FORTRAN Compiler
-FC = gfortran
+FC = gfortran-10
 
 # options
-FCOPT = -ffree-form -g -Wall -O0
+FCOPT = -ffree-form -fbacktrace -g -Wall -O0
 
 # libraries
 LIBS =
