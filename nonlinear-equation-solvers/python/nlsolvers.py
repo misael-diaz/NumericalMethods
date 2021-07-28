@@ -22,6 +22,7 @@ References:
     Scientists: An Introduction with Applications using MATLAB
 [1] R Johansson, Numerical Python: Scientific Computing and Data
     Science Applications with NumPy, SciPy, and Matplotlib, 2nd edition
+[2] docs.python.org/3/tutorial/errors.html#tut-userexceptions
 """
 
 from numpy import abs
