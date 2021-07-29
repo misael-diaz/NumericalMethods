@@ -12,6 +12,9 @@ If you choose another compiler (from LLVM, Intel, etc.) feel free to
 report any compilation issues. (Assuming the selected compiler version
 supports the mentioned features.)
 
+You might want to import the project into an Integrated Development
+Environment IDE such as Code::Blocks or Eclipse.
+
 ## Python
 The supplied codes use Python 3 features (such as f-strings),
 they won't execute successfully if you use Python 2.
