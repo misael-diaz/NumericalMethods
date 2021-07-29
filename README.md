@@ -9,7 +9,7 @@ it's the compiler I use for building all my projects.
 If you choose another compiler (from LLVM, Intel, etc.) feel free to report any compilation issues.
 
 # Python
-The codes uses Python 3 features (such as the f-strings), they won't execute successfully if you use Python 2.
+The codes use Python 3 features (such as the f-strings), they won't execute successfully if you use Python 2.
 I recommend using the Spyder 3 IDE because it provides a graphical user-interface similar to that of MATLAB.
 
 # MATLAB
