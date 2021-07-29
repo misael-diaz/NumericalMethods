@@ -20,7 +20,7 @@
 %
 
 
-function x = regfal(a, b, f)
+function x = regfal(a, b, f, opt)
 %    Synopsis:
 %    Regula Falsi Method. Finds the root of the function f(x) enclosed by
 %    the interval [a, b].
@@ -38,6 +38,11 @@ function x = regfal(a, b, f)
 TOL      = 1.0e-8;
 MAX_ITER = 100;
 
+if ( exist('opt', 'var') )
+    % uses configuration struct if passed
+    TOL      = opt.tol;
+    MAX_ITER = opt.max_iter;
+end
 
 if (a > b)
     % bounds check
