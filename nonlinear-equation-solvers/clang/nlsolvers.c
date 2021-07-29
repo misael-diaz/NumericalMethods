@@ -65,6 +65,25 @@ double regfal ( double lb, double ub, double f(const double) )
 
 }
 
+
+double shifter ( double lb, double ub, double f(const double) )
+{	// Shifter Method
+
+	char nm[] = "Shifter" ;
+	check_bracket (lb, ub, f, nm) ;
+	check_bounds  (&lb, &ub) ;
+
+	int n = 0 ;
+	double xn, fn ;
+
+        do fn = shift (&lb, &ub, &xn, f) ;
+        while (++n != MAX_ITER && fn > TOL) ;
+
+	report (n, nm) ;
+	return xn ;
+
+}
+
 void report (const int n, char nm[]) {
 	// reports if the method has been successful
 	if (n != MAX_ITER) {
@@ -128,6 +147,30 @@ double interp ( double *lb, double *ub, double *xn,
 }
 
 
+double shift ( double *lb, double *ub, double *xn,
+	       double f(const double) )
+{	// uses hybrid approach to approximate the root
+	double fn ;
+	double xb = 0.5 * (*lb + *ub) ;
+	double xf = ( *lb * f(*ub) - *ub * f(*lb) ) / ( f(*ub) - f(*lb) ) ;
+
+	// shifts towards the step (presumably) closer to the root
+	if ( (absval(f(xb))) < (absval(f(xf))) ) /* MACROS requires ( ) */
+		*xn = xb ;
+	else
+		*xn = xf ;
+
+	fn = f(*xn) ;
+
+	if (f(*lb) * fn < 0.)
+		*ub = *xn ;
+	else
+		*lb = *xn ;
+
+	return absval(fn) ;
+}
+
+
 void check_bracket ( double lb, double ub,
 		     double f(const double), char nm[] )
 {
@@ -149,6 +192,17 @@ void check_bounds ( double *lb, double *ub ) {
 		*ub =  up ;
 	}
 }
+
+
+/*
+ * Comments on Shift function:
+ * Enclosing `(absval(x))' in parenthesis is needed to ensure the required
+ * order of precedence. Recall that absval(x) is a MACROS not an intrinsic
+ * function so that to ensure it's evaluated first, it must be enclosed by
+ * parenthesis. This applies in the if-statement used to shift towards the
+ * step closest to the root.
+ *
+ */
 
 
 /*
