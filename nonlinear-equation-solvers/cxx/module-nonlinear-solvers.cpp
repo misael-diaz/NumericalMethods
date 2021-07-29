@@ -23,6 +23,7 @@
  */
 
 module ;
+#include <string>
 #include <iostream>
 #include <stdexcept>
 #define absval(x) ((x < 0.)? -x: x)
@@ -42,11 +43,11 @@ const double TOL = 1.0e-8 ;
 
 
 // declarations (prototypes)
-void report (const int& n) ;
+void report (const int& n, const std::string& nm) ;
 void check_bounds ( double& lb, double& ub ) ;
 
 void check_bracket ( const double& lb, const double& ub,
-	             double f(const double&) ) ;
+		     const std::string& nm, double f(const double&) ) ;
 
 double bisector ( double&, double&, double&, double f(const double&) ) ;
 double interp   ( double&, double&, double&, double f(const double&) ) ;
@@ -60,14 +61,15 @@ double nlsolver::bisect ( double lb, double ub, double f(const double&) )
 
 	int n = 0 ;
 	double xm, fm ;
+	std::string nm = "Bisection" ;
 
 	check_bounds  (lb, ub) ;
-	check_bracket (lb, ub, f) ;
+	check_bracket (lb, ub, nm, f) ;
 
         do fm = bisector (lb, ub, xm, f) ;
         while (++n != MAX_ITER && fm > TOL) ;
 
-	report (n) ;
+	report (n, nm) ;
 	return xm ;
 
 }
@@ -78,14 +80,15 @@ double nlsolver::regfal ( double lb, double ub, double f(const double&) )
 
 	int n = 0 ;
 	double xn, fn ;
+	std::string nm = "Regula-Falsi" ;
 
 	check_bounds  (lb, ub) ;
-	check_bracket (lb, ub, f) ;
+	check_bracket (lb, ub, nm, f) ;
 
         do fn = interp (lb, ub, xn, f) ;
         while (++n != MAX_ITER && fn > TOL) ;
 
-	report (n) ;
+	report (n, nm) ;
 	return xn ;
 
 }
@@ -96,14 +99,15 @@ double nlsolver::shifter ( double lb, double ub, double f(const double&) )
 
 	int n = 0 ;
 	double xn, fn ;
+	std::string nm = "Shifter" ;
 
 	check_bounds  (lb, ub) ;
-	check_bracket (lb, ub, f) ;
+	check_bracket (lb, ub, nm, f) ;
 
         do fn = shift (lb, ub, xn, f) ;
         while (++n != MAX_ITER && fn > TOL) ;
 
-	report (n) ;
+	report (n, nm) ;
 	return xn ;
 
 }
@@ -119,9 +123,11 @@ void check_bounds ( double& lb, double& ub ) {
 
 
 void check_bracket ( const double& lb, const double& ub, 
-		     double f(const double&) ) {
+		     const std::string& nm, double f(const double&) )
+{
 	// complains if there's no root in given interval
 	if ( f(lb) * f(ub) > 0. ) {
+		std::cout << nm << " Method:" << std::endl ;
 		std::cout << "no root enclosed in " 
 		          << "[" << lb << ", " << ub << "]" << std::endl ;
 		throw std::runtime_error("no root in given interval") ;
@@ -130,9 +136,10 @@ void check_bracket ( const double& lb, const double& ub,
 }
 
 
-void report (const int& n) {
+void report (const int& n, const std::string& nm) {
 	// reports if the method has been successful
 	if (n != MAX_ITER) {
+		std::cout << nm << " Method:" << std::endl ;
 		std::cout << "solution found in " << n << " "
 			  << "iterations" << std::endl ;
 	} else {
@@ -222,6 +229,6 @@ double shift ( double& lb, double& ub, double& xn,
  *     iterations. The user may wish to override these parameters so these
  *     must be included in the argument lists. Use the constants as default
  *     values for these parameters.
- * [ ] report function should display the name of the numerical method
+ * [x] report function should display the name of the numerical method
  *
  */
