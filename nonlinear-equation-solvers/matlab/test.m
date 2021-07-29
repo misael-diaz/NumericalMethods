@@ -37,9 +37,11 @@ f = @(x) 1.0 / sqrt(x) + 2.0 * log10(0.024651/3.7 + ...
 
 
 % solves for the root of f(x) numerically
-x = bisect(a, b, f)	% Bisection
-x = regfal(a, b, f)	% Regula Falsi (or False Position)
-x = shifter(a, b, f)	% Hybrid
+%[ configuration struct (optional) ]%
+opt = struct('tol', 1.0e-12, 'max_iter', 256);
+x = bisect(a, b, f, opt)	% Bisection
+x = regfal(a, b, f, opt)	% Regula Falsi (or False Position)
+x = shifter(a, b, f, opt)	% Hybrid
 
 
 % tests throwing exceptions (interval [a, b] does not contain a root)
