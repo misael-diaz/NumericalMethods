@@ -25,6 +25,7 @@
  *
  */
 
+#define absval(x) (x < 0.)? -x: x
 
 // constants
 #define MAX_ITER 100
