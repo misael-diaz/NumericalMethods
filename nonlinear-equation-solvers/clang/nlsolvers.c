@@ -155,7 +155,7 @@ double shift ( double *lb, double *ub, double *xn,
 	double xf = ( *lb * f(*ub) - *ub * f(*lb) ) / ( f(*ub) - f(*lb) ) ;
 
 	// shifts towards the step (presumably) closer to the root
-	if ( (absval(f(xb))) < (absval(f(xf))) ) /* MACROS requires ( ) */
+	if ( absval(f(xb)) < absval(f(xf)) )
 		*xn = xb ;
 	else
 		*xn = xf ;
@@ -192,17 +192,6 @@ void check_bounds ( double *lb, double *ub ) {
 		*ub =  up ;
 	}
 }
-
-
-/*
- * Comments on Shift function:
- * Enclosing `(absval(x))' in parenthesis is needed to ensure the required
- * order of precedence. Recall that absval(x) is a MACROS not an intrinsic
- * function so that to ensure it's evaluated first, it must be enclosed by
- * parenthesis. This applies in the if-statement used to shift towards the
- * step closest to the root.
- *
- */
 
 
 /*
