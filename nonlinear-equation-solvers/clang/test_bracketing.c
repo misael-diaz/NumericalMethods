@@ -1,7 +1,9 @@
 /*
+ * Applied Numerical Analysis
+ * ME 2020 FA21
+ * Prof. M Diaz-Maldonado
+ *
  * source: test_bracketing.c
- * author: misael-diaz
- * date:   2021/07/26
  *
  * Synopsis:
  * Tests the implementation of the bisection and regula falsi methods.
