@@ -13,7 +13,7 @@ report any compilation issues. (Assuming the selected compiler version
 supports the mentioned features.)
 
 ## Python
-The supplied codes uses Python 3 features (such as the f-strings),
+The supplied codes use Python 3 features (such as f-strings),
 they won't execute successfully if you use Python 2.
 I recommend using the Spyder 3 IDE because it provides a graphical
 user-interface GUI similar to that of MATLAB.
