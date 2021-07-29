@@ -1,5 +1,5 @@
 # Applied Numerical Analysis
-# ME 2020
+## ME 2020
 Implements some numerical techniques in C/C++, Python, MATLAB, and FORTRAN.
 
 ## Compiling C/C++ and FORTRAN Codes
