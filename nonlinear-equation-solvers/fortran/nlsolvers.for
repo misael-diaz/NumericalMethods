@@ -1,7 +1,9 @@
 !
+!   Applied Numerical Analysis                                July 26, 2021
+!   ME 2020 FA21
+!   Prof. M Diaz-Maldonado
+!
 !   source: nlsolvers.for
-!   author: misael-diaz
-!   date:   2021-07-26
 !
 !
 !   Synopsis:

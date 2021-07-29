@@ -1,7 +1,9 @@
 /*
+ * Applied Numerical Analysis
+ * ME 2020 FA21
+ * Prof. M Diaz-Maldonado
+ *
  * source: test_bracketing.c
- * author: misael-diaz
- * date:   2021/07/26
  *
  * Synopsis:
  * Tests the implementation of the bisection and regula falsi methods.
@@ -31,18 +33,19 @@ double f (const double) ;	/* nonlinear function, f(x) */
 int main() {
 	// Solves for the positive root of the nonlinear function f(x)
 	double lb, ub ;
-	double x1, x2 ;
+	double x1, x2, x3 ;
 
-	lb = 2.0e-2 ;	ub = 7.0e-2 ;	/* bracketing inteval [lb, ub] */
+	lb = 1.0e-2 ;	ub = 9.0e-2 ;	/* bracketing inteval [lb, ub] */
 
 
 	x1 = bisect (lb, ub, f) ;	// Bisection
 	x2 = regfal (lb, ub, f) ;	// Regula Falsi
+	x3 = shifter(lb, ub, f) ;	// Shifter
 
 
 	// displays roots (both methods converge to the root)
-	printf("x: %12.6f %12.6f\n", x1, x2) ;
-	printf("f(x): %24.6e %24.6e\n", f(x1), f(x2) ) ;
+	printf("x: %24.15f %24.15f %24.15f\n", x1, x2, x3) ;
+	printf("f(x): %24.6e %24.6e %24.6e\n", f(x1), f(x2), f(x3) ) ;
 
 
 /*      tests non-enclosing interval        */

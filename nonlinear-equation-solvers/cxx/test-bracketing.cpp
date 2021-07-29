@@ -1,7 +1,9 @@
 /*
+ * Applied Numerical Analysis                                 July 20, 2021
+ * ME 2020 FA21
+ * Prof. M Diaz-Maldonado
+ *
  * source: test-bracketing.cpp
- * author: misael-diaz
- * date:   2021/07/20
  *
  * Synopsis:
  * Tests the implementation of the bisection and regula falsi methods.
@@ -24,8 +26,14 @@
 
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 #include <stdexcept>
 import nonlinear_solvers ;
+using std::cout ;
+using std::endl ;
+using std::streamsize ;
+using std::setprecision ;
+using std::runtime_error ;
 int main() {
 	// Solves for the positive root of the nonlinear function f(x)
 	
@@ -35,21 +43,25 @@ int main() {
 	             2.51/(9655526.5 * sqrt(x) ) ) ) ;
 	} ;
 	double lb, ub ;		// lower and upper bounds [lb, ub]
-	double x1, x2 ;		// numerical approximation of the root
+	double x1, x2, x3 ;	// numerical approximation of the root
 
 
 	try {
-		lb = 2.0e-2 ;	ub = 7.0e-2 ;
+		lb = 1.0e-2 ;	ub = 9.0e-2 ;
         	x1 = nlsolver::bisect (lb, ub, f) ;	// bisection
         	x2 = nlsolver::regfal (lb, ub, f) ;	// regula falsi
-	} catch (std::runtime_error& err) {
-		std::cout << err.what() << std::endl ;
+		x3 = nlsolver::shifter(lb, ub, f) ;	// shifter
+	} catch (runtime_error& err) {
+		cout << err.what() << endl ;
 		return 1 ;
 	}
 
 
-	// displays solutions (both methods converge to the root)
-	std::cout << "x: " << x1 << ", " << x2 << std::endl ;
-	std::cout << "f(x): " << f(x1) << ", " << f(x2) << std::endl ;
+	// displays solutions (methods converge to the root)
+	streamsize prec = cout.precision() ;
+	cout << "x: " << setprecision(15) << x1 << ", " << x2
+	     << ", "  << x3 << setprecision(prec) << endl ;
+	cout << "f(x): " << f(x1) << ", " << f(x2)
+	     << ", "     << f(x3) << endl ;
 	return 0 ;
 }

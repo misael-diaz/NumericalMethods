@@ -25,6 +25,7 @@
  *
  */
 
+#define absval(x) ((x < 0.)? -x: x)
 
 // constants
 #define MAX_ITER 100
@@ -35,9 +36,11 @@
 
 double bisect   ( double, double, double f(const double) ) ;
 double regfal   ( double, double, double f(const double) ) ;
+double shifter  ( double, double, double f(const double) ) ;
 void   report   (const int n, char nm[]) ;
 double bisector ( double*, double*, double*, double f(const double) ) ;
 double interp   ( double*, double*, double*, double f(const double) ) ;
+double shift    ( double*, double*, double*, double f(const double) ) ;
 
 void check_bracket ( double, double, double f(const double), char nm[] ) ;
 void check_bounds  ( double*, double* ) ;

@@ -1,7 +1,9 @@
 /*
+ * Applied Numerical Analysis                                 July 26, 2021
+ * ME 2020 FA21
+ * Prof. M Diaz-Maldonado
+ *
  * source: nlsolvers.c
- * author: misael-diaz
- * date:   2021/07/26
  *
  * Synopsis:
  * Implements (some) nonlinear equation solvers.
@@ -65,6 +67,25 @@ double regfal ( double lb, double ub, double f(const double) )
 
 }
 
+
+double shifter ( double lb, double ub, double f(const double) )
+{	// Shifter Method
+
+	char nm[] = "Shifter" ;
+	check_bracket (lb, ub, f, nm) ;
+	check_bounds  (&lb, &ub) ;
+
+	int n = 0 ;
+	double xn, fn ;
+
+        do fn = shift (&lb, &ub, &xn, f) ;
+        while (++n != MAX_ITER && fn > TOL) ;
+
+	report (n, nm) ;
+	return xn ;
+
+}
+
 void report (const int n, char nm[]) {
 	// reports if the method has been successful
 	if (n != MAX_ITER) {
@@ -109,8 +130,7 @@ double bisector ( double *lb, double *ub, double *xm,
 	else
 		*lb = *xm ;
 
-
-	return (fm < 0.) ? fm = -fm: fm ;	// implements abs(x)
+	return absval(fm) ;
 }
 
 
@@ -125,7 +145,31 @@ double interp ( double *lb, double *ub, double *xn,
 	else
 		*lb = *xn ;
 
-	return (fn < 0.) ? fn = -fn: fn ;
+	return absval(fn) ;
+}
+
+
+double shift ( double *lb, double *ub, double *xn,
+	       double f(const double) )
+{	// uses hybrid approach to approximate the root
+	double fn ;
+	double xb = 0.5 * (*lb + *ub) ;
+	double xf = ( *lb * f(*ub) - *ub * f(*lb) ) / ( f(*ub) - f(*lb) ) ;
+
+	// shifts towards the step (presumably) closer to the root
+	if ( absval(f(xb)) < absval(f(xf)) )
+		*xn = xb ;
+	else
+		*xn = xf ;
+
+	fn = f(*xn) ;
+
+	if (f(*lb) * fn < 0.)
+		*ub = *xn ;
+	else
+		*lb = *xn ;
+
+	return absval(fn) ;
 }
 
 

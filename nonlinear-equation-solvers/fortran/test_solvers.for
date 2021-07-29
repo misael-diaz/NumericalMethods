@@ -1,8 +1,9 @@
 !
-!   source: test_solvers.for
-!   author: misael-diaz
-!   date:   2021-07-26
+!   Applied Numerical Analysis                                July 26, 2021
+!   ME 2020 FA21
+!   Prof. M Diaz-Maldonado
 !
+!   source: test_solvers.for
 !
 !   Synopsis:
 !   Tests nonlinear solvers.
