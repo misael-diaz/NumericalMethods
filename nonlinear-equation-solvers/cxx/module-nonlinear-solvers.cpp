@@ -25,6 +25,7 @@
 module ;
 #include <iostream>
 #include <stdexcept>
+#define absval(x) ((x < 0.)? -x: x)
 export module nonlinear_solvers ;
 
 
@@ -153,8 +154,7 @@ double bisector ( double& lb, double& ub, double& xm,
 	else
 		lb = xm ;
 
-
-	return (fm < 0.) ? fm = -fm: fm ;	// implements abs(x)
+	return absval(fm) ;
 }
 
 
@@ -169,7 +169,7 @@ double interp ( double& lb, double& ub, double& xn,
 	else
 		lb = xn ;
 
-	return (fn < 0.) ? fn = -fn: fn ;
+	return absval(fn) ;
 }
 
 /*
