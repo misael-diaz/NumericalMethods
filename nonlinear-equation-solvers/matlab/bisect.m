@@ -21,7 +21,7 @@
 %
 
 
-function x = bisect(a, b, f)
+function x = bisect(a, b, f, opt)
 %    Synopsis:
 %    Bisection Method. Finds the root of the function f(x) enclosed by
 %    the interval [a, b].
@@ -39,6 +39,11 @@ function x = bisect(a, b, f)
 TOL      = 1.0e-8;
 MAX_ITER = 100;
 
+if ( exist('opt', 'var') )
+    % uses configuration struct if passed
+    TOL      = opt.tol;
+    MAX_ITER = opt.max_iter;
+end
 
 if (a > b)
     % bounds check
@@ -82,3 +87,7 @@ else
 end
 
 return
+
+
+% TODO:
+% [x] Add code for user-defined tolerance and maximum number of iterations.
