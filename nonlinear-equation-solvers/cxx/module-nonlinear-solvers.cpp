@@ -32,6 +32,7 @@ export module nonlinear_solvers ;
 export namespace nlsolver {
 	double bisect ( double, double, double f(const double&) ) ;
 	double regfal ( double, double, double f(const double&) ) ;
+	double shifter( double, double, double f(const double&) ) ;
 }
 
 
@@ -49,6 +50,7 @@ void check_bracket ( const double& lb, const double& ub,
 
 double bisector ( double&, double&, double&, double f(const double&) ) ;
 double interp   ( double&, double&, double&, double f(const double&) ) ;
+double shift    ( double&, double&, double&, double f(const double&) ) ;
 
 
 
@@ -81,6 +83,24 @@ double nlsolver::regfal ( double lb, double ub, double f(const double&) )
 	check_bracket (lb, ub, f) ;
 
         do fn = interp (lb, ub, xn, f) ;
+        while (++n != MAX_ITER && fn > TOL) ;
+
+	report (n) ;
+	return xn ;
+
+}
+
+
+double nlsolver::shifter ( double lb, double ub, double f(const double&) )
+{	// Shifter Method
+
+	int n = 0 ;
+	double xn, fn ;
+
+	check_bounds  (lb, ub) ;
+	check_bracket (lb, ub, f) ;
+
+        do fn = shift (lb, ub, xn, f) ;
         while (++n != MAX_ITER && fn > TOL) ;
 
 	report (n) ;
@@ -171,6 +191,30 @@ double interp ( double& lb, double& ub, double& xn,
 
 	return absval(fn) ;
 }
+
+
+double shift ( double& lb, double& ub, double& xn,
+	       double f(const double&) )
+{	// like bisector but uses the step (presumably) closer to the root
+	double fn ;
+	double xb = 0.5 * (lb + ub) ;
+        double xf = ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) ) ;
+
+	if ( absval(f(xb)) < absval(f(xf)) )
+		xn = xb ;
+	else
+		xn = xf ;
+
+	fn = f(xn) ;
+
+	if (f(lb) * fn < 0.)
+		ub = xn ;
+	else
+		lb = xn ;
+
+	return absval(fn) ;
+}
+
 
 /*
  * TODO:
