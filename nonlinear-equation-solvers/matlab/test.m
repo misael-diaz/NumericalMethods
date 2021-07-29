@@ -2,9 +2,10 @@
 % ME 2020 FA21
 % Prof. M Diaz-Maldonado
 %
+% source: test.m
 %
 % Synopsis:
-% Tests Bisection and Regula Falsi methods.
+% Tests bracketing methods.
 % 
 %
 % Copyright (c) 2021 Misael Diaz-Maldonado
@@ -27,7 +28,7 @@ clc
 format long g
 
 
-a = 2.0e-2;	b = 7.0e-2;	% bracketing interval [a, b]
+a = 1.0e-2;	b = 9.0e-2;	% bracketing interval [a, b]
 
 
 % defines the nonlinear function f(x) as a lambda function
@@ -38,3 +39,11 @@ f = @(x) 1.0 / sqrt(x) + 2.0 * log10(0.024651/3.7 + ...
 % solves for the root of f(x) numerically
 x = bisect(a, b, f)	% Bisection
 x = regfal(a, b, f)	% Regula Falsi (or False Position)
+x = shifter(a, b, f)	% Hybrid
+
+
+% tests throwing exceptions (interval [a, b] does not contain a root)
+% a = 6.0e-2;	b = 9.0e-2;
+% x = bisect(a, b, f)	passed
+% x = regfal(a, b, f)	passed
+% x = shifter(a, b, f)	passed

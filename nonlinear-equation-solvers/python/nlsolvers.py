@@ -22,13 +22,13 @@ References:
     Scientists: An Introduction with Applications using MATLAB
 [1] R Johansson, Numerical Python: Scientific Computing and Data
     Science Applications with NumPy, SciPy, and Matplotlib, 2nd edition
+[2] docs.python.org/3/tutorial/errors.html#tut-userexceptions
 """
 
 from numpy import abs
 
 # sets default values for the tolerance and maximum number of iterations
 TOL, MAX_ITER = (1.0e-8, 100)
-
 
 def check_bounds(bounds):
     """ Synopsis: Fixes bounds if supplied in wrong order. """
@@ -40,6 +40,14 @@ def check_bounds(bounds):
         lb, ub = (ub, up)
 
     return (lb, ub)
+
+
+def check_bracket(bounds, f):
+    """ Synopsis: Complains if there's no root in the given interval. """
+    lb, ub = bounds
+    if ( f(lb) * f(ub) > 0. ):
+        raise RuntimeError(f"No root exist in given interval [{lb}, {ub}]")
+    return
 
 
 def report(it):
@@ -55,13 +63,9 @@ def report(it):
 def bisect(bounds, f):
     """ Synopsis: Possible implementation of the Bisection method. """
 
+    check_bracket(bounds, f)
     a, b = check_bounds(bounds)
 
-    if f(a) * f(b) > 0:
-        # complains if there are no roots in bracketing interval
-        print(f"no roots exist in [{a}, {b}]")
-        return 0
-    
 
     n, x = (1, (a + b) / 2)
     while ( n != MAX_ITER and abs( f(x) ) > TOL ):
@@ -83,12 +87,9 @@ def bisect(bounds, f):
 def regfal(bounds, f):
     """ Synopsis: Possible implementation of the Regula Falsi method. """
 
+    check_bracket(bounds, f)
     lb, ub = check_bounds(bounds)
 
-    if f(lb) * f(ub) > 0:
-        print(f"no roots exist in [{lb}, {ub}]")
-        return 0
-    
 
     n, x = ( 1, ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) ) )
     while ( n != MAX_ITER and abs( f(x) ) > TOL ):

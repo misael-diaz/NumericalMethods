@@ -41,3 +41,9 @@ f = lambda x: (
 """ solves for the enclosed root with the specified method """
 x = bisect(bounds, f)   # Bisection
 x = regfal(bounds, f)   # Regula Falsi
+
+
+# tests for a non-enclosing interval
+# bounds = (6.0e-2, 7.0e-2)
+# x = bisect(bounds, f) passed
+# x = regfal(bounds, f) passed
