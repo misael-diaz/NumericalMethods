@@ -31,17 +31,23 @@ module ;
 #define absval(x) ((x < 0.)? -x: x)
 export module nonlinear_solvers ;
 
-
-export namespace nlsolver {
-	double bisect ( double, double, double f(const double&) ) ;
-	double regfal ( double, double, double f(const double&) ) ;
-	double shifter( double, double, double f(const double&) ) ;
-}
-
-
 // constants
 const int MAX_ITER = 100 ;
 const double TOL = 1.0e-8 ;
+
+export namespace nlsolver {
+
+	struct config {	// config[uration] struct
+		config(): tol(TOL), max_iter(MAX_ITER) {}
+		config(double t, int i): tol(t), max_iter(i) {}
+		double tol ;
+		int max_iter ;
+	} ;
+
+	double bisect ( double, double, double f(const double&), config ) ;
+	double regfal ( double, double, double f(const double&), config ) ;
+	double shifter( double, double, double f(const double&), config ) ;
+}
 
 
 // declarations (prototypes)
@@ -58,7 +64,8 @@ double shift    ( double&, double&, double&, double f(const double&) ) ;
 
 
 // implementations
-double nlsolver::bisect ( double lb, double ub, double f(const double&) )
+double nlsolver::bisect ( double lb, double ub,
+		          double f(const double&), config opt = config() )
 {	// Bisection Method
 
 	int n = 0 ;
@@ -69,7 +76,7 @@ double nlsolver::bisect ( double lb, double ub, double f(const double&) )
 	check_bracket (lb, ub, nm, f) ;
 
         do fm = bisector (lb, ub, xm, f) ;
-        while (++n != MAX_ITER && fm > TOL) ;
+        while (++n != opt.max_iter && fm > opt.tol) ;
 
 	report (n, nm) ;
 	return xm ;
@@ -77,7 +84,8 @@ double nlsolver::bisect ( double lb, double ub, double f(const double&) )
 }
 
 
-double nlsolver::regfal ( double lb, double ub, double f(const double&) )
+double nlsolver::regfal ( double lb, double ub,
+			  double f(const double&), config opt = config() )
 {	// Regula Falsi Method
 
 	int n = 0 ;
@@ -88,7 +96,7 @@ double nlsolver::regfal ( double lb, double ub, double f(const double&) )
 	check_bracket (lb, ub, nm, f) ;
 
         do fn = interp (lb, ub, xn, f) ;
-        while (++n != MAX_ITER && fn > TOL) ;
+        while (++n != opt.max_iter && fn > opt.tol) ;
 
 	report (n, nm) ;
 	return xn ;
@@ -96,7 +104,8 @@ double nlsolver::regfal ( double lb, double ub, double f(const double&) )
 }
 
 
-double nlsolver::shifter ( double lb, double ub, double f(const double&) )
+double nlsolver::shifter ( double lb, double ub,
+		           double f(const double&), config opt = config() )
 {	// Shifter Method
 
 	int n = 0 ;
@@ -107,7 +116,7 @@ double nlsolver::shifter ( double lb, double ub, double f(const double&) )
 	check_bracket (lb, ub, nm, f) ;
 
         do fn = shift (lb, ub, xn, f) ;
-        while (++n != MAX_ITER && fn > TOL) ;
+        while (++n != opt.max_iter && fn > opt.tol) ;
 
 	report (n, nm) ;
 	return xn ;
@@ -227,7 +236,7 @@ double shift ( double& lb, double& ub, double& xn,
 
 /*
  * TODO:
- * [ ] Define default values for the tolerance and maximum number of
+ * [x] Define default values for the tolerance and maximum number of
  *     iterations. The user may wish to override these parameters so these
  *     must be included in the argument lists. Use the constants as default
  *     values for these parameters.
