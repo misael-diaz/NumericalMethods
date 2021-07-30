@@ -30,7 +30,35 @@
 #include "nlsolvers.h"
 
 // implementations
-double bisect ( double lb, double ub, double f(const double) )
+double bisect_varg ( double lb, double ub, double f(const double),
+		     opt_args opt )
+{	// shadow function which handles initialization of optional args
+	double tol = opt.tol? opt.tol: TOL ;
+	int max_iter = opt.max_iter? opt.max_iter: MAX_ITER ;
+	return bisect_base (lb, ub, f, tol, max_iter) ;
+}
+
+
+double regfal_varg ( double lb, double ub, double f(const double),
+		     opt_args opt )
+{	// shadow function
+	double tol = opt.tol? opt.tol: TOL ;
+	int max_iter = opt.max_iter? opt.max_iter: MAX_ITER ;
+	return regfal_base (lb, ub, f, tol, max_iter) ;
+}
+
+
+double shifter_varg ( double lb, double ub, double f(const double),
+		      opt_args opt )
+{	// shadow function
+	double tol = opt.tol? opt.tol: TOL ;
+	int max_iter = opt.max_iter? opt.max_iter: MAX_ITER ;
+	return shifter_base (lb, ub, f, tol, max_iter) ;
+}
+
+
+double bisect_base ( double lb, double ub, double f(const double),
+		     double tol, int max_iter )
 {	// Bisection Method
 
 	char nm[] = "Bisection" ;
@@ -41,7 +69,7 @@ double bisect ( double lb, double ub, double f(const double) )
 	double xm, fm ;
 
         do fm = bisector (&lb, &ub, &xm, f) ;
-        while (++n != MAX_ITER && fm > TOL) ;
+        while (++n != max_iter && fm > tol) ;
 
 	report (n, nm) ;
 	return xm ;
@@ -49,7 +77,8 @@ double bisect ( double lb, double ub, double f(const double) )
 }
 
 
-double regfal ( double lb, double ub, double f(const double) )
+double regfal_base ( double lb, double ub, double f(const double),
+	             double tol, int max_iter )
 {	// Regula Falsi Method
 
 	char nm[] = "Regula-Falsi" ;
@@ -60,7 +89,7 @@ double regfal ( double lb, double ub, double f(const double) )
 	double xn, fn ;
 
         do fn = interp (&lb, &ub, &xn, f) ;
-        while (++n != MAX_ITER && fn > TOL) ;
+        while (++n != max_iter && fn > tol) ;
 
 	report (n, nm) ;
 	return xn ;
@@ -68,7 +97,8 @@ double regfal ( double lb, double ub, double f(const double) )
 }
 
 
-double shifter ( double lb, double ub, double f(const double) )
+double shifter_base ( double lb, double ub, double f(const double),
+	         double tol, int max_iter )
 {	// Shifter Method
 
 	char nm[] = "Shifter" ;
@@ -79,12 +109,13 @@ double shifter ( double lb, double ub, double f(const double) )
 	double xn, fn ;
 
         do fn = shift (&lb, &ub, &xn, f) ;
-        while (++n != MAX_ITER && fn > TOL) ;
+        while (++n != max_iter && fn > tol) ;
 
 	report (n, nm) ;
 	return xn ;
 
 }
+
 
 void report (const int n, char nm[]) {
 	// reports if the method has been successful
