@@ -28,15 +28,24 @@
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
+
 import nonlinear_solvers ;
+
 using std::cout ;
 using std::endl ;
 using std::streamsize ;
 using std::setprecision ;
 using std::runtime_error ;
+
+using nlsolver::config ;	// optional config[uration] struct
+using nlsolver::bisect ;
+using nlsolver::regfal ;
+using nlsolver::shifter ;
+
 int main() {
 	// Solves for the positive root of the nonlinear function f(x)
 	
+	config opt{1.0e-12, 256} ;	// tolerance and max num iterations
 	
 	auto f = [](const double& x) -> double {
 	    return ( 1.0 / sqrt(x) + 2.0 * log10(0.024651/3.7 +
@@ -48,9 +57,9 @@ int main() {
 
 	try {
 		lb = 1.0e-2 ;	ub = 9.0e-2 ;
-        	x1 = nlsolver::bisect (lb, ub, f) ;	// bisection
-        	x2 = nlsolver::regfal (lb, ub, f) ;	// regula falsi
-		x3 = nlsolver::shifter(lb, ub, f) ;	// shifter
+		x1 = bisect (lb, ub, f, opt) ;	// bisection
+		x2 = regfal (lb, ub, f, opt) ;	// regula falsi
+		x3 = shifter(lb, ub, f, opt) ;	// shifter
 	} catch (runtime_error& err) {
 		cout << err.what() << endl ;
 		return 1 ;

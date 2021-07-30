@@ -32,18 +32,23 @@ double f (const double) ;	/* nonlinear function, f(x) */
 
 int main() {
 	// Solves for the positive root of the nonlinear function f(x)
-	double lb, ub ;
-	double x1, x2, x3 ;
 
-	lb = 1.0e-2 ;	ub = 9.0e-2 ;	/* bracketing inteval [lb, ub] */
+	// defines solver options:
+	const double tol = 1.0e-12 ;	// tolerance
+	const int max_iter = 256 ;	// maximum number of iterations
+
+	double lb, ub ;			/* bracketing inteval [lb, ub] */
+	double x1, x2, x3 ;		// roots
+
+	lb = 1.0e-2 ;	ub = 9.0e-2 ;
+
+	// solves for the root of f(x) with the specified method
+	x1 = bisect (lb, ub, f, tol, max_iter) ;	// Bisection
+	x2 = regfal (lb, ub, f, tol, max_iter) ;	// Regula Falsi
+	x3 = shifter(lb, ub, f, tol, max_iter) ;	// Shifter
 
 
-	x1 = bisect (lb, ub, f) ;	// Bisection
-	x2 = regfal (lb, ub, f) ;	// Regula Falsi
-	x3 = shifter(lb, ub, f) ;	// Shifter
-
-
-	// displays roots (both methods converge to the root)
+	// displays roots (methods converge to the root)
 	printf("x: %24.15f %24.15f %24.15f\n", x1, x2, x3) ;
 	printf("f(x): %24.6e %24.6e %24.6e\n", f(x1), f(x2), f(x3) ) ;
 
