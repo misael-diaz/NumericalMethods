@@ -205,7 +205,15 @@ void check_bounds ( double *lb, double *ub ) {
  *     iterations. The user may wish to override these parameters so these
  *     must be included in the argument lists. Use the constants as default
  *     values for these parameters. Consider implementing a configuration
- *     struct.
+ *     struct. Possible implementation follows from stackoverflow inquiry
+ *     (bk's answer):
+ *     
+ *     1. stackoverflow.com/questions/1472138/c-default-arguments
+ *     2. modelingwithdata.org/arch/00000022.htm
+ *
+ *     The latter provides a detailed explanation to the proposed solution
+ *     (from same stackoverflow user) which should not be overlooked!
+ *
  * [x] report function should display the name of the numerical method
  *
  */
