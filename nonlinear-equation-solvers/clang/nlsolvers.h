@@ -28,14 +28,18 @@
 // Math MACROS
 #define absval(x) ((x < 0.)? -x: x)
 
-// constants
+// constants (defaults)
 #define MAX_ITER 100
 #define TOL 1.0e-8
 
 typedef struct {
-	double tol ;
-	int max_iter ;
-} opt_args ;	/* optional arguments (companion) struct */
+	double tol ;	// tolerance
+	int max_iter ;	// maximum number of iterations
+} nls_conf ;		// nonlinear-solver configuration struct
+
+typedef struct {
+	nls_conf opts ;
+} opt_args ;		/* optional arguments (companion) struct */
 
 
 // declarations (prototypes):

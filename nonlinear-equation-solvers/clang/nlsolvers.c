@@ -31,28 +31,28 @@
 
 // implementations
 double bisect_varg ( double lb, double ub, double f(const double),
-		     opt_args opt )
+		     opt_args args )
 {	// shadow function which handles initialization of optional args
-	double tol = opt.tol? opt.tol: TOL ;
-	int max_iter = opt.max_iter? opt.max_iter: MAX_ITER ;
+	double tol = args.opts.tol? args.opts.tol: TOL ;
+	int max_iter = args.opts.max_iter? args.opts.max_iter: MAX_ITER ;
 	return bisect_base (lb, ub, f, tol, max_iter) ;
 }
 
 
 double regfal_varg ( double lb, double ub, double f(const double),
-		     opt_args opt )
+		     opt_args args )
 {	// shadow function
-	double tol = opt.tol? opt.tol: TOL ;
-	int max_iter = opt.max_iter? opt.max_iter: MAX_ITER ;
+	double tol = args.opts.tol? args.opts.tol: TOL ;
+	int max_iter = args.opts.max_iter? args.opts.max_iter: MAX_ITER ;
 	return regfal_base (lb, ub, f, tol, max_iter) ;
 }
 
 
 double shifter_varg ( double lb, double ub, double f(const double),
-		      opt_args opt )
+		      opt_args args )
 {	// shadow function
-	double tol = opt.tol? opt.tol: TOL ;
-	int max_iter = opt.max_iter? opt.max_iter: MAX_ITER ;
+	double tol = args.opts.tol? args.opts.tol: TOL ;
+	int max_iter = args.opts.max_iter? args.opts.max_iter: MAX_ITER ;
 	return shifter_base (lb, ub, f, tol, max_iter) ;
 }
 

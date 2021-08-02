@@ -33,9 +33,8 @@ double f (const double) ;	/* nonlinear function, f(x) */
 int main() {
 	// Solves for the positive root of the nonlinear function f(x)
 
-	// defines solver options:
-	const double tol = 1.0e-12 ;	// tolerance
-	const int max_iter = 256 ;	// maximum number of iterations
+	// defines solver tolerance and maximum number of iterations
+	nls_conf opts = {.tol = 1.0e-12, .max_iter = 256} ;
 
 	double lb, ub ;			/* bracketing inteval [lb, ub] */
 	double x1, x2, x3 ;		// roots
@@ -43,9 +42,9 @@ int main() {
 	lb = 1.0e-2 ;	ub = 9.0e-2 ;
 
 	// solves for the root of f(x) with the specified method
-	x1 = bisect (lb, ub, f, tol, max_iter) ;	// Bisection
-	x2 = regfal (lb, ub, f, tol, max_iter) ;	// Regula Falsi
-	x3 = shifter(lb, ub, f, tol, max_iter) ;	// Shifter
+	x1 = bisect (lb, ub, f, opts) ;	// Bisection
+	x2 = regfal (lb, ub, f, opts) ;	// Regula Falsi
+	x3 = shifter(lb, ub, f, opts) ;	// Shifter
 
 
 	// displays roots (methods converge to the root)
