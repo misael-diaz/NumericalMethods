@@ -50,6 +50,7 @@ module nlsolvers
 
     public :: bisect
     public :: regfal
+    public :: shifter
     contains
 
 
@@ -142,6 +143,69 @@ module nlsolvers
             end if
 
             x = ( lb * fp(ub) - ub * fp(lb) ) / ( fp(ub) - fp(lb) )
+            return
+        end subroutine
+
+
+        function shifter (lb, ub, fp, opts) result(x)   ! Shifter Method
+            real(kind = real64), intent(in) :: lb, ub   ! [low, up] bounds
+            procedure(fun), pointer :: fp               ! f(x)
+            real(kind = real64):: a, b                  ! bounds aliases
+            real(kind = real64):: x1, x2, x             ! root approximates
+            integer(kind = int32):: n, maxit            ! count && max iter
+            real(kind = real64):: t                     ! tolerance
+            type(nls_conf), intent(in), optional :: opts
+            character(len=*), parameter :: nm = "Shifter"
+
+            call bracket_check (lb, ub, fp, nm)
+            call bounds_check  (lb, ub, a, b)
+            call optset(t, maxit, opts)
+
+            n = 1
+            x1 = 0.5_real64 * (a + b)
+            x2 = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
+            ! selects the approximate (presumably) closer to the root
+            if ( abs(fp(x1)) < abs(fp(x2)) ) then
+                x = x1
+            else
+                x = x2
+            end if
+
+            do while ( n /= maxit .and. abs( fp(x) ) > t )
+                call shift (a, b, x, fp)
+                n = n + 1
+            end do
+
+            call report (n, nm)
+
+            return
+        end function
+
+
+        subroutine shift (lb, ub, x, fp)
+            ! Synopsis:
+            ! As bisector but shifts towards bisection or interpolation
+            ! depending on which yields an approximate closer to the root.
+            real(kind = real64), intent(inout) :: lb, ub
+            real(kind = real64), intent(inout) :: x
+            real(kind = real64) :: x1, x2
+            procedure(fun), pointer :: fp
+
+            if ( fp(lb) * fp(x) < 0.0_real64 ) then
+                ub = x
+            else
+                lb = x
+            end if
+
+            x1 = 0.5_real64 * (lb + ub)
+            x2 = ( lb * fp(ub) - ub * fp(lb) ) / ( fp(ub) - fp(lb) )
+
+            if ( abs(fp(x1)) < abs(fp(x2)) ) then
+                x = x1
+            else
+                x = x2
+            end if
+
             return
         end subroutine
 
