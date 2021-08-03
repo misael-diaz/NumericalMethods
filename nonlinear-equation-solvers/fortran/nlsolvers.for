@@ -61,8 +61,9 @@ module nlsolvers
             integer(kind = int32):: n, maxit            ! count && max iter
             real(kind = real64):: t                     ! tolerance
             type(nls_conf), intent(in), optional :: opts
+            character(len=*), parameter :: nm = "Bisection"
 
-            call bracket_check (lb, ub, fp)
+            call bracket_check (lb, ub, fp, nm)
             call bounds_check  (lb, ub, a, b)
             call optset(t, maxit, opts)
 
@@ -73,7 +74,7 @@ module nlsolvers
                 n = n + 1
             end do
 
-            call report (n)
+            call report (n, nm)
 
             return
         end function
@@ -108,8 +109,9 @@ module nlsolvers
             integer(kind = int32):: n, maxit            ! count && max iter
             real(kind = real64):: t                     ! tolerance
             type(nls_conf), intent(in), optional :: opts
+            character(len=*), parameter :: nm = "Regula Falsi"
 
-            call bracket_check (lb, ub, fp)
+            call bracket_check (lb, ub, fp, nm)
             call bounds_check  (lb, ub, a, b)
             call optset(t, maxit, opts)
 
@@ -120,7 +122,7 @@ module nlsolvers
                 n = n + 1
             end do
 
-            call report (n)
+            call report (n, nm)
 
             return
         end function
@@ -144,10 +146,12 @@ module nlsolvers
         end subroutine
 
 
-        subroutine report(n)
+        subroutine report (n, name)
             integer(kind = int32), intent(in) :: n
+            character(len=*), intent(in) :: name
 
             if (n /= MAX_ITER) then
+                print *, name // " Method: "
                 print *, "solution found in ", n, " iterations"
             else
                 print *, "maximum number of iterations has been " // &
@@ -158,15 +162,16 @@ module nlsolvers
         end subroutine
 
 
-        subroutine bracket_check (lb, ub, fp)
+        subroutine bracket_check (lb, ub, fp, name)
             ! complains if there's no root in given interval [lb, ub].
             real(kind = real64), intent(in) :: lb, ub
             procedure(fun), pointer :: fp
+            character(len=*), intent(in) :: name
             character(len=*), parameter :: errmsg = &
-                & "no root exists in given interval"
+                & "No root exists in given interval"
 
             if ( fp(lb) * fp(ub) > 0.0_real64 ) then
-                error stop errmsg
+                error stop (name // " " // new_line('N') // errmsg)
             end if
 
             return
