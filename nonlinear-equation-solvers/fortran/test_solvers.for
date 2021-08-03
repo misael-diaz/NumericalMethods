@@ -70,7 +70,7 @@ program tests
 
     ! solves for the root of f(x) numerically
     x1 = bisect (lb, ub, fp, opts)      ! Bisection
-    x2 = regfal (lb, ub, fp)            ! Regula Falsi
+    x2 = regfal (lb, ub, fp, opts)      ! Regula Falsi
 
 
     print *, "x: ", x1, x2

@@ -102,14 +102,24 @@ module nlsolvers
         end function
 
 
-        function regfal (lb, ub, fp) result(x)          ! Regula Falsi
+        function regfal (lb, ub, fp, opts) result(x)    ! Regula Falsi
             real(kind = real64), intent(in) :: lb, ub   ! [low, up] bounds
             procedure(fun), pointer :: fp               ! f(x)
             real(kind = real64):: a, b                  ! bounds aliases
             real(kind = real64):: x                     ! root approximate
-            integer(kind = int32):: n                   ! iterations
+            integer(kind = int32):: n, maxit            ! count && max iter
+            real(kind = real64):: t                     ! tolerance
+            type(nls_conf), intent(in), optional :: opts
 
             call bracket_check (lb, ub, fp)
+
+            if ( present(opts) ) then
+                t     = opts % tol
+                maxit = opts % max_iter
+            else
+                t     = TOL
+                maxit = MAX_ITER
+            end if
 
             ! checks bounds
             if (lb < ub) then
@@ -122,7 +132,7 @@ module nlsolvers
 
             n = 1
             x = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
-            do while ( n /= MAX_ITER .and. abs( fp(x) ) > TOL )
+            do while ( n /= maxit .and. abs( fp(x) ) > t )
 
                 ! selects the bracketing interval
                 if ( fp(a) * fp(x) < 0.0_real64 ) then
