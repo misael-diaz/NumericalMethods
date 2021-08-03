@@ -63,16 +63,8 @@ module nlsolvers
             type(nls_conf), intent(in), optional :: opts
 
             call bracket_check (lb, ub, fp)
+            call bounds_check  (lb, ub, a, b)
             call optset(t, maxit, opts)
-
-            ! checks bounds
-            if (lb < ub) then
-                a = lb
-                b = ub
-            else
-                a = ub
-                b = lb
-            end if
 
             n = 1
             x = 0.5_real64 * (a + b)
@@ -105,16 +97,8 @@ module nlsolvers
             type(nls_conf), intent(in), optional :: opts
 
             call bracket_check (lb, ub, fp)
+            call bounds_check  (lb, ub, a, b)
             call optset(t, maxit, opts)
-
-            ! checks bounds
-            if (lb < ub) then
-                a = lb
-                b = ub
-            else
-                a = ub
-                b = lb
-            end if
 
             n = 1
             x = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
@@ -179,6 +163,23 @@ module nlsolvers
             else
                 tolerance = TOL
                 maxiter   = MAX_ITER
+            end if
+
+            return
+        end subroutine
+
+
+        subroutine bounds_check (lb, ub, a, b)
+            ! Synopsis: Ensures the lower bound is less than the upper one.
+            real(kind = real64), intent(in) :: lb, ub
+            real(kind = real64), intent(out) :: a, b
+
+            if (lb < ub) then
+                a = lb
+                b = ub
+            else
+                a = ub
+                b = lb
             end if
 
             return
