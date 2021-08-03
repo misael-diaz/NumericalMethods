@@ -30,9 +30,14 @@ module nlsolvers
     implicit none
     private
 
-    ! constants
+    ! constants (defaults for the tolerance and max number of iterations)
     real(kind = real64), parameter :: TOL = 1.0e-8_real64
     integer(kind = int32), parameter :: MAX_ITER = 100
+
+    type, public :: nls_conf    !! conf[iguration] struct
+        real(kind = real64) :: tol = TOL
+        integer(kind = int32) :: max_iter = MAX_ITER
+    end type
 
     interface
         function fun(x) result(f)
@@ -48,14 +53,24 @@ module nlsolvers
     contains
 
 
-        function bisect (lb, ub, fp) result(x)          ! Bisection
+        function bisect (lb, ub, fp, opts) result(x)    ! Bisection
             real(kind = real64), intent(in) :: lb, ub   ! [low, up] bounds
             procedure(fun), pointer :: fp               ! f(x)
             real(kind = real64):: a, b                  ! bounds aliases
             real(kind = real64):: x                     ! root approximate
-            integer(kind = int32):: n                   ! iterations
+            integer(kind = int32):: n, maxit            ! count && max iter
+            real(kind = real64):: t                     ! tolerance
+            type(nls_conf), intent(in), optional :: opts
 
             call bracket_check (lb, ub, fp)
+
+            if ( present(opts) ) then
+                t     = opts % tol
+                maxit = opts % max_iter
+            else
+                t     = TOL
+                maxit = MAX_ITER
+            end if
 
             ! checks bounds
             if (lb < ub) then
@@ -68,7 +83,7 @@ module nlsolvers
 
             n = 1
             x = 0.5_real64 * (a + b)
-            do while ( n /= MAX_ITER .and. abs( fp(x) ) > TOL )
+            do while ( n /= maxit .and. abs( fp(x) ) > t )
 
                 ! selects the bracketing interval
                 if ( fp(a) * fp(x) < 0.0_real64 ) then

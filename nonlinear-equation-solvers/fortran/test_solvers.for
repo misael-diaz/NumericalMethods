@@ -48,25 +48,29 @@ end module
 
 program tests
     use, intrinsic :: iso_fortran_env, only: real64
-    use nlsolvers, only: bisect, regfal
+    use nlsolvers, only: bisect, regfal, nls_conf
     use objfun, only: fun
     implicit none
+    type(nls_conf) :: opts
     procedure(fun), pointer :: fp => null()
     real(kind = real64) :: lb, ub
     real(kind = real64) :: x1, x2
 
+    ! sets the tolerance and maximum number of iterations of the solver
+    opts % tol      = 1.0e-12_real64
+    opts % max_iter = 256
 
     ! defines the (root) bracketing interval [lb, ub]
-    lb = 2.0e-2_real64
-    ub = 7.0e-2_real64
+    lb = 1.0e-2_real64
+    ub = 9.0e-2_real64
 
 
     fp => fun   !< associates procedure pointer to f(x) >!
 
 
     ! solves for the root of f(x) numerically
-    x1 = bisect (lb, ub, fp)    ! Bisection
-    x2 = regfal (lb, ub, fp)    ! Regula Falsi
+    x1 = bisect (lb, ub, fp, opts)      ! Bisection
+    x2 = regfal (lb, ub, fp)            ! Regula Falsi
 
 
     print *, "x: ", x1, x2
