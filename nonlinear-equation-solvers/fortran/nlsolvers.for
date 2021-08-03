@@ -69,15 +69,7 @@ module nlsolvers
             n = 1
             x = 0.5_real64 * (a + b)
             do while ( n /= maxit .and. abs( fp(x) ) > t )
-
-                ! selects the bracketing interval
-                if ( fp(a) * fp(x) < 0.0_real64 ) then
-                    b = x
-                else
-                    a = x
-                end if
-
-                x = 0.5_real64 * (a + b)
+                call bisector (a, b, x, fp)
                 n = n + 1
             end do
 
@@ -85,6 +77,27 @@ module nlsolvers
 
             return
         end function
+
+
+        subroutine bisector (lb, ub, x, fp)
+            ! Synopsis:
+            ! Bisects the bracketing interval [lb, ub] and returns
+            ! its middle value as an estimate of the root of the
+            ! nonlinear function f(x). As a side-effect the function
+            ! updates the bounds of the bracketing interval.
+            real(kind = real64), intent(inout) :: lb, ub
+            real(kind = real64), intent(inout) :: x
+            procedure(fun), pointer :: fp
+
+            if ( fp(lb) * fp(x) < 0.0_real64 ) then
+                ub = x
+            else
+                lb = x
+            end if
+
+            x = 0.5_real64 * (lb + ub)
+            return
+        end subroutine
 
 
         function regfal (lb, ub, fp, opts) result(x)    ! Regula Falsi
@@ -103,15 +116,7 @@ module nlsolvers
             n = 1
             x = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
             do while ( n /= maxit .and. abs( fp(x) ) > t )
-
-                ! selects the bracketing interval
-                if ( fp(a) * fp(x) < 0.0_real64 ) then
-                    b = x
-                else
-                    a = x
-                end if
-
-                x = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
+                call interp (a, b, x, fp)
                 n = n + 1
             end do
 
@@ -119,6 +124,24 @@ module nlsolvers
 
             return
         end function
+
+
+        subroutine interp (lb, ub, x, fp)
+            ! Synopsis:
+            ! As bisector but estimates the root via linear interpolation.
+            real(kind = real64), intent(inout) :: lb, ub
+            real(kind = real64), intent(inout) :: x
+            procedure(fun), pointer :: fp
+
+            if ( fp(lb) * fp(x) < 0.0_real64 ) then
+                ub = x
+            else
+                lb = x
+            end if
+
+            x = ( lb * fp(ub) - ub * fp(lb) ) / ( fp(ub) - fp(lb) )
+            return
+        end subroutine
 
 
         subroutine report(n)
