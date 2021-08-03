@@ -63,14 +63,7 @@ module nlsolvers
             type(nls_conf), intent(in), optional :: opts
 
             call bracket_check (lb, ub, fp)
-
-            if ( present(opts) ) then
-                t     = opts % tol
-                maxit = opts % max_iter
-            else
-                t     = TOL
-                maxit = MAX_ITER
-            end if
+            call optset(t, maxit, opts)
 
             ! checks bounds
             if (lb < ub) then
@@ -112,14 +105,7 @@ module nlsolvers
             type(nls_conf), intent(in), optional :: opts
 
             call bracket_check (lb, ub, fp)
-
-            if ( present(opts) ) then
-                t     = opts % tol
-                maxit = opts % max_iter
-            else
-                t     = TOL
-                maxit = MAX_ITER
-            end if
+            call optset(t, maxit, opts)
 
             ! checks bounds
             if (lb < ub) then
@@ -174,6 +160,25 @@ module nlsolvers
 
             if ( fp(lb) * fp(ub) > 0.0_real64 ) then
                 error stop errmsg
+            end if
+
+            return
+        end subroutine
+
+
+        subroutine optset (tolerance, maxiter, opts)
+            ! Synopsis:
+            ! Sets the tolerance and maximum number of iterations options.
+            real(kind = real64), intent(out) :: tolerance
+            integer(kind = int32), intent(out) :: maxiter
+            type(nls_conf), intent(in), optional :: opts
+
+            if ( present(opts) ) then
+                tolerance = opts % tol
+                maxiter   = opts % max_iter
+            else
+                tolerance = TOL
+                maxiter   = MAX_ITER
             end if
 
             return
