@@ -30,57 +30,8 @@ from numpy import abs
 
 # sets default values for the tolerance and maximum number of iterations
 TOL, MAX_ITER = (1.0e-8, 100)
-
+# defines options for nonlinear solvers
 nls_opts = {'tol': TOL, 'max_iter': MAX_ITER}
-
-def check_bounds(bounds):
-    """ Synopsis: Fixes bounds if supplied in wrong order. """
-
-    lb, ub = bounds # unpacks lower and upper bounds, respectively
-
-    if (lb > ub):
-        up = lb
-        lb, ub = (ub, up)
-
-    return (lb, ub)
-
-
-def check_bracket(name, bounds, f):
-    """ Synopsis: Complains if there's no root in the given interval. """
-    lb, ub = bounds
-    errMSG = name + ": " + f"No root exist in given interval [{lb}, {ub}]"
-    if ( f(lb) * f(ub) > 0. ):
-        raise RuntimeError(errMSG)
-    return
-
-
-def report(it, name):
-    """ Synopsis: Reports if the method has been successful. """
-    if (it != MAX_ITER):
-        print(name + " Method:")
-        print(f"solution found in {it} iterations")
-    else:
-        print(f"method failed to find the root you may try " +
-              f"a narrower interval")
-    return
-
-
-def optset(**kwargs):
-    """
-    Synopsis:
-    Uses the tolerance and maximum number of iterations options provided
-    by the user if any.
-    """
-    opts = kwargs.get('opts', None)
-
-    if (opts == None):
-        tol      = TOL
-        max_iter = MAX_ITER
-    else:
-        tol = opts['tol']
-        max_iter = opts['max_iter']
-
-    return (tol, max_iter)
 
 
 def bisect(bounds, f, **kwargs):
@@ -138,20 +89,6 @@ def regfal(bounds, f, **kwargs):
     return x
 
 
-def shift(lb, ub, f):
-    """ Synopsis: Returns the approximate closest to the root. """
-
-    x1 = 0.5 * (lb + ub)
-    x2 = ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) )
-
-    if ( abs(f(x1)) < abs(f(x2)) ):
-        x = x1
-    else:
-        x = x2
-
-    return x
-
-
 def shifter(bounds, f, **kwargs):
     """ Synopsis:
     Shifts towards the 'best' approximate of the root of f(x).
@@ -179,6 +116,71 @@ def shifter(bounds, f, **kwargs):
 
     report(n, name)
     return x
+
+
+def shift(lb, ub, f):
+    """ Synopsis: Returns the approximate closest to the root. """
+
+    x1 = 0.5 * (lb + ub)
+    x2 = ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) )
+
+    if ( abs(f(x1)) < abs(f(x2)) ):
+        x = x1
+    else:
+        x = x2
+
+    return x
+
+
+def optset(**kwargs):
+    """
+    Synopsis:
+    Uses the tolerance and maximum number of iterations options provided
+    by the user if any.
+    """
+    opts = kwargs.get('opts', None)
+
+    if (opts == None):
+        tol      = TOL
+        max_iter = MAX_ITER
+    else:
+        tol = opts['tol']
+        max_iter = opts['max_iter']
+
+    return (tol, max_iter)
+
+
+def report(it, name):
+    """ Synopsis: Reports if the method has been successful. """
+    if (it != MAX_ITER):
+        print(name + " Method:")
+        print(f"solution found in {it} iterations")
+    else:
+        print(f"method failed to find the root you may try " +
+              f"a narrower interval")
+    return
+
+
+def check_bracket(name, bounds, f):
+    """ Synopsis: Complains if there's no root in the given interval. """
+    lb, ub = bounds
+    errMSG = name + ": " + f"No root exist in given interval [{lb}, {ub}]"
+    if ( f(lb) * f(ub) > 0. ):
+        raise RuntimeError(errMSG)
+    return
+
+
+def check_bounds(bounds):
+    """ Synopsis: Fixes bounds if supplied in wrong order. """
+
+    lb, ub = bounds # unpacks lower and upper bounds, respectively
+
+    if (lb > ub):
+        up = lb
+        lb, ub = (ub, up)
+
+    return (lb, ub)
+
 
 
 
