@@ -42,17 +42,19 @@ def check_bounds(bounds):
     return (lb, ub)
 
 
-def check_bracket(bounds, f):
+def check_bracket(name, bounds, f):
     """ Synopsis: Complains if there's no root in the given interval. """
     lb, ub = bounds
+    errMSG = name + ": " + f"No root exist in given interval [{lb}, {ub}]"
     if ( f(lb) * f(ub) > 0. ):
-        raise RuntimeError(f"No root exist in given interval [{lb}, {ub}]")
+        raise RuntimeError(errMSG)
     return
 
 
-def report(it):
+def report(it, name):
     """ Synopsis: Reports if the method has been successful. """
     if (it != MAX_ITER):
+        print(name + " Method:")
         print(f"solution found in {it} iterations")
     else:
         print(f"method failed to find the root you may try " + 
@@ -63,7 +65,8 @@ def report(it):
 def bisect(bounds, f):
     """ Synopsis: Possible implementation of the Bisection method. """
 
-    check_bracket(bounds, f)
+    name = "Bisection"
+    check_bracket(name, bounds, f)
     a, b = check_bounds(bounds)
 
 
@@ -80,14 +83,15 @@ def bisect(bounds, f):
         n += 1
 
 
-    report(n)
+    report(n, name)
     return x
 
 
 def regfal(bounds, f):
     """ Synopsis: Possible implementation of the Regula Falsi method. """
 
-    check_bracket(bounds, f)
+    name = "Regula Falsi"
+    check_bracket(name, bounds, f)
     lb, ub = check_bounds(bounds)
 
 
@@ -103,7 +107,7 @@ def regfal(bounds, f):
         n += 1
 
 
-    report(n)
+    report(n, name)
     return x
 
 
