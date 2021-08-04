@@ -27,8 +27,10 @@ References:
 
 from numpy import abs
 
+
 # sets default values for the tolerance and maximum number of iterations
 TOL, MAX_ITER = (1.0e-8, 100)
+
 
 def check_bounds(bounds):
     """ Synopsis: Fixes bounds if supplied in wrong order. """
@@ -116,5 +118,5 @@ def regfal(bounds, f):
 """
 TODO:
     [ ] use user-supplied values for the tolerance and maximum iterations.
-    [ ] raise an exception when the bracketing interval contains no root.
+    [x] raise an exception when the bracketing interval contains no root.
 """
