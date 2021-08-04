@@ -26,8 +26,13 @@ References:
 
 from numpy import sqrt
 from numpy import log10
-from nlsolvers import bisect, regfal
+from nlsolvers import bisect, regfal, nls_opts
 
+# copies nonlinear solver options into a dictionary
+options = nls_opts
+# overrides defaults
+options['tol']      = 1.0e-12
+options['max_iter'] = 256
 
 bounds = (2.0e-2, 7.0e-2)   # bracketing interval [a, b]
 
@@ -39,9 +44,8 @@ f = lambda x: (
 
 
 """ solves for the enclosed root with the specified method """
-x = bisect(bounds, f)   # Bisection
-x = regfal(bounds, f)   # Regula Falsi
-
+x = bisect(bounds, f, opts = options)   # Bisection
+x = regfal(bounds, f, opts = options)   # Regula Falsi
 
 # tests for a non-enclosing interval
 # bounds = (6.0e-2, 7.0e-2)

@@ -31,6 +31,7 @@ from numpy import abs
 # sets default values for the tolerance and maximum number of iterations
 TOL, MAX_ITER = (1.0e-8, 100)
 
+nls_opts = {'tol': TOL, 'max_iter': MAX_ITER}
 
 def check_bounds(bounds):
     """ Synopsis: Fixes bounds if supplied in wrong order. """
@@ -63,9 +64,29 @@ def report(it, name):
               f"a narrower interval")
     return
 
+def optset(**kwargs):
+    """
+    Synopsis:
+    Uses the tolerance and maximum number of iterations options provided
+    by the user if any.
+    """
+    opts = kwargs.get('opts', None)
 
-def bisect(bounds, f):
+    if (opts == None):
+        tol      = TOL
+        max_iter = MAX_ITER
+    else:
+        tol = opts['tol']
+        max_iter = opts['max_iter']
+
+    return (tol, max_iter)
+
+
+def bisect(bounds, f, **kwargs):
     """ Synopsis: Possible implementation of the Bisection method. """
+
+    optional = kwargs.get('opts', None)
+    (tol, max_iter) = optset(opts = optional)
 
     name = "Bisection"
     check_bracket(name, bounds, f)
@@ -73,7 +94,7 @@ def bisect(bounds, f):
 
 
     n, x = (1, (a + b) / 2)
-    while ( n != MAX_ITER and abs( f(x) ) > TOL ):
+    while ( n != max_iter and abs( f(x) ) > tol ):
         
         # updates bracketing interval [a, b]
         if f(a) * f(x) < 0:
@@ -89,8 +110,11 @@ def bisect(bounds, f):
     return x
 
 
-def regfal(bounds, f):
+def regfal(bounds, f, **kwargs):
     """ Synopsis: Possible implementation of the Regula Falsi method. """
+
+    optional = kwargs.get('opts', None)
+    (tol, max_iter) = optset(opts = optional)
 
     name = "Regula Falsi"
     check_bracket(name, bounds, f)
@@ -98,7 +122,7 @@ def regfal(bounds, f):
 
 
     n, x = ( 1, ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) ) )
-    while ( n != MAX_ITER and abs( f(x) ) > TOL ):
+    while ( n != max_iter and abs( f(x) ) > tol ):
         
         if f(lb) * f(x) < 0:
             ub = x
@@ -117,6 +141,6 @@ def regfal(bounds, f):
 
 """
 TODO:
-    [ ] use user-supplied values for the tolerance and maximum iterations.
+    [x] use user-supplied values for the tolerance and maximum iterations.
     [x] raise an exception when the bracketing interval contains no root.
 """
