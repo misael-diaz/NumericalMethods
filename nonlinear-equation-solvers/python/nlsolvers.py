@@ -60,9 +60,10 @@ def report(it, name):
         print(name + " Method:")
         print(f"solution found in {it} iterations")
     else:
-        print(f"method failed to find the root you may try " + 
+        print(f"method failed to find the root you may try " +
               f"a narrower interval")
     return
+
 
 def optset(**kwargs):
     """
@@ -95,13 +96,13 @@ def bisect(bounds, f, **kwargs):
 
     n, x = (1, (a + b) / 2)
     while ( n != max_iter and abs( f(x) ) > tol ):
-        
+
         # updates bracketing interval [a, b]
         if f(a) * f(x) < 0:
             b = x
         else:
             a = x
-            
+
         x = 0.5 * (a + b)
         n += 1
 
@@ -123,12 +124,12 @@ def regfal(bounds, f, **kwargs):
 
     n, x = ( 1, ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) ) )
     while ( n != max_iter and abs( f(x) ) > tol ):
-        
+
         if f(lb) * f(x) < 0:
             ub = x
         else:
             lb = x
-            
+
         x = ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) )
         n += 1
 
@@ -136,6 +137,48 @@ def regfal(bounds, f, **kwargs):
     report(n, name)
     return x
 
+
+def shift(lb, ub, f):
+    """ Synopsis: Returns the approximate closest to the root. """
+
+    x1 = 0.5 * (lb + ub)
+    x2 = ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) )
+
+    if ( abs(f(x1)) < abs(f(x2)) ):
+        x = x1
+    else:
+        x = x2
+
+    return x
+
+
+def shifter(bounds, f, **kwargs):
+    """ Synopsis:
+    Shifts towards the 'best' approximate of the root of f(x).
+    """
+
+    optional = kwargs.get('opts', None)
+    (tol, max_iter) = optset(opts = optional)
+
+    name = "Shifter"
+    check_bracket(name, bounds, f)
+    lb, ub = check_bounds(bounds)
+
+
+    n, x = ( 1, shift(lb, ub, f) )
+    while ( n != max_iter and abs( f(x) ) > tol ):
+
+        if f(lb) * f(x) < 0:
+            ub = x
+        else:
+            lb = x
+
+        x = shift(lb, ub, f)
+        n += 1
+
+
+    report(n, name)
+    return x
 
 
 
