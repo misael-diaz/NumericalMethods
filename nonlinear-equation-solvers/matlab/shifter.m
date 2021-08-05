@@ -25,6 +25,7 @@ function x = shifter(a, b, f, opt)
     % Shifter Method. Finds the root of the function f(x) enclosed by
     % the interval [a, b].
 
+    name = 'Shifter';
     TOL      = 1.0e-8;
     MAX_ITER = 100;
 
@@ -86,7 +87,8 @@ function x = shifter(a, b, f, opt)
         % Synopsis: Complains if there's no root in the given interval.
         if ( f(a) * f(b) > 0 )
             errID  = 'NonlinearSolver:BracketingException';
-            errMSG = 'No roots exists in the given interval [a, b]';
+            errMSG = 'No root exists in the given interval [a, b]';
+            errMSG = [name, ' Method: ', errMSG];
             except = MException(errID, errMSG);
             throw(except);
         end
@@ -96,6 +98,7 @@ function x = shifter(a, b, f, opt)
     function report
         % Synopsis: Reports to the user if the method has been successful.
         if ( n ~= MAX_ITER )
+            fprintf('%s Method:\n', name)
             fprintf('>> Solution found in %d iterations\n', n)
         else
             fprintf('>> maximum number of iterations reached, ')
