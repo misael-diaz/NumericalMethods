@@ -22,4 +22,5 @@ I recommend using the Spyder 3 IDE because it provides a graphical
 user-interface GUI similar to that of MATLAB.
 
 ## MATLAB
-Use the latest available version at your disposal.
+Use the latest available version at your disposal. Codes have been
+executed successfully with the release R2020b.
