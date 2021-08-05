@@ -30,9 +30,14 @@ module nlsolvers
     implicit none
     private
 
-    ! constants
+    ! constants (defaults for the tolerance and max number of iterations)
     real(kind = real64), parameter :: TOL = 1.0e-8_real64
     integer(kind = int32), parameter :: MAX_ITER = 100
+
+    type, public :: nls_conf    !! conf[iguration] struct
+        real(kind = real64) :: tol = TOL
+        integer(kind = int32) :: max_iter = MAX_ITER
+    end type
 
     interface
         function fun(x) result(f)
@@ -45,91 +50,172 @@ module nlsolvers
 
     public :: bisect
     public :: regfal
+    public :: shifter
     contains
 
 
-        function bisect (lb, ub, fp) result(x)          ! Bisection
+        function bisect (lb, ub, fp, opts) result(x)    ! Bisection
             real(kind = real64), intent(in) :: lb, ub   ! [low, up] bounds
             procedure(fun), pointer :: fp               ! f(x)
             real(kind = real64):: a, b                  ! bounds aliases
             real(kind = real64):: x                     ! root approximate
-            integer(kind = int32):: n                   ! iterations
+            integer(kind = int32):: n, maxit            ! count && max iter
+            real(kind = real64):: t                     ! tolerance
+            type(nls_conf), intent(in), optional :: opts
+            character(len=*), parameter :: nm = "Bisection"
 
-            call bracket_check (lb, ub, fp)
-
-            ! checks bounds
-            if (lb < ub) then
-                a = lb
-                b = ub
-            else
-                a = ub
-                b = lb
-            end if
+            call bracket_check (lb, ub, fp, nm)
+            call bounds_check  (lb, ub, a, b)
+            call optset(t, maxit, opts)
 
             n = 1
             x = 0.5_real64 * (a + b)
-            do while ( n /= MAX_ITER .and. abs( fp(x) ) > TOL )
-
-                ! selects the bracketing interval
-                if ( fp(a) * fp(x) < 0.0_real64 ) then
-                    b = x
-                else
-                    a = x
-                end if
-
-                x = 0.5_real64 * (a + b)
+            do while ( n /= maxit .and. abs( fp(x) ) > t )
+                call bisector (a, b, x, fp)
                 n = n + 1
             end do
 
-            call report (n)
+            call report (n, nm)
 
             return
         end function
 
 
-        function regfal (lb, ub, fp) result(x)          ! Regula Falsi
+        subroutine bisector (lb, ub, x, fp)
+            ! Synopsis:
+            ! Bisects the bracketing interval [lb, ub] and returns
+            ! its middle value as an estimate of the root of the
+            ! nonlinear function f(x). As a side-effect the function
+            ! updates the bounds of the bracketing interval.
+            real(kind = real64), intent(inout) :: lb, ub
+            real(kind = real64), intent(inout) :: x
+            procedure(fun), pointer :: fp
+
+            if ( fp(lb) * fp(x) < 0.0_real64 ) then
+                ub = x
+            else
+                lb = x
+            end if
+
+            x = 0.5_real64 * (lb + ub)
+            return
+        end subroutine
+
+
+        function regfal (lb, ub, fp, opts) result(x)    ! Regula Falsi
             real(kind = real64), intent(in) :: lb, ub   ! [low, up] bounds
             procedure(fun), pointer :: fp               ! f(x)
             real(kind = real64):: a, b                  ! bounds aliases
             real(kind = real64):: x                     ! root approximate
-            integer(kind = int32):: n                   ! iterations
+            integer(kind = int32):: n, maxit            ! count && max iter
+            real(kind = real64):: t                     ! tolerance
+            type(nls_conf), intent(in), optional :: opts
+            character(len=*), parameter :: nm = "Regula Falsi"
 
-            call bracket_check (lb, ub, fp)
-
-            ! checks bounds
-            if (lb < ub) then
-                a = lb
-                b = ub
-            else
-                a = ub
-                b = lb
-            end if
+            call bracket_check (lb, ub, fp, nm)
+            call bounds_check  (lb, ub, a, b)
+            call optset(t, maxit, opts)
 
             n = 1
             x = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
-            do while ( n /= MAX_ITER .and. abs( fp(x) ) > TOL )
-
-                ! selects the bracketing interval
-                if ( fp(a) * fp(x) < 0.0_real64 ) then
-                    b = x
-                else
-                    a = x
-                end if
-
-                x = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
+            do while ( n /= maxit .and. abs( fp(x) ) > t )
+                call interp (a, b, x, fp)
                 n = n + 1
             end do
 
-            call report (n)
+            call report (n, nm)
 
             return
         end function
 
 
-        subroutine report(n)
+        subroutine interp (lb, ub, x, fp)
+            ! Synopsis:
+            ! As bisector but estimates the root via linear interpolation.
+            real(kind = real64), intent(inout) :: lb, ub
+            real(kind = real64), intent(inout) :: x
+            procedure(fun), pointer :: fp
+
+            if ( fp(lb) * fp(x) < 0.0_real64 ) then
+                ub = x
+            else
+                lb = x
+            end if
+
+            x = ( lb * fp(ub) - ub * fp(lb) ) / ( fp(ub) - fp(lb) )
+            return
+        end subroutine
+
+
+        function shifter (lb, ub, fp, opts) result(x)   ! Shifter Method
+            real(kind = real64), intent(in) :: lb, ub   ! [low, up] bounds
+            procedure(fun), pointer :: fp               ! f(x)
+            real(kind = real64):: a, b                  ! bounds aliases
+            real(kind = real64):: x1, x2, x             ! root approximates
+            integer(kind = int32):: n, maxit            ! count && max iter
+            real(kind = real64):: t                     ! tolerance
+            type(nls_conf), intent(in), optional :: opts
+            character(len=*), parameter :: nm = "Shifter"
+
+            call bracket_check (lb, ub, fp, nm)
+            call bounds_check  (lb, ub, a, b)
+            call optset(t, maxit, opts)
+
+            n = 1
+            x1 = 0.5_real64 * (a + b)
+            x2 = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
+            ! selects the approximate (presumably) closer to the root
+            if ( abs(fp(x1)) < abs(fp(x2)) ) then
+                x = x1
+            else
+                x = x2
+            end if
+
+            do while ( n /= maxit .and. abs( fp(x) ) > t )
+                call shift (a, b, x, fp)
+                n = n + 1
+            end do
+
+            call report (n, nm)
+
+            return
+        end function
+
+
+        subroutine shift (lb, ub, x, fp)
+            ! Synopsis:
+            ! As bisector but shifts towards bisection or interpolation
+            ! depending on which yields an approximate closer to the root.
+            real(kind = real64), intent(inout) :: lb, ub
+            real(kind = real64), intent(inout) :: x
+            real(kind = real64) :: x1, x2
+            procedure(fun), pointer :: fp
+
+            if ( fp(lb) * fp(x) < 0.0_real64 ) then
+                ub = x
+            else
+                lb = x
+            end if
+
+            x1 = 0.5_real64 * (lb + ub)
+            x2 = ( lb * fp(ub) - ub * fp(lb) ) / ( fp(ub) - fp(lb) )
+
+            if ( abs(fp(x1)) < abs(fp(x2)) ) then
+                x = x1
+            else
+                x = x2
+            end if
+
+            return
+        end subroutine
+
+
+        subroutine report (n, name)
             integer(kind = int32), intent(in) :: n
+            character(len=*), intent(in) :: name
 
             if (n /= MAX_ITER) then
+                print *, name // " Method: "
                 print *, "solution found in ", n, " iterations"
             else
                 print *, "maximum number of iterations has been " // &
@@ -140,15 +226,52 @@ module nlsolvers
         end subroutine
 
 
-        subroutine bracket_check (lb, ub, fp)
+        subroutine bracket_check (lb, ub, fp, name)
             ! complains if there's no root in given interval [lb, ub].
             real(kind = real64), intent(in) :: lb, ub
             procedure(fun), pointer :: fp
+            character(len=*), intent(in) :: name
             character(len=*), parameter :: errmsg = &
-                & "no root exists in given interval"
+                & "No root exists in given interval"
 
             if ( fp(lb) * fp(ub) > 0.0_real64 ) then
-                error stop errmsg
+                error stop (name // " " // new_line('N') // errmsg)
+            end if
+
+            return
+        end subroutine
+
+
+        subroutine optset (tolerance, maxiter, opts)
+            ! Synopsis:
+            ! Sets the tolerance and maximum number of iterations options.
+            real(kind = real64), intent(out) :: tolerance
+            integer(kind = int32), intent(out) :: maxiter
+            type(nls_conf), intent(in), optional :: opts
+
+            if ( present(opts) ) then
+                tolerance = opts % tol
+                maxiter   = opts % max_iter
+            else
+                tolerance = TOL
+                maxiter   = MAX_ITER
+            end if
+
+            return
+        end subroutine
+
+
+        subroutine bounds_check (lb, ub, a, b)
+            ! Synopsis: Ensures the lower bound is less than the upper one.
+            real(kind = real64), intent(in) :: lb, ub
+            real(kind = real64), intent(out) :: a, b
+
+            if (lb < ub) then
+                a = lb
+                b = ub
+            else
+                a = ub
+                b = lb
             end if
 
             return
