@@ -21,82 +21,91 @@
 
 
 function x = shifter(a, b, f, opt)
-%    Synopsis:
-%    Shifter Method. Finds the root of the function f(x) enclosed by
-%    the interval [a, b].
-%
-%    inputs:
-%    a            lower bound
-%    b            upper bound
-%    f            nonlinear function, f(x)
-%
-%    output:
-%    x            approximate value of the root if successful.
+    % Synopsis:
+    % Shifter Method. Finds the root of the function f(x) enclosed by
+    % the interval [a, b].
 
+    TOL      = 1.0e-8;
+    MAX_ITER = 100;
 
-% sets default values for the tolerance and maximum number of iterations
-TOL      = 1.0e-8;
-MAX_ITER = 100;
+    optset
+    check_bounds
+    check_bracket
 
-if ( exist('opt', 'var') )
-    % uses configuration struct if passed
-    TOL      = opt.tol;
-    MAX_ITER = opt.max_iter;
-end
-
-if (a > b)
-    % bounds check
-    up = a;
-    a  = b;
-    b  = up;
-end
-
-
-if ( f(a) * f(b) > 0 )
-    % complains if there's no root in the given interval    
-    errID  = 'NonlinearSolver:BracketingException';
-    errMSG = 'No roots exists in the given interval [a, b]';
-    except = MException(errID, errMSG);
-    throw(except);
-    return
-end
-
-
-n = 1;
-% shifts towards the step (presumably) closest to the root
-x1 = 0.5 * (a + b);
-x2 = ( a * f(b) - b * f(a) ) / ( f(b) - f(a) );
-if ( abs(f(x1)) < abs(f(x2)) )
-    x = x1;
-else
-    x = x2;
-end
-
-while ( n ~= MAX_ITER && abs( f(x) ) > TOL )
+    n = 1;
+    shift
+    while ( n ~= MAX_ITER && abs( f(x) ) > TOL )
 
     % updates the bracketing interval
-    if ( f(a) * f(x) < 0 )
-        b = x;
-    else
-        a = x;
+        if ( f(a) * f(x) < 0 )
+            b = x;
+        else
+            a = x;
+        end
+
+	shift
+        n = n + 1;
     end
 
-    x1 = 0.5 * (a + b);
-    x2 = ( a * f(b) - b * f(a) ) / ( f(b) - f(a) );
-    if ( abs(f(x1)) < abs(f(x2)) )
-        x = x1;
-    else
-        x = x2;
+    report
+    return
+
+
+    %```nested functions:```%
+    function shift
+        % Synopsis: Shifts to the step (presumably) closest to the root.
+        x1 = 0.5 * (a + b);
+        x2 = ( a * f(b) - b * f(a) ) / ( f(b) - f(a) );
+        if ( abs(f(x1)) < abs(f(x2)) )
+            x = x1;
+        else
+            x = x2;
+        end
     end
-    n = n + 1;
+
+    function optset
+        % Synopsis: Uses configuration struct if provided by user.
+        if ( exist('opt', 'var') )
+            TOL      = opt.tol;
+            MAX_ITER = opt.max_iter;
+        end
+    end
+
+
+    function check_bounds
+        % Synopsis: Ensures the lower bound is less than the upper bound.
+        if (a > b)
+            up = a;
+            a  = b;
+            b  = up;
+        end
+    end
+
+
+    function check_bracket
+        % Synopsis: Complains if there's no root in the given interval.
+        if ( f(a) * f(b) > 0 )
+            errID  = 'NonlinearSolver:BracketingException';
+            errMSG = 'No roots exists in the given interval [a, b]';
+            except = MException(errID, errMSG);
+            throw(except);
+        end
+    end
+
+
+    function report
+        % Synopsis: Reports to the user if the method has been successful.
+        if ( n ~= MAX_ITER )
+            fprintf('>> Solution found in %d iterations\n', n)
+        else
+            fprintf('>> maximum number of iterations reached, ')
+            fprintf('try again with a narrower interval\n')
+        end
+    end
+
+
 end
 
 
-if ( n ~= MAX_ITER )
-    fprintf('>> Solution found in %d iterations\n', n)
-else
-    fprintf('>> maximum number of iterations reached, ')
-    fprintf('try again with a narrower interval\n')
-end
-
-return
+% TODO:
+% [x] Add code for user-defined tolerance and maximum number of iterations.

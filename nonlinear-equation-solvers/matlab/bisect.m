@@ -18,75 +18,94 @@
 % [0] A Gilat and V Subramanian, Numerical Methods for Engineers and
 %    Scientists: An Introduction with Applications using MATLAB
 % [1] A Gilat, MATLAB: An Introduction with Applications, 6th edition
-%
+% [2] www.mathworks.com/help/matlab/matlab_prog/nested-functions.html
 
 
 function x = bisect(a, b, f, opt)
-%    Synopsis:
-%    Bisection Method. Finds the root of the function f(x) enclosed by
-%    the interval [a, b].
-%
-%    inputs:
-%    a            lower bound
-%    b            upper bound
-%    f            nonlinear function, f(x)
-%
-%    output:
-%    x            approximate value of the root if successful.
+    % Synopsis:
+    % Bisection Method. Finds the root of the function f(x) enclosed by
+    % the interval [a, b].
+    %
+    % inputs:
+    % a            lower bound
+    % b            upper bound
+    % f            nonlinear function, f(x)
+    % opt          optional, configuration struct {tolerance, max_iters}
+    %
+    % output:
+    % x            approximate value of the root if successful.
 
 
-% sets default values for the tolerance and maximum number of iterations
-TOL      = 1.0e-8;
-MAX_ITER = 100;
+    % sets default values for the tolerance and max number of iterations
+    TOL      = 1.0e-8;
+    MAX_ITER = 100;
 
-if ( exist('opt', 'var') )
-    % uses configuration struct if passed
-    TOL      = opt.tol;
-    MAX_ITER = opt.max_iter;
-end
+    optset
+    check_bounds
+    check_bracket
 
-if (a > b)
-    % bounds check
-    up = a;
-    a  = b;
-    b  = up;
-end
+    n = 1;
+    x = 0.5 * (a + b);
+    while ( n ~= MAX_ITER && abs( f(x) ) > TOL )
 
+        % updates the bracketing interval
+        if ( f(a) * f(x) < 0 )
+            b = x;
+        else
+            a = x;
+        end
 
-if ( f(a) * f(b) > 0 )
-    % complains if there's no root in the given interval
-    errID  = 'NonlinearSolver:BracketingException';
-    errMSG = 'No roots exists in the given interval [a, b]';
-    except = MException(errID, errMSG);
-    throw(except);
-    return
-end
-
-
-n = 1;
-x = 0.5 * (a + b);
-while ( n ~= MAX_ITER && abs( f(x) ) > TOL )
-
-    % updates the bracketing interval
-    if ( f(a) * f(x) < 0 )
-        b = x;
-    else
-        a = x;
+        x = 0.5 * (a + b);
+        n = n + 1;
     end
 
-    x = 0.5 * (a + b);
-    n = n + 1;
+    report
+    return
+
+
+    %```nested functions:```%
+    function optset
+        % Synopsis: Uses configuration struct if provided by user.
+        if ( exist('opt', 'var') )
+            TOL      = opt.tol;
+            MAX_ITER = opt.max_iter;
+        end
+    end
+
+
+    function check_bounds
+        % Synopsis: Ensures the lower bound is less than the upper bound.
+        if (a > b)
+            up = a;
+            a  = b;
+            b  = up;
+        end
+    end
+
+
+    function check_bracket
+        % Synopsis: Complains if there's no root in the given interval.
+        if ( f(a) * f(b) > 0 )
+            errID  = 'NonlinearSolver:BracketingException';
+            errMSG = 'No roots exists in the given interval [a, b]';
+            except = MException(errID, errMSG);
+            throw(except);
+        end
+    end
+
+
+    function report
+        % Synopsis: Reports to the user if the method has been successful.
+        if ( n ~= MAX_ITER )
+            fprintf('>> Solution found in %d iterations\n', n)
+        else
+            fprintf('>> maximum number of iterations reached, ')
+            fprintf('try again with a narrower interval\n')
+        end
+    end
+
+
 end
-
-
-if ( n ~= MAX_ITER )
-    fprintf('>> Solution found in %d iterations\n', n)
-else
-    fprintf('>> maximum number of iterations reached, ')
-    fprintf('try again with a narrower interval\n')
-end
-
-return
 
 
 % TODO:
