@@ -37,20 +37,20 @@ from matplotlib import pyplot as plt
 
 
 # defines the right-hand side RHS of the ODE: dy/dt = f(t, y) as a lambda
-k = 1
+k = 1.0
 f = lambda t, y: (-k * y)
 
 
-n = 255             # number of integration time-steps
-ti, tf = (0., 5.)   # initial time ti and final time tf
-trange = (ti, tf)   # time range tuple
-yi     = 1.0        # initial value: yi = y(t = ti)
-odesol = np.empty([2, n+1, 2])
+n = 255                         # number of integration time-steps
+ti, tf = (0., 5.)               # initial time ti and final time tf
+trange = (ti, tf)               # time range tuple
+yi     = 1.0                    # initial value: yi = y(t = ti)
+odesol = np.empty([2, n+1, 2])  # preallocates array for speed
 
 
 """ solves the ODE with Euler's and second-order Runge-Kutta Methods """
 odesol[:, :, 0] = Euler(n, trange, yi, f)
-odesol[:, :, 1] = RK2(n, trange, yi, f)
+odesol[:, :, 1] = RK2  (n, trange, yi, f)
 # unpacks the numerical solutions
 t, y_Euler, y_RK2 = (odesol[0, :, 0], odesol[1, :, 0], odesol[1, :, 1])
 y = np.exp(-k * t)  # analytic solution
@@ -61,16 +61,16 @@ plt.close("all")            # closes all existing figures
 plt.ion()                   # enables interactive plotting
 fig, ax = plt.subplots()    # effectively plots on the same figure
 
-ax.plot(t, y, color="black", linewidth=2.0, label='analytic')
-ax.plot(t[::8], y_Euler[::8], color="orange", marker="o", linestyle="", 
-                              label="Euler's Method")
-ax.plot(t[::16], y_RK2[::16], color="red",  marker="s", linestyle="", 
-                              label="second-order RK Method")
+ax.plot(t, y, color="black", linewidth=2.0, label="analytic solution")
+ax.plot(t[::8], y_Euler[::8], color="orange", marker="o", linestyle="",
+        label="Euler's Method")
+ax.plot(t[::16], y_RK2[::16], color="red",    marker="s", linestyle="",
+        label="second-order Runge-Kutta Method")
 
 ax.grid()                   # shows grid
 ax.legend()                 # displays the legend
-ax.set_xlabel("t")
-ax.set_ylabel("y(t) = exp(-kt)")
+ax.set_xlabel("time, t")
+ax.set_ylabel("dynamic response, y(t) = exp(-kt)")
 ax.set_title("Natural Response of a First Order Dynamic System")
 
 # exports figure as a Portable Network Graphic PNG with 300 DPI resolution
