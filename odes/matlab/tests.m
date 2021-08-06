@@ -20,7 +20,7 @@
 % References:
 % [0] A Gilat and V Subramanian, Numerical Methods for Engineers and
 %     Scientists: An Introduction with Applications using MATLAB
-% [1] TO ADD
+% [1] A Gilat, MATLAB: An Introduction with Applications, 6th edition
 
 clear
 close all
@@ -31,11 +31,11 @@ k = 1;
 f = @(t, y) (-k * y);
 
 
-n = 255;             % number of integration time-steps
-ti = 0.0; tf = 5.0;  % initial time ti and final time tf
-trange = [ti, tf];   % time range tuple
-yi     = 1.0;        % initial value: yi = y(t = ti)
-odesol = zeros([n + 1, 2, 2]);
+n = 255;             		% number of integration time-steps
+ti = 0.0; tf = 5.0;  		% initial time ti and final time tf
+trange = [ti, tf];   		% time range array
+yi     = 1.0;        		% initial value: yi = y(t = ti)
+odesol = zeros([n + 1, 2, 2]);	% preallocates array for speed
 
 
 % solves the ODE with Euler's and second-order Runge-Kutta Methods
