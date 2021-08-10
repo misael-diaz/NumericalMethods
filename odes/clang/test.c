@@ -54,8 +54,8 @@ int main() {
 
 	// exports numerical solutions to data files
 	char filename[] = "output/Euler.dat" ;
-	strcpy (filename, "output/EuRK2.dat") ;
 	write  (filename, numel, odesol[0]) ;
+	strcpy (filename, "output/EuRK2.dat") ;
 	write  (filename, numel, odesol[1]) ;
 //	write  (filename, numel, oderet) ;	// alternate way of writing
 
@@ -84,6 +84,13 @@ void write (char filename[], const int numel, double **odesol) {
 
 	FILE *pFile = NULL ;
 	pFile = fopen(filename, "w") ;
+
+	if (pFile == NULL) {
+		fprintf(stderr, "I/O Error: %s\n", filename) ;
+		fprintf(stderr, "aborting execution ... \n") ;
+		exit(EXIT_FAILURE) ;
+	}
+
 	for (int i = 0 ; i != numel ; ++i)
 		fprintf(pFile, "%23.15e \t %23.15e \n", t[i], y[i]) ;
 	fclose(pFile) ;
