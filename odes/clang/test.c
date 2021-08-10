@@ -30,8 +30,12 @@
 #include <string.h>
 #include "odes.h"
 
+#define RATE 1.0
+#define absval(x) ( (x < 0.)? -x: x )
+
 // prototypes
 double f (double, double) ;	/* ODE RHS Function f(t, y) */
+double fsol (double t) ;	// analytic solution
 void display (const int, double**) ;
 void write   (char*, const int, double**) ;
 
@@ -74,8 +78,15 @@ int main() {
 // implementations
 double f (double t, double y) {
 	// ODE function is the expression at the right-hand side of the ODE
-	double k = 1.0 ;
+	double k = RATE ;
 	return  (-k * y) ;
+}
+
+
+double fsol (double t) {
+	// analytic solution
+	double k = RATE ;
+	return exp(-k * t) ;
 }
 
 
@@ -100,12 +111,17 @@ void write (char filename[], const int numel, double **odesol) {
 
 
 void display (const int numel, double **odesol) {
-	// writes the numerical solution to stdout
+	// displays the numerical solution to stdout
+
+	double err ;			// absolute error
 	double *t = odesol[0] ;
 	double *y = odesol[1] ;
 
-	for (int i = 0 ; i != numel ; ++i)
-		fprintf(stdout, "%23.15e \t %23.15e \n", t[i], y[i]) ;
+	for (int i = 0 ; i != numel ; ++i) {
+		err = absval( y[i] - fsol(t[i]) ) ;
+		fprintf(stdout, "%23.15e \t %23.15e \t %23.15e \n",
+			t[i], y[i], err) ;
+	}
 }
 
 
