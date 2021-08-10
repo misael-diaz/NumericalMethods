@@ -1,0 +1,39 @@
+#
+# source: make-inc
+# author: misael-diaz
+# date:   2021/07/20
+#
+# Synopsis:
+# Defines the include file for building the program with GNU make.
+#
+# Copyright (c) 2021 Misael Diaz-Maldonado
+#
+# This file is released under the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# clang compiler
+CC = gcc
+
+# options
+CCOPT = -g -Wall -O0
+
+# libraries
+LIBS = -lm
+
+
+# sources
+NUM_INTEGRATION_SRC = odes.c
+TEST_NUMINT_SRC     = test.c
+
+
+# objects
+NUM_INTEGRATION_OBJ = odes.o
+TEST_NUMINT_OBJ     = test.o
+OBJECTS = $(NUM_INTEGRATION_OBJ) $(TEST_NUMINT_OBJ)
+
+
+# executables
+TEST_NUMINT_EXE = test-odes
+TESTS = $(TEST_NUMINT_EXE)
