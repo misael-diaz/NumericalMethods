@@ -32,7 +32,8 @@
 
 // prototypes
 double f (double, double) ;	/* ODE RHS Function f(t, y) */
-void write (char filename[], const int numel, double **odesol) ;
+void display (const int, double**) ;
+void write   (char*, const int, double**) ;
 
 int main() {
 	// Solves an ODE using Euler's and Runge-Kutta Methods.
@@ -59,6 +60,7 @@ int main() {
 	write  (filename, numel, odesol[1]) ;
 //	write  (filename, numel, oderet) ;	// alternate way of writing
 
+	display (numel, oderet) ;
 
 	// frees memory buffers
 	free (odesol[0][0]) ;
@@ -94,6 +96,16 @@ void write (char filename[], const int numel, double **odesol) {
 	for (int i = 0 ; i != numel ; ++i)
 		fprintf(pFile, "%23.15e \t %23.15e \n", t[i], y[i]) ;
 	fclose(pFile) ;
+}
+
+
+void display (const int numel, double **odesol) {
+	// writes the numerical solution to stdout
+	double *t = odesol[0] ;
+	double *y = odesol[1] ;
+
+	for (int i = 0 ; i != numel ; ++i)
+		fprintf(stdout, "%23.15e \t %23.15e \n", t[i], y[i]) ;
 }
 
 
