@@ -22,6 +22,8 @@
  *     Scientists, 3rd edition.
  * [1] A Koenig and B Moo, Accelerated C++ Practical Programming by
  *     Example.
+ * [2] www.cplusplus.com/reference/tuple/tuple
+ * [3] www.geeksforgeeks.org/tuples-in-c/
  *
  */
 
