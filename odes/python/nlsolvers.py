@@ -59,7 +59,7 @@ def bisect(bounds, f, **kwargs):
 
 
     report(max_iter, n, name, verbose)
-    return x
+    return (x, n)
 
 
 def regfal(bounds, f, **kwargs):
@@ -86,7 +86,7 @@ def regfal(bounds, f, **kwargs):
 
 
     report(max_iter, n, name, verbose)
-    return x
+    return (x, n)
 
 
 def shifter(bounds, f, **kwargs):
@@ -115,7 +115,7 @@ def shifter(bounds, f, **kwargs):
 
 
     report(max_iter, n, name, verbose)
-    return x
+    return (x, n)
 
 
 def shift(lb, ub, f):
