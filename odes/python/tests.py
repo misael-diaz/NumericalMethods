@@ -28,7 +28,7 @@ References:
 """
 
 
-from ode import Euler
+from ode import iEuler
 from ode import EulerRK2 as RK2
 import numpy as np
 import matplotlib as mpl
@@ -49,8 +49,8 @@ odesol = np.empty([2, n+1, 2])  # preallocates array for speed
 
 
 """ solves the ODE with Euler's and second-order Runge-Kutta Methods """
-odesol[:, :, 0] = Euler(n, trange, yi, f)
-odesol[:, :, 1] = RK2  (n, trange, yi, f)
+odesol[:, :, 0] = iEuler(n, trange, yi, f)
+odesol[:, :, 1] = RK2   (n, trange, yi, f)
 # unpacks the numerical solutions
 t, y_Euler, y_RK2 = (odesol[0, :, 0], odesol[1, :, 0], odesol[1, :, 1])
 y = np.exp(-k * t)  # analytic solution
@@ -63,7 +63,7 @@ fig, ax = plt.subplots()    # effectively plots on the same figure
 
 ax.plot(t, y, color="black", linewidth=2.0, label="analytic solution")
 ax.plot(t[::8], y_Euler[::8], color="orange", marker="o", linestyle="",
-        label="Euler's Method")
+        label="implicit Euler's Method")
 ax.plot(t[::16], y_RK2[::16], color="red",    marker="s", linestyle="",
         label="second-order Runge-Kutta Method")
 
