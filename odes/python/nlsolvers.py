@@ -31,7 +31,7 @@ from numpy import abs
 # sets default values for the tolerance and maximum number of iterations
 TOL, MAX_ITER = (1.0e-12, 256)
 # defines default options for nonlinear solvers
-nls_opts = {'tol': TOL, 'max_iter': MAX_ITER, 'verbose': True}
+nls_opts = {'tol': TOL, 'max_iter': MAX_ITER, 'verbose': False}
 
 
 def bisect(bounds, f, **kwargs):
