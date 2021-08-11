@@ -143,7 +143,7 @@ def optset(**kwargs):
     if (opts == None):
         tol      = TOL
         max_iter = MAX_ITER
-        verbose  = True
+        verbose  = False
     else:
         tol = opts['tol']
         max_iter = max(1, opts['max_iter'])
