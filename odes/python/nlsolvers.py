@@ -30,15 +30,15 @@ from numpy import abs
 
 # sets default values for the tolerance and maximum number of iterations
 TOL, MAX_ITER = (1.0e-12, 256)
-# defines options for nonlinear solvers
-nls_opts = {'tol': TOL, 'max_iter': MAX_ITER}
+# defines default options for nonlinear solvers
+nls_opts = {'tol': TOL, 'max_iter': MAX_ITER, 'verbose': True}
 
 
 def bisect(bounds, f, **kwargs):
     """ Synopsis: Possible implementation of the Bisection method. """
 
     optional = kwargs.get('opts', None)
-    (tol, max_iter) = optset(opts = optional)
+    (tol, max_iter, verbose) = optset(opts = optional)
 
     name = "Bisection"
     check_bracket(name, bounds, f)
@@ -58,7 +58,7 @@ def bisect(bounds, f, **kwargs):
         n += 1
 
 
-    report(n, name)
+    report(max_iter, n, name, verbose)
     return x
 
 
@@ -66,7 +66,7 @@ def regfal(bounds, f, **kwargs):
     """ Synopsis: Possible implementation of the Regula Falsi method. """
 
     optional = kwargs.get('opts', None)
-    (tol, max_iter) = optset(opts = optional)
+    (tol, max_iter, verbose) = optset(opts = optional)
 
     name = "Regula Falsi"
     check_bracket(name, bounds, f)
@@ -85,7 +85,7 @@ def regfal(bounds, f, **kwargs):
         n += 1
 
 
-    report(n, name)
+    report(max_iter, n, name, verbose)
     return x
 
 
@@ -95,7 +95,7 @@ def shifter(bounds, f, **kwargs):
     """
 
     optional = kwargs.get('opts', None)
-    (tol, max_iter) = optset(opts = optional)
+    (tol, max_iter, verbose) = optset(opts = optional)
 
     name = "Shifter"
     check_bracket(name, bounds, f)
@@ -114,7 +114,7 @@ def shifter(bounds, f, **kwargs):
         n += 1
 
 
-    report(n, name)
+    report(max_iter, n, name, verbose)
     return x
 
 
@@ -143,21 +143,24 @@ def optset(**kwargs):
     if (opts == None):
         tol      = TOL
         max_iter = MAX_ITER
+        verbose  = True
     else:
         tol = opts['tol']
-        max_iter = opts['max_iter']
+        max_iter = max(1, opts['max_iter'])
+        verbose  = opts['verbose']
 
-    return (tol, max_iter)
+    return (tol, max_iter, verbose)
 
 
-def report(it, name):
+def report(max_iter, it, name, verbose):
     """ Synopsis: Reports if the method has been successful. """
-    if (it != MAX_ITER):
-        print(name + " Method:")
-        print(f"solution found in {it} iterations")
+    if (it != max_iter):
+        if (verbose):
+            print(name + " Method:")
+            print(f"solution found in {it} iterations")
     else:
-        print(f"method failed to find the root you may try " +
-              f"a narrower interval")
+        errMSG = (name + " " + "requires more iterations for convergence")
+        raise RuntimeError(errMSG)
     return
 
 
