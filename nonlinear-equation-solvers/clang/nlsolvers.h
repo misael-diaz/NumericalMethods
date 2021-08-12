@@ -25,16 +25,19 @@
  *
  */
 
+#include <stdbool.h>
 // Math MACROS
 #define absval(x) ((x < 0.)? -x: x)
 
 // constants (defaults)
 #define MAX_ITER 100
 #define TOL 1.0e-8
+#define VERBOSE false
 
 typedef struct {
 	double tol ;	// tolerance
 	int max_iter ;	// maximum number of iterations
+	bool verbose ;
 } nls_conf ;		// nonlinear-solver configuration struct
 
 typedef struct {
@@ -45,14 +48,14 @@ typedef struct {
 // declarations (prototypes):
 
 // shadow functions (handle initialization of optional arguments)
-double bisect_varg (double, double, double f(const double), opt_args) ;
-double regfal_varg (double, double, double f(const double), opt_args) ;
-double shifter_varg(double, double, double f(const double), opt_args) ;
+double bisect_varg (double, double, double f(double), opt_args) ;
+double regfal_varg (double, double, double f(double), opt_args) ;
+double shifter_varg(double, double, double f(double), opt_args) ;
 
 // base functions (where the respective method is actually implemented)
-double bisect_base (double, double, double f(const double), double, int) ;
-double regfal_base (double, double, double f(const double), double, int) ;
-double shifter_base(double, double, double f(const double), double, int) ;
+double bisect_base (double, double, double f(double), double, int, bool) ;
+double regfal_base (double, double, double f(double), double, int, bool) ;
+double shifter_base(double, double, double f(double), double, int, bool) ;
 
 // wrapper MACROS
 #define bisect(lb, ub, f, ...)\
@@ -63,13 +66,13 @@ double shifter_base(double, double, double f(const double), double, int) ;
 	shifter_varg(lb, ub, f, (opt_args){__VA_ARGS__})
 
 // bracketing approach
-double bisector ( double*, double*, double*, double f(const double) ) ;
-double interp   ( double*, double*, double*, double f(const double) ) ;
-double shift    ( double*, double*, double*, double f(const double) ) ;
+double bisector ( double*, double*, double*, double f(double) ) ;
+double interp   ( double*, double*, double*, double f(double) ) ;
+double shift    ( double*, double*, double*, double f(double) ) ;
 
 // utility functions
-void report        ( const int max_iter, const int n, char nm[] ) ;
-void check_bracket ( double, double, double f(const double), char nm[] ) ;
+void report        ( int, int, char*, bool ) ;
+void check_bracket ( double, double, double f(double), char nm[] ) ;
 void check_bounds  ( double*, double* ) ;
 #endif
 
