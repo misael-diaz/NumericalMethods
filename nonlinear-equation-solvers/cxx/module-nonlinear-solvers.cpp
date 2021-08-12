@@ -40,10 +40,18 @@ export namespace nlsolver {
 
 	struct config {	// config[uration] struct
 		config(): tol(TOL), max_iter(MAX_ITER), verbose(VERBOSE) {}
-		config(double t): tol(t), max_iter(MAX_ITER),
+		config(double t): tol(t),   max_iter(MAX_ITER),
 	                          verbose(VERBOSE) {}
-		config(double t, int i): tol(t), max_iter(i),
-	                                 verbose(VERBOSE) {}
+		config(int    i): tol(TOL), max_iter(i),
+	                          verbose(VERBOSE) {}
+		config(bool   v): tol(TOL), max_iter(MAX_ITER),
+	                          verbose(v) {}
+		config(double t, int  i): tol(t), max_iter(i),
+	                                  verbose(VERBOSE) {}
+		config(double t, bool v): tol(t), max_iter(MAX_ITER),
+	                                  verbose(v) {}
+		config(int    i, bool v): tol(TOL), max_iter(i),
+	                                  verbose(v) {}
 		config(double t, int i, bool v): tol(t), max_iter(i),
 	                                         verbose(v) {}
 		double tol ;
