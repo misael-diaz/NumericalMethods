@@ -58,7 +58,7 @@ def bisect(bounds, f, **kwargs):
         n += 1
 
 
-    report(n, name)
+    report(max_iter, n, name)
     return x
 
 
@@ -85,7 +85,7 @@ def regfal(bounds, f, **kwargs):
         n += 1
 
 
-    report(n, name)
+    report(max_iter, n, name)
     return x
 
 
@@ -114,7 +114,7 @@ def shifter(bounds, f, **kwargs):
         n += 1
 
 
-    report(n, name)
+    report(max_iter, n, name)
     return x
 
 
@@ -150,9 +150,9 @@ def optset(**kwargs):
     return (tol, max_iter)
 
 
-def report(it, name):
+def report(max_iter, it, name):
     """ Synopsis: Reports if the method has been successful. """
-    if (it != MAX_ITER):
+    if (it != max_iter):
         print(name + " Method:")
         print(f"solution found in {it} iterations")
     else:
