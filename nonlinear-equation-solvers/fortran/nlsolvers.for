@@ -33,10 +33,12 @@ module nlsolvers
     ! constants (defaults for the tolerance and max number of iterations)
     real(kind = real64), parameter :: TOL = 1.0e-8_real64
     integer(kind = int32), parameter :: MAX_ITER = 100
+    logical(kind = int32), parameter :: VERBOSE  = .false.
 
     type, public :: nls_conf    !! conf[iguration] struct
         real(kind = real64) :: tol = TOL
         integer(kind = int32) :: max_iter = MAX_ITER
+        logical(kind = int32) :: verbose  = VERBOSE
     end type
 
     interface
@@ -59,23 +61,23 @@ module nlsolvers
             procedure(fun), pointer :: fp               ! f(x)
             real(kind = real64):: a, b                  ! bounds aliases
             real(kind = real64):: x                     ! root approximate
-            integer(kind = int32):: n, maxit            ! count && max iter
-            real(kind = real64):: t                     ! tolerance
+            integer(kind = int32):: n                   ! count
+            type(nls_conf) :: conf
             type(nls_conf), intent(in), optional :: opts
             character(len=*), parameter :: nm = "Bisection"
 
             call bracket_check (lb, ub, fp, nm)
             call bounds_check  (lb, ub, a, b)
-            call optset(t, maxit, opts)
+            call optset(conf, opts)
 
             n = 1
             x = 0.5_real64 * (a + b)
-            do while ( n /= maxit .and. abs( fp(x) ) > t )
+            do while (n /= conf % max_iter .and. abs( fp(x) ) > conf % tol)
                 call bisector (a, b, x, fp)
                 n = n + 1
             end do
 
-            call report (maxit, n, nm)
+            call report (n, nm, conf)
 
             return
         end function
@@ -103,27 +105,27 @@ module nlsolvers
 
 
         function regfal (lb, ub, fp, opts) result(x)    ! Regula Falsi
-            real(kind = real64), intent(in) :: lb, ub   ! [low, up] bounds
-            procedure(fun), pointer :: fp               ! f(x)
-            real(kind = real64):: a, b                  ! bounds aliases
-            real(kind = real64):: x                     ! root approximate
-            integer(kind = int32):: n, maxit            ! count && max iter
-            real(kind = real64):: t                     ! tolerance
+            real(kind = real64), intent(in) :: lb, ub
+            procedure(fun), pointer :: fp
+            real(kind = real64):: a, b
+            real(kind = real64):: x
+            integer(kind = int32):: n
+            type(nls_conf) :: conf
             type(nls_conf), intent(in), optional :: opts
             character(len=*), parameter :: nm = "Regula Falsi"
 
             call bracket_check (lb, ub, fp, nm)
             call bounds_check  (lb, ub, a, b)
-            call optset(t, maxit, opts)
+            call optset(conf, opts)
 
             n = 1
             x = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
-            do while ( n /= maxit .and. abs( fp(x) ) > t )
+            do while (n /= conf % max_iter .and. abs( fp(x) ) > conf % tol)
                 call interp (a, b, x, fp)
                 n = n + 1
             end do
 
-            call report (maxit, n, nm)
+            call report (n, nm, conf)
 
             return
         end function
@@ -148,18 +150,18 @@ module nlsolvers
 
 
         function shifter (lb, ub, fp, opts) result(x)   ! Shifter Method
-            real(kind = real64), intent(in) :: lb, ub   ! [low, up] bounds
-            procedure(fun), pointer :: fp               ! f(x)
-            real(kind = real64):: a, b                  ! bounds aliases
-            real(kind = real64):: x1, x2, x             ! root approximates
-            integer(kind = int32):: n, maxit            ! count && max iter
-            real(kind = real64):: t                     ! tolerance
+            real(kind = real64), intent(in) :: lb, ub
+            procedure(fun), pointer :: fp
+            real(kind = real64):: a, b
+            real(kind = real64):: x1, x2, x
+            integer(kind = int32):: n
+            type(nls_conf) :: conf
             type(nls_conf), intent(in), optional :: opts
             character(len=*), parameter :: nm = "Shifter"
 
             call bracket_check (lb, ub, fp, nm)
             call bounds_check  (lb, ub, a, b)
-            call optset(t, maxit, opts)
+            call optset(conf, opts)
 
             n = 1
             x1 = 0.5_real64 * (a + b)
@@ -171,12 +173,12 @@ module nlsolvers
                 x = x2
             end if
 
-            do while ( n /= maxit .and. abs( fp(x) ) > t )
+            do while (n /= conf % max_iter .and. abs( fp(x) ) > conf % tol)
                 call shift (a, b, x, fp)
                 n = n + 1
             end do
 
-            call report (maxit, n, nm)
+            call report (n, nm, conf)
 
             return
         end function
@@ -210,16 +212,18 @@ module nlsolvers
         end subroutine
 
 
-        subroutine report (maxit, n, name)
-            integer(kind = int32), intent(in) :: maxit
+        subroutine report (n, name, conf)
+            type(nls_conf), intent(in) :: conf
             integer(kind = int32), intent(in) :: n
             character(len=*), intent(in) :: name
             character(len=*), parameter :: errmsg = &
                 & "method needs more iterations for convergence"
 
-            if (n /= maxit) then
-                print *, name // " Method: "
-                print *, "solution found in ", n, " iterations"
+            if (n /= conf % max_iter) then
+                if (conf % verbose) then
+                    print *, name // " Method: "
+                    print *, "solution found in ", n, " iterations"
+                end if
             else
                 error stop (name // " " // errmsg)
             end if
@@ -244,19 +248,20 @@ module nlsolvers
         end subroutine
 
 
-        subroutine optset (tolerance, maxiter, opts)
+        subroutine optset (conf, opts)
             ! Synopsis:
-            ! Sets the tolerance and maximum number of iterations options.
-            real(kind = real64), intent(out) :: tolerance
-            integer(kind = int32), intent(out) :: maxiter
+            ! Sets the solver conf[iguration] options.
             type(nls_conf), intent(in), optional :: opts
+            type(nls_conf), intent(out) :: conf
 
             if ( present(opts) ) then
-                tolerance = opts % tol
-                maxiter   = opts % max_iter
+                conf % tol      = opts % tol
+                conf % max_iter = opts % max_iter
+                conf % verbose  = opts % verbose
             else
-                tolerance = TOL
-                maxiter   = MAX_ITER
+                conf % tol      = TOL
+                conf % max_iter = MAX_ITER
+                conf % verbose  = VERBOSE
             end if
 
             return

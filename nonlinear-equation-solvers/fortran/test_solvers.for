@@ -59,6 +59,7 @@ program tests
     ! sets the tolerance and maximum number of iterations of the solver
     opts % tol      = 1.0e-12_real64
     opts % max_iter = 256
+    opts % verbose  = .false.
 
     ! defines the (root) bracketing interval [lb, ub]
     lb = 1.0e-2_real64
