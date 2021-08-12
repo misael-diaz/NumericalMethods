@@ -75,7 +75,7 @@ module nlsolvers
                 n = n + 1
             end do
 
-            call report (n, nm)
+            call report (maxit, n, nm)
 
             return
         end function
@@ -123,7 +123,7 @@ module nlsolvers
                 n = n + 1
             end do
 
-            call report (n, nm)
+            call report (maxit, n, nm)
 
             return
         end function
@@ -176,7 +176,7 @@ module nlsolvers
                 n = n + 1
             end do
 
-            call report (n, nm)
+            call report (maxit, n, nm)
 
             return
         end function
@@ -210,11 +210,12 @@ module nlsolvers
         end subroutine
 
 
-        subroutine report (n, name)
+        subroutine report (maxit, n, name)
+            integer(kind = int32), intent(in) :: maxit
             integer(kind = int32), intent(in) :: n
             character(len=*), intent(in) :: name
 
-            if (n /= MAX_ITER) then
+            if (n /= maxit) then
                 print *, name // " Method: "
                 print *, "solution found in ", n, " iterations"
             else
