@@ -45,7 +45,8 @@ using nlsolver::shifter ;
 int main() {
 	// Solves for the positive root of the nonlinear function f(x)
 	
-	config opt{1.0e-12, 256} ;	// tolerance and max num iterations
+	// tolerance, maximum number of iterations, and verbosity
+	config opt{1.0e-12, 256, false} ;
 	
 	auto f = [](const double& x) -> double {
 	    return ( 1.0 / sqrt(x) + 2.0 * log10(0.024651/3.7 +
