@@ -28,6 +28,7 @@ function x = shifter(a, b, f, opt)
     name = 'Shifter';
     TOL      = 1.0e-8;
     MAX_ITER = 100;
+    VERBOSE  = 0;
 
     optset
     check_bounds
@@ -67,8 +68,17 @@ function x = shifter(a, b, f, opt)
     function optset
         % Synopsis: Uses configuration struct if provided by user.
         if ( exist('opt', 'var') )
-            TOL      = opt.tol;
-            MAX_ITER = opt.max_iter;
+	    if ( isfield(opt, 'tol') )
+                TOL      = opt.tol;
+	    end
+
+	    if ( isfield(opt, 'max_iter') )
+                MAX_ITER = opt.max_iter;
+	    end
+
+	    if ( isfield(opt, 'verbose') )
+	        VERBOSE  = opt.verbose;
+	    end
         end
     end
 
@@ -98,8 +108,10 @@ function x = shifter(a, b, f, opt)
     function report
         % Synopsis: Reports to the user if the method has been successful.
         if ( n ~= MAX_ITER )
-            fprintf('%s Method:\n', name)
-            fprintf('>> Solution found in %d iterations\n', n)
+	    if (VERBOSE)
+                fprintf('%s Method:\n', name)
+                fprintf('>> Solution found in %d iterations\n', n)
+	    end
         else
             errID  = 'NonlinearSolver:ConvergenceException';
             errMSG = 'requires additional iterations for convergence';
