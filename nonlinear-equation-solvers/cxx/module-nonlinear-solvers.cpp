@@ -51,7 +51,7 @@ export namespace nlsolver {
 
 
 // declarations (prototypes)
-void report (const int& n, const std::string& nm) ;
+void report (const int& max_iter, const int& n, const std::string& nm) ;
 void check_bounds ( double& lb, double& ub ) ;
 
 void check_bracket ( const double& lb, const double& ub,
@@ -78,7 +78,7 @@ double nlsolver::bisect ( double lb, double ub,
         do fm = bisector (lb, ub, xm, f) ;
         while (++n != opt.max_iter && fm > opt.tol) ;
 
-	report (n, nm) ;
+	report (opt.max_iter, n, nm) ;
 	return xm ;
 
 }
@@ -98,7 +98,7 @@ double nlsolver::regfal ( double lb, double ub,
         do fn = interp (lb, ub, xn, f) ;
         while (++n != opt.max_iter && fn > opt.tol) ;
 
-	report (n, nm) ;
+	report (opt.max_iter, n, nm) ;
 	return xn ;
 
 }
@@ -118,7 +118,7 @@ double nlsolver::shifter ( double lb, double ub,
         do fn = shift (lb, ub, xn, f) ;
         while (++n != opt.max_iter && fn > opt.tol) ;
 
-	report (n, nm) ;
+	report (opt.max_iter, n, nm) ;
 	return xn ;
 
 }
@@ -147,15 +147,16 @@ void check_bracket ( const double& lb, const double& ub,
 }
 
 
-void report (const int& n, const std::string& nm) {
+void report (const int& max_iter, const int& n, const std::string& nm) {
 	// reports if the method has been successful
-	if (n != MAX_ITER) {
+	if (n != max_iter) {
 		std::cout << nm << " Method:" << std::endl ;
 		std::cout << "solution found in " << n << " "
 			  << "iterations" << std::endl ;
 	} else {
-		std::cout << "method failed to find the root, " 
-		    "you may try a narrower interval" << std::endl ;
+		std::string errMSG = nm + " method requires more "
+			"iterations for convergence" ;
+		throw std::runtime_error (errMSG) ;
 	}
 }
 
