@@ -101,8 +101,11 @@ function x = bisect(a, b, f, opt)
             fprintf('%s Method:\n', name)
             fprintf('>> Solution found in %d iterations\n', n)
         else
-            fprintf('>> maximum number of iterations reached, ')
-            fprintf('try again with a narrower interval\n')
+            errID  = 'NonlinearSolver:ConvergenceException';
+            errMSG = 'requires additional iterations for convergence';
+            errMSG = [name, ' method ', errMSG];
+            except = MException(errID, errMSG);
+            throw(except);
         end
     end
 
