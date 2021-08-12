@@ -156,8 +156,9 @@ def report(max_iter, it, name):
         print(name + " Method:")
         print(f"solution found in {it} iterations")
     else:
-        print(f"method failed to find the root you may try " +
-              f"a narrower interval")
+        errMSG = (name + " " + "method requires more iterations for " +
+                  "convergence")
+        raise RuntimeError(errMSG)
     return
 
 
