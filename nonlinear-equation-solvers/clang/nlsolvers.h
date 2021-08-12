@@ -68,7 +68,7 @@ double interp   ( double*, double*, double*, double f(const double) ) ;
 double shift    ( double*, double*, double*, double f(const double) ) ;
 
 // utility functions
-void report        ( const int n, char nm[] ) ;
+void report        ( const int max_iter, const int n, char nm[] ) ;
 void check_bracket ( double, double, double f(const double), char nm[] ) ;
 void check_bounds  ( double*, double* ) ;
 #endif

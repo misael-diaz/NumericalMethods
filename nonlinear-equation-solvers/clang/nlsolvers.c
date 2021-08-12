@@ -71,7 +71,7 @@ double bisect_base ( double lb, double ub, double f(const double),
         do fm = bisector (&lb, &ub, &xm, f) ;
         while (++n != max_iter && fm > tol) ;
 
-	report (n, nm) ;
+	report (max_iter, n, nm) ;
 	return xm ;
 
 }
@@ -91,7 +91,7 @@ double regfal_base ( double lb, double ub, double f(const double),
         do fn = interp (&lb, &ub, &xn, f) ;
         while (++n != max_iter && fn > tol) ;
 
-	report (n, nm) ;
+	report (max_iter, n, nm) ;
 	return xn ;
 
 }
@@ -111,20 +111,21 @@ double shifter_base ( double lb, double ub, double f(const double),
         do fn = shift (&lb, &ub, &xn, f) ;
         while (++n != max_iter && fn > tol) ;
 
-	report (n, nm) ;
+	report (max_iter, n, nm) ;
 	return xn ;
 
 }
 
 
-void report (const int n, char nm[]) {
+void report (const int max_iter, const int n, char nm[]) {
 	// reports if the method has been successful
-	if (n != MAX_ITER) {
+	if (n != max_iter) {
 		printf("%s Method:\n", nm) ;
 		printf("solution found in %d iterations\n", n) ;
 	} else {
-		printf("method failed to find the root, ") ; 
-		printf("you may try a narrower interval\n") ;
+		fprintf(stderr, "%s method needs additional ", nm) ;
+		fprintf(stderr, "iterations for convergence\n") ;
+		exit(EXIT_FAILURE) ;
 	}
 }
 
@@ -232,7 +233,7 @@ void check_bounds ( double *lb, double *ub ) {
  * [x] Implement guards against "empty" ranges (lower > upper bound)
  * [x] Implement guards against applying the method on an interval
  *     that does not enclose a root.
- * [ ] Define default values for the tolerance and maximum number of
+ * [x] Define default values for the tolerance and maximum number of
  *     iterations. The user may wish to override these parameters so these
  *     must be included in the argument lists. Use the constants as default
  *     values for these parameters. Consider implementing a configuration
