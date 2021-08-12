@@ -33,6 +33,7 @@ options = nls_opts
 # overrides defaults
 options['tol']      = 1.0e-12
 options['max_iter'] = 256
+options['verbose']  = False
 
 bounds = (1.0e-2, 9.0e-2)   # bracketing interval [a, b]
 

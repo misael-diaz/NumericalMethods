@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include "nlsolvers.h"
 
-double f (const double) ;	/* nonlinear function, f(x) */
+double f (double) ;	/* nonlinear function, f(x) */
 
 int main() {
 	// Solves for the positive root of the nonlinear function f(x)
@@ -60,7 +60,7 @@ int main() {
 }
 
 
-double f (const double x) {
+double f (double x) {
 	// defines the nonlinear function f(x)
 	return ( 1.0 / sqrt(x) + 2.0 * log10(0.024651/3.7 +
 	         2.51/(9655526.5 * sqrt(x) ) ) ) ;

@@ -34,14 +34,29 @@ export module nonlinear_solvers ;
 // constants
 const int MAX_ITER = 100 ;
 const double TOL = 1.0e-8 ;
+const bool VERBOSE = false ;
 
 export namespace nlsolver {
 
 	struct config {	// config[uration] struct
-		config(): tol(TOL), max_iter(MAX_ITER) {}
-		config(double t, int i): tol(t), max_iter(i) {}
+		config(): tol(TOL), max_iter(MAX_ITER), verbose(VERBOSE) {}
+		config(double t): tol(t),   max_iter(MAX_ITER),
+	                          verbose(VERBOSE) {}
+		config(int    i): tol(TOL), max_iter(i),
+	                          verbose(VERBOSE) {}
+		config(bool   v): tol(TOL), max_iter(MAX_ITER),
+	                          verbose(v) {}
+		config(double t, int  i): tol(t), max_iter(i),
+	                                  verbose(VERBOSE) {}
+		config(double t, bool v): tol(t), max_iter(MAX_ITER),
+	                                  verbose(v) {}
+		config(int    i, bool v): tol(TOL), max_iter(i),
+	                                  verbose(v) {}
+		config(double t, int i, bool v): tol(t), max_iter(i),
+	                                         verbose(v) {}
 		double tol ;
 		int max_iter ;
+		bool verbose ;
 	} ;
 
 	double bisect ( double, double, double f(const double&), config ) ;
@@ -51,7 +66,8 @@ export namespace nlsolver {
 
 
 // declarations (prototypes)
-void report (const int& n, const std::string& nm) ;
+void report (const int& n, const std::string& nm,
+             const nlsolver::config& opt) ;
 void check_bounds ( double& lb, double& ub ) ;
 
 void check_bracket ( const double& lb, const double& ub,
@@ -78,7 +94,7 @@ double nlsolver::bisect ( double lb, double ub,
         do fm = bisector (lb, ub, xm, f) ;
         while (++n != opt.max_iter && fm > opt.tol) ;
 
-	report (n, nm) ;
+	report (n, nm, opt) ;
 	return xm ;
 
 }
@@ -98,7 +114,7 @@ double nlsolver::regfal ( double lb, double ub,
         do fn = interp (lb, ub, xn, f) ;
         while (++n != opt.max_iter && fn > opt.tol) ;
 
-	report (n, nm) ;
+	report (n, nm, opt) ;
 	return xn ;
 
 }
@@ -118,7 +134,7 @@ double nlsolver::shifter ( double lb, double ub,
         do fn = shift (lb, ub, xn, f) ;
         while (++n != opt.max_iter && fn > opt.tol) ;
 
-	report (n, nm) ;
+	report (n, nm, opt) ;
 	return xn ;
 
 }
@@ -147,15 +163,20 @@ void check_bracket ( const double& lb, const double& ub,
 }
 
 
-void report (const int& n, const std::string& nm) {
+void report (const int& n, const std::string& nm,
+             const nlsolver::config& opt)
+{
 	// reports if the method has been successful
-	if (n != MAX_ITER) {
-		std::cout << nm << " Method:" << std::endl ;
-		std::cout << "solution found in " << n << " "
-			  << "iterations" << std::endl ;
+	if (n != opt.max_iter) {
+		if (opt.verbose) {
+			std::cout << nm << " Method:" << std::endl ;
+			std::cout << "solution found in " << n << " "
+                                  << "iterations" << std::endl ;
+		}
 	} else {
-		std::cout << "method failed to find the root, " 
-		    "you may try a narrower interval" << std::endl ;
+		std::string errMSG = nm + " method requires more "
+			"iterations for convergence" ;
+		throw std::runtime_error (errMSG) ;
 	}
 }
 

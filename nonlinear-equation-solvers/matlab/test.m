@@ -38,7 +38,7 @@ f = @(x) 1.0 / sqrt(x) + 2.0 * log10(0.024651/3.7 + ...
 
 % solves for the root of f(x) numerically
 %[ configuration struct (optional) ]%
-opt = struct('tol', 1.0e-12, 'max_iter', 256);
+opt = struct('tol', 1.0e-12, 'max_iter', 256, 'verbose', 0);
 x = bisect (a, b, f, opt)	% Bisection
 x = regfal (a, b, f, opt)	% Regula Falsi (or False Position)
 x = shifter(a, b, f, opt)	% Shifter Method
