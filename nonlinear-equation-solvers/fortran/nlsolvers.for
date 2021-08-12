@@ -214,13 +214,14 @@ module nlsolvers
             integer(kind = int32), intent(in) :: maxit
             integer(kind = int32), intent(in) :: n
             character(len=*), intent(in) :: name
+            character(len=*), parameter :: errmsg = &
+                & "method needs more iterations for convergence"
 
             if (n /= maxit) then
                 print *, name // " Method: "
                 print *, "solution found in ", n, " iterations"
             else
-                print *, "maximum number of iterations has been " // &
-                       & "reached, try again with a narrower interval"
+                error stop (name // " " // errmsg)
             end if
 
             return
