@@ -30,35 +30,38 @@
 #include "nlsolvers.h"
 
 // implementations
-double bisect_varg ( double lb, double ub, double f(const double),
-		     opt_args args )
+double bisect_varg ( double lb, double ub, double f(double),
+                     opt_args args )
 {	// shadow function which handles initialization of optional args
 	double tol = args.opts.tol? args.opts.tol: TOL ;
 	int max_iter = args.opts.max_iter? args.opts.max_iter: MAX_ITER ;
-	return bisect_base (lb, ub, f, tol, max_iter) ;
+	int verbose  = args.opts.verbose ? args.opts.verbose : VERBOSE ;
+	return bisect_base (lb, ub, f, tol, max_iter, verbose) ;
 }
 
 
-double regfal_varg ( double lb, double ub, double f(const double),
-		     opt_args args )
+double regfal_varg ( double lb, double ub, double f(double),
+                     opt_args args )
 {	// shadow function
 	double tol = args.opts.tol? args.opts.tol: TOL ;
 	int max_iter = args.opts.max_iter? args.opts.max_iter: MAX_ITER ;
-	return regfal_base (lb, ub, f, tol, max_iter) ;
+	int verbose  = args.opts.verbose ? args.opts.verbose : VERBOSE ;
+	return regfal_base (lb, ub, f, tol, max_iter, verbose) ;
 }
 
 
-double shifter_varg ( double lb, double ub, double f(const double),
-		      opt_args args )
+double shifter_varg ( double lb, double ub, double f(double),
+                      opt_args args )
 {	// shadow function
 	double tol = args.opts.tol? args.opts.tol: TOL ;
 	int max_iter = args.opts.max_iter? args.opts.max_iter: MAX_ITER ;
-	return shifter_base (lb, ub, f, tol, max_iter) ;
+	int verbose  = args.opts.verbose ? args.opts.verbose : VERBOSE ;
+	return shifter_base (lb, ub, f, tol, max_iter, verbose) ;
 }
 
 
-double bisect_base ( double lb, double ub, double f(const double),
-		     double tol, int max_iter )
+double bisect_base ( double lb, double ub, double f(double),
+                     double tol, int max_iter, bool verbose )
 {	// Bisection Method
 
 	char nm[] = "Bisection" ;
@@ -71,14 +74,14 @@ double bisect_base ( double lb, double ub, double f(const double),
         do fm = bisector (&lb, &ub, &xm, f) ;
         while (++n != max_iter && fm > tol) ;
 
-	report (n, nm) ;
+	report (max_iter, n, nm, verbose) ;
 	return xm ;
 
 }
 
 
-double regfal_base ( double lb, double ub, double f(const double),
-	             double tol, int max_iter )
+double regfal_base ( double lb, double ub, double f(double),
+                     double tol, int max_iter, bool verbose )
 {	// Regula Falsi Method
 
 	char nm[] = "Regula-Falsi" ;
@@ -91,14 +94,14 @@ double regfal_base ( double lb, double ub, double f(const double),
         do fn = interp (&lb, &ub, &xn, f) ;
         while (++n != max_iter && fn > tol) ;
 
-	report (n, nm) ;
+	report (max_iter, n, nm, verbose) ;
 	return xn ;
 
 }
 
 
-double shifter_base ( double lb, double ub, double f(const double),
-	         double tol, int max_iter )
+double shifter_base ( double lb, double ub, double f(double),
+                      double tol, int max_iter, bool verbose )
 {	// Shifter Method
 
 	char nm[] = "Shifter" ;
@@ -111,26 +114,29 @@ double shifter_base ( double lb, double ub, double f(const double),
         do fn = shift (&lb, &ub, &xn, f) ;
         while (++n != max_iter && fn > tol) ;
 
-	report (n, nm) ;
+	report (max_iter, n, nm, verbose) ;
 	return xn ;
 
 }
 
 
-void report (const int n, char nm[]) {
+void report (int max_iter, int n, char nm[], bool verbose) {
 	// reports if the method has been successful
-	if (n != MAX_ITER) {
-		printf("%s Method:\n", nm) ;
-		printf("solution found in %d iterations\n", n) ;
+	if (n != max_iter) {
+		if (verbose) {
+			printf("%s Method:\n", nm) ;
+			printf("solution found in %d iterations\n", n) ;
+		}
 	} else {
-		printf("method failed to find the root, ") ; 
-		printf("you may try a narrower interval\n") ;
+		fprintf(stderr, "%s method needs additional ", nm) ;
+		fprintf(stderr, "iterations for convergence\n") ;
+		exit(EXIT_FAILURE) ;
 	}
 }
 
 
 double bisector ( double *lb, double *ub, double *xm, 
-		  double f(const double) )
+		  double f(double) )
 {
 
 /*
@@ -166,7 +172,7 @@ double bisector ( double *lb, double *ub, double *xm,
 
 
 double interp ( double *lb, double *ub, double *xn,
-		double f(const double) )
+		double f(double) )
 {	// like bisector but uses interpolation to approximate the root
         *xn = ( *lb * f(*ub) - *ub * f(*lb) ) / ( f(*ub) - f(*lb) ) ;
 	double fn = f(*xn) ;
@@ -181,7 +187,7 @@ double interp ( double *lb, double *ub, double *xn,
 
 
 double shift ( double *lb, double *ub, double *xn,
-	       double f(const double) )
+	       double f(double) )
 {	// uses hybrid approach to approximate the root
 	double fn ;
 	double xb = 0.5 * (*lb + *ub) ;
@@ -205,7 +211,7 @@ double shift ( double *lb, double *ub, double *xn,
 
 
 void check_bracket ( double lb, double ub,
-		     double f(const double), char nm[] )
+		     double f(double), char nm[] )
 {
 	// complains if there's no root in given interval and aborts
 	if ( f(lb) * f(ub) > 0. ) {
@@ -232,7 +238,7 @@ void check_bounds ( double *lb, double *ub ) {
  * [x] Implement guards against "empty" ranges (lower > upper bound)
  * [x] Implement guards against applying the method on an interval
  *     that does not enclose a root.
- * [ ] Define default values for the tolerance and maximum number of
+ * [x] Define default values for the tolerance and maximum number of
  *     iterations. The user may wish to override these parameters so these
  *     must be included in the argument lists. Use the constants as default
  *     values for these parameters. Consider implementing a configuration
