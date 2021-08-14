@@ -46,6 +46,45 @@ double** Euler ( double **odesol, double ti, double tf, double yi,
 	return odesol ;
 }
 
+double** iEuler ( double **odesol, double ti, double tf, double yi,
+                  const int N, double f(double t, double y, double *prms),
+		  void *vprms )
+{	/* Applies the implicit Euler's method */
+
+	// unpacks the parameters for the nonlinear and ode solvers
+	iODE_solverParams *params = vprms ;
+	double (*objf) (double, void*) = params -> objf ;
+	double *prms = params -> prms ;
+
+	double K1, K2 ;
+	double y_lb, y_ub ;
+	double *t = NULL, *y = NULL ;
+	double dt = (tf - ti) / ( (double) N ) ;
+
+	t = odesol[0] = linspace (odesol[0], ti, tf, N + 1) ;
+	y = odesol[1] = ode_allocArray (odesol[1], N + 1) ;
+
+	y[0] = yi ;
+	for (int i = 0 ; i != N ; ++i) {
+
+		// bounds the solution y[i + 1] from below and above
+		K1 = f(t[i], y[i], prms) ;
+		K2 = f(t[i] + dt, y[i] + dt * K1, prms) ;
+		y_lb = y[i] + dt * K1 ;
+		y_ub = y[i] + dt * K2 ;
+
+		// packs parameters for the nonlinear solver
+		prms[0] = dt ;
+		prms[1] = y[i] ;
+		prms[2] = t[i + 1] ;
+
+		/* solves for y[i + 1] iteratively */
+		y[i + 1] = fzero ( y_lb, y_ub, objf, vprms ) ;
+	}
+
+	return odesol ;
+}
+
 
 double** EulerRK2 ( double **odesol, double ti, double tf, double yi,
 		    const int N, double f(double t, double y) )

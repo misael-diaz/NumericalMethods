@@ -26,10 +26,22 @@
  *
  */
 
+#include "fzero.h"
+
+
+// Type declarations
+typedef struct {
+	double (*objf)   (double, void*) ;
+	double (*odefun) (double, double, double*) ;
+	double *prms ;	// parameter array
+} iODE_solverParams ;	// implicit, ODE Solver Parameters
+
 
 // Methods
-double** Euler    (double**, double, double, double, const int,
+double**  Euler   (double**, double, double, double, const int,
                    double f(double, double) ) ;
+double** iEuler   (double**, double, double, double, const int,
+                   double odefun(double, double, double*), void*) ;
 double** EulerRK2 (double**, double, double, double, const int,
                    double f(double, double) ) ;
 double* linspace  (double*, double, double, const int) ;
