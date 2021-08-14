@@ -24,14 +24,16 @@ LIBS = -lm
 
 
 # sources
+NL_SOLVER_FZERO_SRC = fzero.c
 NUM_INTEGRATION_SRC = odes.c
 TEST_NUMINT_SRC     = test.c
 
 
 # objects
+NL_SOLVER_FZERO_OBJ = fzero.o
 NUM_INTEGRATION_OBJ = odes.o
 TEST_NUMINT_OBJ     = test.o
-OBJECTS = $(NUM_INTEGRATION_OBJ) $(TEST_NUMINT_OBJ)
+OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATION_OBJ) $(TEST_NUMINT_OBJ)
 
 
 # executables
