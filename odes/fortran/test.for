@@ -28,14 +28,16 @@ module odefuns
     implicit none
     public
     contains
-        function odefun(t, y) result(f)
+        function odefun(t, y, params) result(f)
             ! Synopsis:
             ! Defines the nonlinear function, f(x), to be integrated.
             real(kind = real64), intent(in) :: t
             real(kind = real64), intent(in) :: y
-            real(kind = real64), parameter :: k = 1.0_real64
+            real(kind = real64), intent(in) :: params(:)
+            real(kind = real64):: k
             real(kind = real64):: f
 
+            k = params(1)
             f = -k * y
             
             return
@@ -45,8 +47,9 @@ end module
 
 program tests
     ! Solves linear Ordinary Differential Equations ODEs numerically.
+    use, intrinsic :: iso_c_binding, only: c_loc
     use, intrinsic :: iso_fortran_env, only: int64, real64
-    use odes, only: Euler
+    use odes, only: Euler, ODE_solverParams
     use odefuns, only: odefun
     implicit none
 
@@ -60,35 +63,51 @@ program tests
         end subroutine
     end interface
 
-    real(kind = real64):: ti, tf
-    real(kind = real64):: yi
-    real(kind = real64), allocatable :: odesol(:, :)
+    real(kind = real64):: k                                     ! rate
+    real(kind = real64):: yi                                    ! y(t = ti)
+    real(kind = real64):: ti, tf                                ! tspan
+    integer(kind = int64), parameter :: n = 255                 ! num steps
+    real(kind = real64), allocatable :: odesol(:, :)            ! solution
+    type(ODE_solverParams), allocatable, target :: params       ! ODE Param
     procedure(odefun), pointer :: fp => null()
-    integer(kind = int64), parameter :: n = 255
     integer(kind = int64) :: mstat
     character(:), allocatable :: filename
 
 
-    allocate (odesol(n + 1, 2), stat=mstat)
+    !! memory allocations
+    allocate (params, odesol(n + 1, 2), stat=mstat)
     if (mstat /= 0) error stop "failed to allocate memory buffers"
 
+    allocate (params % prms(1), stat=mstat)
+    if (mstat /= 0) error stop "failed to allocate array of parameters"
 
+    allocate (character( len = len("output/Euler.dat") ) :: filename, &
+        & stat = mstat) ! dynamically allocated string of characters
+    if (mstat /= 0) error stop "failed to allocate memory for string"
+
+
+    !! initializations
     fp => odefun
     ti = 0.0_real64             ! initial time
     tf = 5.0_real64             ! final time
     yi = 1.0_real64             ! initial value, y(t = ti) = yi
+    k  = 1.0_real64             ! rate constant
 
-    call Euler (odesol, ti, tf, yi, n, fp)
+    associate (prms => params % prms)
+        prms = k
+    end associate
 
-    ! allocates string of characters dynamically
-    allocate (character( len = len("output/Euler.dat") ) :: filename, &
-        & stat = mstat)
-    if (mstat /= 0) error stop "failed to allocate memory for string"
 
+    !! solves the ODEs with the specified method
+    call Euler ( odesol, ti, tf, yi, n, fp, c_loc(params) )
+
+
+    !! exports numerical results
     filename = "output/Euler.dat"
     call write (odesol, filename)
 
-    deallocate (odesol, filename, stat=mstat)
+    !! frees memory buffers
+    deallocate (params, odesol, filename, stat=mstat)
     if (mstat /= 0) error stop "unexpected memory deallocation error"
 end program
 

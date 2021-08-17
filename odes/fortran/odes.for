@@ -20,37 +20,58 @@
 !
 !   You should have received a copy of the GNU General Public License
 !   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+!
+!
+!   References:
+!   [0] SJ Chapman, FORTRAN for Scientists and Engineers, 4th edition.
+!   [1] A Gilat and V Subramanian, Numerical Methods for Engineers and
+!       Scientists, 3rd edition.
+!   [2] gcc.gnu.org/onlinedocs/gfortran/Working-with-Pointers.html
 
 module odes
+    use, intrinsic :: iso_c_binding, only: c_ptr, c_f_pointer
     use, intrinsic :: iso_fortran_env, only: int64, real64
     implicit none
     private
 
     interface
-        function odefun(t, y) result(f)
+        function odefun(t, y, params) result(f)
             use, intrinsic :: iso_fortran_env, only: real64
             implicit none
             real(kind = real64), intent(in) :: t
             real(kind = real64), intent(in) :: y
+            real(kind = real64), intent(in) :: params(:)
             real(kind = real64) :: f
         end function
     end interface
+
+    type, public :: ODE_solverParams
+        real(kind = real64), allocatable :: prms(:)
+        contains
+            final :: finalizer
+    end type    ! ODE Solver Parameters
 
     public :: Euler
     contains
 
 
-        subroutine Euler (odesol, ti, tf, yi, N, f)
+        subroutine Euler (odesol, ti, tf, yi, N, f, vprms)
             ! Synopsis: Possible implementation of Euler's explicit method
-            integer(kind = int64), intent(in) :: N              ! steps
             real(kind = real64), intent(in) :: ti, tf           ! tspan
             real(kind = real64), intent(in) :: yi               ! y(t = ti)
-            real(kind = real64), intent(inout), target :: odesol(N + 1, 2)
+            integer(kind = int64), intent(in) :: N              ! steps
             procedure(odefun), pointer :: f                     ! odefun
+            type(c_ptr), intent(in), value :: vprms             ! void*
             integer(kind = int64) :: i                          ! counter
             real(kind = real64) :: dt                           ! time-step
+            real(kind = real64), intent(inout), target :: odesol(N + 1, 2)
+            type(ODE_solverParams), pointer :: params => null()
             real(kind = real64), pointer, contiguous :: t(:) => null()
             real(kind = real64), pointer, contiguous :: y(:) => null()
+            real(kind = real64), pointer, contiguous :: prms(:) => null()
+
+            call c_f_pointer (vprms, params)    ! binds ode params to void*
+            prms => params % prms               ! binds to the param array
 
             t => odesol(:, 1)   ! time, t
             y => odesol(:, 2)   ! solution, y(t)
@@ -60,7 +81,7 @@ module odes
 
             y(1) = yi
             do i = 1, N
-                y(i + 1) = y(i) + dt * f( t(i), y(i) )
+                y(i + 1) = y(i) + dt * f( t(i), y(i), prms )
             end do
 
 
@@ -85,4 +106,34 @@ module odes
         end subroutine
 
 
+
+        subroutine finalizer (params)
+            ! Destroys the fields of objects of type ODE Solver Parameters.
+            type(ODE_solverParams), intent(inout) :: params
+            integer(kind = int64):: mstat
+
+            if ( allocated(params % prms) ) then
+                deallocate(params % prms, stat=mstat)
+                if (mstat /= 0) error stop "finalizer: unexpected error"
+            end if
+
+            return
+        end subroutine
+
+
 end module
+
+
+! Comments:
+! The type(c_ptr) is used as a FORTRAN analogue of C's universal pointer
+! (void *). Note that it's passed by value to the numerical techniques
+! so that it behaves just like void* (otherwise it behaves as void**,
+! see GCC reference above). To achieve that it's also necessary to use
+! c_loc on the caller side as shown in the main program.
+!
+! The rationale for using it is that it allows users to apply the numerical
+! techniques with their own derived-types. The odefun subroutine just needs
+! to "unpack" the needed parameters to evaluate the expression f(t, y).
+!
+! Defining a finalizer saves the user from manually deallocating the fields
+! of derived-types.
