@@ -85,7 +85,7 @@ int main() {
 
 
 	// frees memory buffers
-	free (prms) ;
+	free (iSolverParams) ;
 	free (odesol[0][0]) ;
 	free (odesol[0][1]) ;
 	free (odesol[1][0]) ;
