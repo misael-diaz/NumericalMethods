@@ -49,7 +49,7 @@ program tests
     ! Solves linear Ordinary Differential Equations ODEs numerically.
     use, intrinsic :: iso_c_binding, only: c_loc
     use, intrinsic :: iso_fortran_env, only: int64, real64
-    use odes, only: Euler, ODE_solverParams
+    use odes, only: Euler, iEuler, ODE_solverParams
     use odefuns, only: odefun
     implicit none
 
@@ -67,15 +67,16 @@ program tests
     real(kind = real64):: yi                                    ! y(t = ti)
     real(kind = real64):: ti, tf                                ! tspan
     integer(kind = int64), parameter :: n = 255                 ! num steps
-    real(kind = real64), allocatable :: odesol(:, :)            ! solution
+    real(kind = real64), allocatable, target :: odesol(:, :)    ! solution
     type(ODE_solverParams), allocatable, target :: params       ! ODE Param
+    real(kind = real64), pointer, contiguous :: p_odesol(:, :) => null()
     procedure(odefun), pointer :: fp => null()
     integer(kind = int64) :: mstat
     character(:), allocatable :: filename
 
 
     !! memory allocations
-    allocate (params, odesol(n + 1, 2), stat=mstat)
+    allocate (params, odesol(n + 1, 4), stat=mstat)
     if (mstat /= 0) error stop "failed to allocate memory buffers"
 
     allocate (params % prms(1), stat=mstat)
@@ -98,13 +99,17 @@ program tests
     end associate
 
 
-    !! solves the ODEs with the specified method
-    call Euler ( odesol, ti, tf, yi, n, fp, c_loc(params) )
-
-
-    !! exports numerical results
+    !! solves the ODEs with the specified method and exports results
+    p_odesol => odesol(:, 1:2)
+    call Euler ( p_odesol, ti, tf, yi, n, fp, c_loc(params) )
     filename = "output/Euler.dat"
-    call write (odesol, filename)
+    call write (p_odesol, filename)
+
+    p_odesol => odesol(:, 3:4)
+    call iEuler ( p_odesol, ti, tf, yi, n, fp, c_loc(params) )
+    filename = "output/iEulr.dat"
+    call write (p_odesol, filename)
+
 
     !! frees memory buffers
     deallocate (params, odesol, filename, stat=mstat)
