@@ -39,85 +39,84 @@ export module odes ;
 export namespace ode {
 
 	// Euler's Method
-	std::tuple< std::vector<double>, std::vector<double> >
-	Euler (const double&, const double&, const double&, 
-	       const int&, double f(const double&, const double&) ) ;
+	std::tuple< std::vector<double>, std::vector<double> >&
+	Euler ( std::tuple< std::vector<double>, std::vector<double> >&,
+		const double&, const double&, const double&, const int&,
+		double f(const double&, const double&) ) ;
 	
 	// second-order Runge-Kutta Method
-	std::tuple< std::vector<double>, std::vector<double> >
-	EulerRK2 (const double&, const double&, const double&, 
-	          const int&, double f(const double&, const double&) ) ;
+	std::tuple< std::vector<double>, std::vector<double> >&
+	RK2 ( std::tuple< std::vector<double>, std::vector<double> >&,
+	      const double&, const double&, const double&, const int&,
+              double f(const double&, const double&) ) ;
+
 }
 
 // declarations
-std::vector<double>& linspace ( std::vector<double>&, const double&, 
+std::vector<double>& linspace ( std::vector<double>&, const double&,
 		                const double&, const int& ) ;
 
 // implementations
-std::tuple< std::vector<double>, std::vector<double> >
-ode::Euler (const double& ti, const double& tf, const double& yi, 
+std::tuple< std::vector<double>, std::vector<double> >&
+ode::Euler (std::tuple< std::vector<double>, std::vector<double> >& odesol,
+	    const double& ti, const double& tf, const double& yi,
 	    const int& N, double f (const double&, const double&) )
-{	// implements Euler's Method
+{	// possible implementation of Euler's explicit method
 
-	std::vector<double> t ;
-	t = linspace(t, ti, tf, N + 1) ;
+	double dt = (tf - ti) / ( (double) N );		// time-step, dt
+	std::vector<double>& t = std::get<0> (odesol);	// time, t
+	std::vector<double>& y = std::get<1> (odesol);	// y(t)
 
-	std::vector<double> y(N + 1) ;
-	double dt = (tf - ti) / ( (double) N ) ;
-	typedef std::vector<double>::size_type size ;
+	t = linspace (t, ti, tf, N + 1);
 
-
+	y.clear();		// clears (existing) data
+	y.reserve(N + 1);	// preallocates vector for speed
 	y[0] = yi ;
-	for (size i = 0 ; i != t.size() ; ++i) {
-		y[i + 1] = y[i] + dt * f(t[i], y[i]) ;
+	typedef std::vector<double>::size_type size ;
+	for (size i = 0 ; i != (t.size() - 1) ; ++i) {
+		y[i + 1] = y[i] + dt * f(t[i], y[i]);
 	}
 
-
-	return std::tuple (t, y) ;
+	return odesol ;
 }
 
 
-std::tuple< std::vector<double>, std::vector<double> >
-ode::EulerRK2 (const double& ti, const double& tf, const double& yi, 
-	    const int& N, double f (const double&, const double&) )
+std::tuple< std::vector<double>, std::vector<double> >&
+ode::RK2 ( std::tuple< std::vector<double>, std::vector<double> >& odesol,
+	   const double& ti, const double& tf, const double& yi,
+	   const int& N, double f (const double&, const double&) )
 {	// implements an Euler-based, second-order, Runge-Kutta Method
 
-	double K1, K2 ;
-	std::vector<double> t ;
-	t = linspace(t, ti, tf, N + 1) ;
+	double K1, K2 ;					// slopes
+	double dt = (tf - ti) / ( (double) N );		// time-step, dt
+	std::vector<double>& t = std::get<0> (odesol);	// time, t
+	std::vector<double>& y = std::get<1> (odesol);	// y(t)
 
-	std::vector<double> y(N + 1) ;
-	double dt = (tf - ti) / ( (double) N ) ;
-	typedef std::vector<double>::size_type size ;
+	t = linspace (t, ti, tf, N + 1);
 
-
+	y.clear();
+	y.reserve(N + 1);
 	y[0] = yi ;
-	for (size i = 0 ; i != t.size() ; ++i) {
-		K1 = f(t[i], y[i]) ;
-		K2 = f(t[i] + dt, y[i] + dt * K1) ;
-		y[i + 1] = y[i] + 0.5 * dt * (K1 + K2) ;
+	typedef std::vector<double>::size_type size ;
+	for (size i = 0 ; i != (t.size() - 1) ; ++i) {
+		K1 = f(t[i], y[i]);
+		K2 = f(t[i] + dt, y[i] + dt * K1);
+		y[i + 1] = y[i] + 0.5 * dt * (K1 + K2);
 	}
 
-
-	return std::tuple (t, y) ;
+	return odesol ;
 }
 
 
-std::vector<double>& linspace (std::vector<double>& t, const double& ti, 
+std::vector<double>& linspace (std::vector<double>& t, const double& ti,
 		               const double& tf, const int& numel)
 {	// implements a numpy-like linspace method
-
-	t.clear() ;
-	std::vector<int> idx (numel) ;
-	std::iota(idx.begin(), idx.end(), 0) ;
-	double dt = (tf - ti) / ( (double) (numel - 1) ) ;  // time-step
-
-	// transformational lambda function
-	auto ft = [&ti, &dt](const int& i) -> double {
-		return (ti + ( (double) i) * dt) ;
-	} ;
-
-	// transforms index into a vector t = [ti, tf] of numel elements
-	std::transform(idx.begin(), idx.end(), std::back_inserter(t), ft) ;
+	t.clear();				// clears (existing) data
+	t.reserve (numel);			// prellocates for speed
+	std::vector<int> idx (numel);		// index vector [0, numel)
+	std::iota (idx.begin(), idx.end(), 0);
+	double dt = (tf - ti) / ( (double) (numel - 1) );
+	auto f = [&](const int& i) { return (ti + ( (double) i) * dt); };
+	std::transform (idx.begin(), idx.end(), std::back_inserter(t), f);
 	return t ;
 }

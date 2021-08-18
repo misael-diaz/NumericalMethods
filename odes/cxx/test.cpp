@@ -50,29 +50,29 @@ using std::setprecision ;
 using std::runtime_error ;
 
 using ode::Euler ;
-using ode::EulerRK2 ;
+using ode::RK2 ;
 
 
-void write (std::tuple < std::vector<double>, std::vector<double> > ) ;
-void write (std::tuple < std::vector<double>, std::vector<double> >,
-	    const std::string& ) ;
+void write (const std::tuple <std::vector<double>, std::vector<double>>& );
+void write (const std::tuple < std::vector<double>, std::vector<double> >&,
+	    const std::string& );
 
 int main() {
 
-	const int N = 255;
+	const int N = 255 ;
 	const double yi = 1.0 ;
 	const double ti = 0.0, tf = 5.0 ;
 	tuple < vector<double>, vector<double> > odesol_Euler, odesol_RK2 ;
 
-	// odefun
-	auto f = [](const double& t, const double& y) {
+	// lambda, odefun, RHS of the ODE f(t, y)
+	auto f = [](const double& t, const double& y) -> double {
 		const double k = 1.0 ;
 		return (-k * y) ;
        	} ;
 
 	// solves the ODE using the specified method
-	odesol_Euler = Euler    (ti, tf, yi, N, f) ;
-	odesol_RK2   = EulerRK2 (ti, tf, yi, N, f) ;
+	odesol_Euler = Euler (odesol_Euler, ti, tf, yi, N, f) ;
+	odesol_RK2   = RK2   (odesol_RK2,   ti, tf, yi, N, f) ;
 	
 	// exports numerical solutions
 	string filename = "output/Euler.dat" ;
@@ -86,7 +86,7 @@ int main() {
 }
 
 
-void write (std::tuple < std::vector<double>, std::vector<double> > odesol)
+void write (const tuple < vector<double>, vector<double> >& odesol)
 {	// writes numerical results on the output stream
 
 	// unpacks numerical solution in tuple
@@ -102,8 +102,8 @@ void write (std::tuple < std::vector<double>, std::vector<double> > odesol)
 }
 
 
-void write (std::tuple < std::vector<double>, std::vector<double> > odesol,
-	    const std::string& filename)
+void write (const tuple < vector<double>, vector<double> >& odesol,
+	    const string& filename)
 {	// writes numerical results to the output filestream
 
 	const vector<double>& t = get<0>(odesol) ;
