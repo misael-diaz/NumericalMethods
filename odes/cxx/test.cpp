@@ -51,6 +51,7 @@ using std::setprecision ;
 using std::runtime_error ;
 
 using ode::Euler ;
+using ode::iEuler ;
 using ode::RK2 ;
 
 
@@ -63,7 +64,9 @@ int main() {
 	const int N = 255 ;
 	const double yi = 1.0 ;
 	const double ti = 0.0, tf = 5.0 ;
-	tuple < vector<double>, vector<double> > odesol_Euler, odesol_RK2 ;
+	tuple < vector<double>, vector<double> > odesol_Euler ;
+	tuple < vector<double>, vector<double> > odesol_iEuler ;
+	tuple < vector<double>, vector<double> > odesol_RK2 ;
 
 	// lambda, odefun, RHS of the ODE f(t, y)
 	std::function < double(const double&, const double&) >
@@ -73,17 +76,21 @@ int main() {
        	} ;
 
 	// solves the ODE using the specified method
-	odesol_Euler = Euler (odesol_Euler, ti, tf, yi, N, f) ;
-	odesol_RK2   = RK2   (odesol_RK2,   ti, tf, yi, N, f) ;
+	odesol_Euler  =  Euler(odesol_Euler,  ti, tf, yi, N, f) ;
+	odesol_iEuler = iEuler(odesol_iEuler, ti, tf, yi, N, f) ;
+	odesol_RK2    = RK2   (odesol_RK2,    ti, tf, yi, N, f) ;
 	
 	// exports numerical solutions
 	string filename = "output/Euler.dat" ;
 	write (odesol_Euler, filename) ;
 
+	filename = "output/iEulr.dat" ;
+	write (odesol_iEuler, filename) ;
+
 	filename = "output/EuRK2.dat" ;
 	write (odesol_RK2, filename) ;
 
-	write (odesol_RK2) ;
+	write (odesol_iEuler) ;
 	return 0 ;
 }
 
