@@ -25,18 +25,21 @@ CXXOPT  = -fmodules-ts -g -Wall -O0
 
 
 # sources
+NL_SOLVER_FZERO_MOD      = module-fzero-solver.cpp
 NUM_INTEGRATORS_MOD      = module-ode-solvers.cpp
 TEST_NUM_INTEGRATORS_CXX = test.cpp
 
 
 # objects
+NL_SOLVER_FZERO_OBJ      = module-fzero-solver.o
 NUM_INTEGRATORS_OBJ      = module_ode_solvers.o
 TEST_NUM_INTEGRATORS_OBJ = test_odes.o
-OBJECTS = $(NUM_INTEGRATORS_OBJ) $(TEST_NUM_INTEGRATORS_OBJ)
+OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATORS_OBJ)\
+          $(TEST_NUM_INTEGRATORS_OBJ)
 
 
 # executables
-TEST_NUM_INTEGRATORS_EXE = test-odes
+TEST_NUM_INTEGRATORS_EXE = test-ode-solvers
 TESTS = $(TEST_NUM_INTEGRATORS_EXE)
 
 # gcm cache
