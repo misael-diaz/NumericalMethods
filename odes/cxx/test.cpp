@@ -35,6 +35,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <functional>
 import odes ;
 
 using std::get ;
@@ -65,7 +66,8 @@ int main() {
 	tuple < vector<double>, vector<double> > odesol_Euler, odesol_RK2 ;
 
 	// lambda, odefun, RHS of the ODE f(t, y)
-	auto f = [](const double& t, const double& y) -> double {
+	std::function < double(const double&, const double&) >
+	f = [](const double& t, const double& y) -> double {
 		const double k = 1.0 ;
 		return (-k * y) ;
        	} ;

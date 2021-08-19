@@ -33,6 +33,7 @@ module ;
 #include <vector>
 #include <numeric>
 #include <algorithm>
+#include <functional>
 export module odes ;
 
 
@@ -42,13 +43,13 @@ export namespace ode {
 	std::tuple< std::vector<double>, std::vector<double> >&
 	Euler ( std::tuple< std::vector<double>, std::vector<double> >&,
 		const double&, const double&, const double&, const int&,
-		double f(const double&, const double&) ) ;
+		std::function< double(const double&, const double&) >& ) ;
 	
 	// second-order Runge-Kutta Method
 	std::tuple< std::vector<double>, std::vector<double> >&
 	RK2 ( std::tuple< std::vector<double>, std::vector<double> >&,
 	      const double&, const double&, const double&, const int&,
-              double f(const double&, const double&) ) ;
+	      std::function< double(const double&, const double&) >& ) ;
 
 }
 
@@ -60,7 +61,8 @@ std::vector<double>& linspace ( std::vector<double>&, const double&,
 std::tuple< std::vector<double>, std::vector<double> >&
 ode::Euler (std::tuple< std::vector<double>, std::vector<double> >& odesol,
 	    const double& ti, const double& tf, const double& yi,
-	    const int& N, double f (const double&, const double&) )
+	    const int& N,
+	    std::function< double(const double&, const double&) >& f )
 {	// possible implementation of Euler's explicit method
 
 	double dt = (tf - ti) / ( (double) N );		// time-step, dt
@@ -84,7 +86,8 @@ ode::Euler (std::tuple< std::vector<double>, std::vector<double> >& odesol,
 std::tuple< std::vector<double>, std::vector<double> >&
 ode::RK2 ( std::tuple< std::vector<double>, std::vector<double> >& odesol,
 	   const double& ti, const double& tf, const double& yi,
-	   const int& N, double f (const double&, const double&) )
+	   const int& N,
+	   std::function< double(const double&, const double&) >& f )
 {	// implements an Euler-based, second-order, Runge-Kutta Method
 
 	double K1, K2 ;					// slopes
