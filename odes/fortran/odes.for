@@ -61,6 +61,7 @@ module odes
 
     public :: Euler
     public :: iEuler
+    public :: RK2
     contains
 
 
@@ -148,6 +149,42 @@ module odes
 
                     return
                 end function
+        end subroutine
+
+
+        subroutine RK2 (odesol, ti, tf, yi, N, f, vprms)
+            ! Synopsis: Euler based, second-order Runge-Kutta Method
+            real(kind = real64), intent(in) :: ti, tf
+            real(kind = real64), intent(in) :: yi
+            integer(kind = int64), intent(in) :: N
+            procedure(odefun), pointer :: f
+            type(c_ptr), intent(in), value :: vprms
+            integer(kind = int64) :: i
+            real(kind = real64) :: dt
+            real(kind = real64) :: K1, K2
+            real(kind = real64), intent(inout), target :: odesol(N + 1, 2)
+            type(ODE_solverParams), pointer :: params => null()
+            real(kind = real64), pointer, contiguous :: t(:) => null()
+            real(kind = real64), pointer, contiguous :: y(:) => null()
+            real(kind = real64), pointer, contiguous :: prms(:) => null()
+
+            call c_f_pointer (vprms, params)
+            prms => params % prms
+
+            t => odesol(:, 1)
+            y => odesol(:, 2)
+            dt = (tf - ti) / real(N, kind = real64)
+            call linspace (t, ti, tf, N + 1)
+
+
+            y(1) = yi
+            do i = 1, N
+                K1 = f( t(i), y(i), prms )
+                K2 = f( t(i) + dt, y(i) + K1 * dt, prms )
+                y(i + 1) = y(i) + 0.5_real64 * dt * (K1 + K2)
+            end do
+
+            return
         end subroutine
 
 
