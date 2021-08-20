@@ -26,6 +26,8 @@
  */
 
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 // Math MACROS
 #define absval(x) (signbit(x)? -x: x)

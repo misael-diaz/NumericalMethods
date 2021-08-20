@@ -25,8 +25,6 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "fzero.h"
 
 // implementations
@@ -64,7 +62,7 @@ double shift ( double *lb, double *ub, double *xn,
 
 	fn = f(*xn, vprms) ;
 
-	if (f(*lb, vprms) * fn < 0.)
+	if ( signbit( f(*lb, vprms) * fn) )
 		*ub = *xn ;
 	else
 		*lb = *xn ;
@@ -77,7 +75,7 @@ void check_bracket ( double lb, double ub, double f(double, void*),
                      char nm[], void* vprms )
 {
 	// complains if there's no root in given interval and aborts
-	if ( f(lb, vprms) * f(ub, vprms) > 0. ) {
+	if ( !signbit( f(lb, vprms) * f(ub, vprms) ) ) {
 		fprintf(stderr, "\n%s Method:\n", nm) ;
 		fprintf(stderr, "No root in given interval ... \n") ;
 		fprintf(stderr, "Try again, aborting execution ... \n\n") ;
