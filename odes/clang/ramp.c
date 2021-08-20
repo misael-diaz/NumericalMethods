@@ -148,7 +148,8 @@ void display (const int numel, double **odesol) {
 	double *y = odesol[1];
 
 	for (int i = 0 ; i != numel ; ++i) {
-		err = absval( y[i] - fsol(t[i]) );
+		err = y[i] - fsol(t[i]);
+		err = absval (err);
 		fprintf(stdout, "%23.15e \t %23.15e \t %23.15e \n",
 			t[i], y[i], err);
 	}
