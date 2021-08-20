@@ -25,9 +25,10 @@
  *
  */
 
+#include <math.h>
 #include <stdbool.h>
 // Math MACROS
-#define absval(x) ((x < 0.)? -x: x)
+#define absval(x) (signbit(x)? -x: x)
 
 // constants (defaults)
 #define MAX_ITER 256
