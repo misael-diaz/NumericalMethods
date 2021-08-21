@@ -148,8 +148,7 @@ void write (char filename[], const int numel, double **odesol) {
 
 	char fmt[] = "%23.15e %23.15e %23.15e\n" ;	// format string
 	for (int i = 0 ; i != numel ; ++i) {
-		err = y[i] - fsol(t[i]);
-		err = absval (err) ;
+		err = absval( (fsol(t[i]) - y[i]) );	// needs inner `()'
 		fprintf(pFile, fmt, t[i], y[i], err);
 	}
 	fclose(pFile) ;
@@ -163,11 +162,10 @@ void display (const int numel, double **odesol) {
 	double *t = odesol[0] ;
 	double *y = odesol[1] ;
 
+	char fmt[] = "%23.15e %23.15e %23.15e\n" ;
 	for (int i = 0 ; i != numel ; ++i) {
-		err = y[i] - fsol(t[i]);
-		err = absval (err) ;
-		fprintf(stdout, "%23.15e \t %23.15e \t %23.15e \n",
-			t[i], y[i], err) ;
+		err = absval( (fsol(t[i]) - y[i]) );
+		fprintf(stdout, fmt, t[i], y[i], err) ;
 	}
 }
 
@@ -177,5 +175,9 @@ void display (const int numel, double **odesol) {
  * My aim was to write a code that looks similar to the code written
  * in Python. That's why the numerical solvers return an array that
  * can be used for writing if the users wish to do so.
+ *
+ * Comments on absval MACRO:
+ * The inner parenthesis when computing the absolute error in the display
+ * and write functions is needed to ensure the proper order of operations.
  *
  */
