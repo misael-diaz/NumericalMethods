@@ -39,7 +39,7 @@ odesol = zeros([n + 1, 2, 2]);	% preallocates array for speed
 
 
 % solves the ODE with Euler's and second-order Runge-Kutta Methods
-odesol(:, :, 1) = Euler   (n, trange, yi, f);
+odesol(:, :, 1) = iEuler  (n, trange, yi, f);
 odesol(:, :, 2) = EulerRK2(n, trange, yi, f);
 % unpacks the numerical solutions
 t = odesol(:, 1, 1); y_Euler = odesol(:, 2, 1); y_RK2 = odesol(:, 2, 2);
@@ -52,7 +52,7 @@ plot(t, y, "color", "black", "linewidth", 2, ...
      "displayname", "analytic solution");
 hold on;
 plot(t(1:8:end), y_Euler(1:8:end), "color", "red", "marker", "o", ...
-     "linestyle", "none", "displayname", "Euler's Method")
+     "linestyle", "none", "displayname", "implicit Euler's Method")
 plot(t(1:16:end), y_RK2(1:16:end), "color", "red", "marker", "s", ...
      "linestyle", "none", "displayname", "second-order Runge-Kutta Method")
 

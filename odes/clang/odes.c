@@ -24,54 +24,32 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+
 #include "odes.h"
 
+
 // implementations
-double** Euler ( double **odesol, double ti, double tf, double yi,
-		 const int N, double f(double t, double y) )
-{	// applies Euler's method to integrate the ODE
+static double* ode_allocArray (double *x, const int numel) {
+	// allocates memory for a first-rank array of doubles
 
-	double *t = NULL, *y = NULL ;			// t, y(t)
-	double dt = (tf - ti) / ( (double) N ) ;	// time-step
+	x = (double*) malloc ( numel * sizeof(double) ) ;
 
-	t = odesol[0] = linspace (odesol[0], ti, tf, N + 1) ;
-	y = odesol[1] = ode_allocArray (odesol[1], N + 1) ;
-
-	y[0] = yi ;
-	for (int i = 0 ; i != N ; ++i)
-		y[i + 1] = y[i] + dt * f(t[i], y[i]) ;
-
-	return odesol ;
-}
-
-
-double** EulerRK2 ( double **odesol, double ti, double tf, double yi,
-		    const int N, double f(double t, double y) )
-{	// applies an Euler-based, second-order, Runge-Kutta method
-
-	double K1, K2 ;
-	double *t = NULL, *y = NULL ;
-	double dt = (tf - ti) / ( (double) N ) ;
-
-	t = odesol[0] = linspace (odesol[0], ti, tf, N + 1) ;
-	y = odesol[1] = ode_allocArray (odesol[1], N + 1) ;
-
-	y[0] = yi ;
-	for (int i = 0 ; i != N ; ++i) {
-		K1 = f(t[i], y[i]) ;
-		K2 = f(t[i] + dt, y[i] + K1 * dt) ;
-		y[i + 1] = y[i] + 0.5 * dt * (K1 + K2) ;
+	if (x == NULL) {
+		fprintf(stderr, "\n\n") ;
+		fprintf(stderr, "ODE: failed to allocate array\n") ;
+		fprintf(stderr, "aborting execution ... \n") ;
+		fprintf(stderr, "\n\n") ;
+		exit(EXIT_FAILURE) ;
 	}
 
-	return odesol ;
+	return x ;
 }
 
 
-double* linspace (double *t, double ti, double tf, const int numel) {
+static double* linspace (double *t, double ti, double tf, const int numel)
+{
         // implements a numpy-like linspace method
-        
+
 	double dt = (tf - ti) / ( (double) (numel - 1) ) ;
 
 	t = ode_allocArray (t, numel) ;
@@ -82,18 +60,92 @@ double* linspace (double *t, double ti, double tf, const int numel) {
 }
 
 
-double* ode_allocArray (double *x, const int numel) {
-	// allocates memory for a first-rank array of doubles
-	
-	x = (double*) malloc ( numel * sizeof(double) ) ;
-	
-	if (x == NULL) {
-		fprintf(stderr, "\n\n") ;
-		fprintf(stderr, "ODE: failed to allocate array\n") ;
-		fprintf(stderr, "aborting execution ... \n") ;
-		fprintf(stderr, "\n\n") ;
-		exit(EXIT_FAILURE) ;
+// method interfaces
+double** Euler ( double **odesol, double ti, double tf, double yi,
+		 const int N, double f(double t, double y, double* prms),
+		 void *vprms )
+{	// applies Euler's method to integrate the ODE
+
+	// unpacks parameters
+	iODE_solverParams *params = vprms ;
+	double *prms = params -> prms ;
+
+	double *t = NULL, *y = NULL ;			// t, y(t)
+	double dt = (tf - ti) / ( (double) N ) ;	// time-step
+
+	t = odesol[0] = linspace (odesol[0], ti, tf, N + 1) ;
+	y = odesol[1] = ode_allocArray (odesol[1], N + 1) ;
+
+	y[0] = yi ;
+	for (int i = 0 ; i != N ; ++i)
+		y[i + 1] = y[i] + dt * f(t[i], y[i], prms);
+
+	return odesol ;
+}
+
+
+double** iEuler ( double **odesol, double ti, double tf, double yi,
+                  const int N, double f(double t, double y, double *prms),
+		  void *vprms )
+{	/* Applies the implicit Euler's method */
+
+	// unpacks the parameters for the nonlinear and ode solvers
+	iODE_solverParams *params = vprms ;
+	double (*objf) (double, void*) = params -> objf ;
+	double *prms = params -> prms ;
+
+	double K1, K2 ;
+	double y_lb, y_ub ;
+	double *t = NULL, *y = NULL ;
+	double dt = (tf - ti) / ( (double) N ) ;
+
+	t = odesol[0] = linspace (odesol[0], ti, tf, N + 1) ;
+	y = odesol[1] = ode_allocArray (odesol[1], N + 1) ;
+
+	y[0] = yi ;
+	for (int i = 0 ; i != N ; ++i) {
+
+		// bounds the solution y[i + 1] from below and above
+		K1 = f(t[i], y[i], prms) ;
+		K2 = f(t[i] + dt, y[i] + dt * K1, prms) ;
+		y_lb = y[i] + dt * K1 ;
+		y_ub = y[i] + dt * K2 ;
+
+		// packs parameters for the nonlinear solver
+		prms[0] = dt ;
+		prms[1] = y[i] ;
+		prms[2] = t[i + 1] ;
+
+		/* solves for y[i + 1] iteratively */
+		y[i + 1] = fzero ( y_lb, y_ub, objf, vprms ) ;
 	}
 
-	return x ;
+	return odesol ;
+}
+
+
+double** EulerRK2 (double **odesol, double ti, double tf, double yi,
+		   const int N, double f(double t, double y, double *prms),
+		   void *vprms)
+{	// applies an Euler-based, second-order, Runge-Kutta method
+
+	// unpacks parameters
+	iODE_solverParams *params = vprms ;
+	double *prms = params -> prms ;
+
+	double K1, K2 ;
+	double *t = NULL, *y = NULL ;
+	double dt = (tf - ti) / ( (double) N ) ;
+
+	t = odesol[0] = linspace (odesol[0], ti, tf, N + 1) ;
+	y = odesol[1] = ode_allocArray (odesol[1], N + 1) ;
+
+	y[0] = yi ;
+	for (int i = 0 ; i != N ; ++i) {
+		K1 = f(t[i], y[i], prms) ;
+		K2 = f(t[i] + dt, y[i] + K1 * dt, prms) ;
+		y[i + 1] = y[i] + 0.5 * dt * (K1 + K2) ;
+	}
+
+	return odesol ;
 }

@@ -24,16 +24,24 @@ LIBS = -lm
 
 
 # sources
+NL_SOLVER_FZERO_SRC = fzero.c
 NUM_INTEGRATION_SRC = odes.c
 TEST_NUMINT_SRC     = test.c
+TEST_RAMP_SRC       = ramp.c
+TEST_SINUSOID_SRC   = sinusoid.c
 
 
 # objects
+NL_SOLVER_FZERO_OBJ = fzero.o
 NUM_INTEGRATION_OBJ = odes.o
 TEST_NUMINT_OBJ     = test.o
-OBJECTS = $(NUM_INTEGRATION_OBJ) $(TEST_NUMINT_OBJ)
+TEST_RAMP_OBJ       = ramp.o
+TEST_SINUSOID_OBJ   = sinusoid.o
+OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATION_OBJ)
 
 
 # executables
-TEST_NUMINT_EXE = test-odes
-TESTS = $(TEST_NUMINT_EXE)
+TEST_NUMINT_EXE   = test-odes
+TEST_RAMP_EXE     = test-ramp-input
+TEST_SINUSOID_EXE = test-sinusoid-input
+TESTS = $(TEST_NUMINT_EXE) $(TEST_RAMP_EXE) $(TEST_SINUSOID_EXE)

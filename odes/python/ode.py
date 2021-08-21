@@ -24,10 +24,10 @@ References:
     Science Applications with NumPy, SciPy, and Matplotlib, 2nd edition
 """
 
-
 from numpy import array
 from numpy import empty
 from numpy import linspace
+from nlsolvers import shifter as fzero
 
 
 def Euler(N, trange, yi, f):
@@ -55,6 +55,31 @@ def Euler(N, trange, yi, f):
                 y[i + 1] = y[i] + dt * f(t[i], y[i])
 
         odesol = array([t, y])   # packs into a second-rank numpy array
+        return odesol
+
+
+def iEuler(N, trange, yi, f):
+        """ Synopsis: Implements an implicit Euler's Method """
+
+        y      = empty(N + 1)
+        it     = empty(N)   # placeholder for nonlinear solver iterations
+        ti, tf = trange
+        t,  dt = (linspace(ti, tf, N+1), (tf - ti) / N)
+
+
+        y[0] = yi
+        for i in range(N):
+                K1 = f(t[i], y[i])
+                K2 = f(t[i] + dt, y[i] + K1 * dt)
+                # defines interval bracketing y[i+1]
+                y_lb, y_ub = (y[i] + dt * K1, y[i] + dt * K2)
+                objf = lambda yn: yn - y[i] - dt * f(t[i+1], yn)
+                # solves for y[i+1] iteratively
+                (y[i+1], it[i]) = fzero( (y_lb, y_ub), objf )
+
+
+        # print(f"avg num iters: {it.mean()}\n") # uncomment to see stats
+        odesol = array([t, y])
         return odesol
 
 
