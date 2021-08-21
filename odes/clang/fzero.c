@@ -28,26 +28,47 @@
 #include "fzero.h"
 
 // implementations
-double fzero ( double lb, double ub, double f(double, void*), void *vprms )
-{	// Shifter Method from nonlinear solvers using the default options
-
-	char nm[] = "fzero" ;
-	check_bracket (lb, ub, f, nm, vprms) ;
-	check_bounds  (&lb, &ub) ;
-
-	int n = 0 ;
-	double xn, fn ;
-
-        do fn = shift (&lb, &ub, &xn, f, vprms) ;
-        while (++n != MAX_ITER && fn > TOL) ;
-
-	report (MAX_ITER, n, nm, VERBOSE) ;
-	return xn ;
-
+static void check_bracket ( double lb, double ub, double f(double, void*),
+                     char nm[], void* vprms )
+{
+	// complains if there's no root in given interval and aborts
+	if ( !signbit( f(lb, vprms) * f(ub, vprms) ) ) {
+		fprintf(stderr, "\n%s Method:\n", nm) ;
+		fprintf(stderr, "No root in given interval ... \n") ;
+		fprintf(stderr, "Try again, aborting execution ... \n\n") ;
+		exit(EXIT_FAILURE) ;
+	}
 }
 
 
-double shift ( double *lb, double *ub, double *xn,
+static void check_bounds ( double *lb, double *ub ) {
+	// ensures that the lower bound is less than the upper bound
+	double up = *lb ;
+	if ( *lb > *ub ) {
+		*lb = *ub ;
+		*ub =  up ;
+	}
+}
+
+
+static void report (int max_iter, int n, char nm[], bool verbose) {
+	// reports if the method has been successful
+	if (n != max_iter) {
+
+		if (verbose) {
+			printf("%s Method:\n", nm) ;
+			printf("solution found in %d iterations\n", n) ;
+		}
+
+	} else {
+		fprintf(stderr, "%s method needs additional ", nm) ;
+		fprintf(stderr, "iterations for convergence\n") ;
+		exit(EXIT_FAILURE) ;
+	}
+}
+
+
+static double shift ( double *lb, double *ub, double *xn,
 	       double f(double, void*), void *vprms )
 {
 	double fn ;
@@ -71,41 +92,21 @@ double shift ( double *lb, double *ub, double *xn,
 }
 
 
-void check_bracket ( double lb, double ub, double f(double, void*),
-                     char nm[], void* vprms )
-{
-	// complains if there's no root in given interval and aborts
-	if ( !signbit( f(lb, vprms) * f(ub, vprms) ) ) {
-		fprintf(stderr, "\n%s Method:\n", nm) ;
-		fprintf(stderr, "No root in given interval ... \n") ;
-		fprintf(stderr, "Try again, aborting execution ... \n\n") ;
-		exit(EXIT_FAILURE) ;
-	}
-}
+// method interfaces
+double fzero ( double lb, double ub, double f(double, void*), void *vprms )
+{	// Shifter Method from nonlinear solvers using the default options
 
+	char nm[] = "fzero" ;
+	check_bracket (lb, ub, f, nm, vprms) ;
+	check_bounds  (&lb, &ub) ;
 
-void check_bounds ( double *lb, double *ub ) {
-	// ensures that the lower bound is less than the upper bound
-	double up = *lb ;
-	if ( *lb > *ub ) {
-		*lb = *ub ;
-		*ub =  up ;
-	}
-}
+	int n = 0 ;
+	double xn, fn ;
 
+        do fn = shift (&lb, &ub, &xn, f, vprms) ;
+        while (++n != MAX_ITER && fn > TOL) ;
 
-void report (int max_iter, int n, char nm[], bool verbose) {
-	// reports if the method has been successful
-	if (n != max_iter) {
+	report (MAX_ITER, n, nm, VERBOSE) ;
+	return xn ;
 
-		if (verbose) {
-			printf("%s Method:\n", nm) ;
-			printf("solution found in %d iterations\n", n) ;
-		}
-
-	} else {
-		fprintf(stderr, "%s method needs additional ", nm) ;
-		fprintf(stderr, "iterations for convergence\n") ;
-		exit(EXIT_FAILURE) ;
-	}
 }

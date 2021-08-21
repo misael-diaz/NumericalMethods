@@ -44,12 +44,6 @@ typedef struct {	/* (yet) unused in this minimalistic version */
 	bool verbose ;
 } nls_conf ;		// nonlinear-solver configuration struct
 
-// prototypes
+// method prototypes
 double fzero (double, double, double f(double, void*), void*);
-double shift (double*, double*, double*, double f(double, void*), void*);
-
-// utility functions
-void report        (int, int, char*, bool);
-void check_bracket (double, double, double f(double, void*), char*, void*);
-void check_bounds  (double*, double*);
 #endif
