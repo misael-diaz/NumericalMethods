@@ -44,9 +44,4 @@ double** iEuler   (double**, double, double, double, const int,
                    double odefun(double, double, double*), void*) ;
 double** EulerRK2 (double**, double, double, double, const int,
                    double f(double, double) ) ;
-double* linspace  (double*, double, double, const int) ;
-
-
-// Utilities
-double* ode_allocArray (double*, const int) ;
 #endif

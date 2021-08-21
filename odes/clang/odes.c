@@ -24,11 +24,43 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+
 #include "odes.h"
 
+
 // implementations
+static double* ode_allocArray (double *x, const int numel) {
+	// allocates memory for a first-rank array of doubles
+
+	x = (double*) malloc ( numel * sizeof(double) ) ;
+
+	if (x == NULL) {
+		fprintf(stderr, "\n\n") ;
+		fprintf(stderr, "ODE: failed to allocate array\n") ;
+		fprintf(stderr, "aborting execution ... \n") ;
+		fprintf(stderr, "\n\n") ;
+		exit(EXIT_FAILURE) ;
+	}
+
+	return x ;
+}
+
+
+static double* linspace (double *t, double ti, double tf, const int numel)
+{
+        // implements a numpy-like linspace method
+
+	double dt = (tf - ti) / ( (double) (numel - 1) ) ;
+
+	t = ode_allocArray (t, numel) ;
+        for (int i = 0 ; i != numel ; ++i)
+                t[i] = ti + ( (double) i ) * dt ;
+
+        return t ;
+}
+
+
+// method interfaces
 double** Euler ( double **odesol, double ti, double tf, double yi,
 		 const int N, double f(double t, double y) )
 {	// applies Euler's method to integrate the ODE
@@ -45,6 +77,7 @@ double** Euler ( double **odesol, double ti, double tf, double yi,
 
 	return odesol ;
 }
+
 
 double** iEuler ( double **odesol, double ti, double tf, double yi,
                   const int N, double f(double t, double y, double *prms),
@@ -105,34 +138,4 @@ double** EulerRK2 ( double **odesol, double ti, double tf, double yi,
 	}
 
 	return odesol ;
-}
-
-
-double* linspace (double *t, double ti, double tf, const int numel) {
-        // implements a numpy-like linspace method
-        
-	double dt = (tf - ti) / ( (double) (numel - 1) ) ;
-
-	t = ode_allocArray (t, numel) ;
-        for (int i = 0 ; i != numel ; ++i)
-                t[i] = ti + ( (double) i ) * dt ;
-
-        return t ;
-}
-
-
-double* ode_allocArray (double *x, const int numel) {
-	// allocates memory for a first-rank array of doubles
-	
-	x = (double*) malloc ( numel * sizeof(double) ) ;
-	
-	if (x == NULL) {
-		fprintf(stderr, "\n\n") ;
-		fprintf(stderr, "ODE: failed to allocate array\n") ;
-		fprintf(stderr, "aborting execution ... \n") ;
-		fprintf(stderr, "\n\n") ;
-		exit(EXIT_FAILURE) ;
-	}
-
-	return x ;
 }
