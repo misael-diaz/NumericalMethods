@@ -135,7 +135,7 @@ double fsol (double t) {
 
 
 void write (char filename[], const int numel, double **odesol) {
-	// writes the numerical solution to a data file
+	// writes the numerical solution and error to a data file
 	double *t = odesol[0];
 	double *y = odesol[1];
 
@@ -148,8 +148,9 @@ void write (char filename[], const int numel, double **odesol) {
 		exit(EXIT_FAILURE);
 	}
 
+	char fmt[] = "%23.15e %23.15e %23.15e\n" ;
 	for (int i = 0 ; i != numel ; ++i)
-		fprintf(pFile, "%23.15e \t %23.15e \n", t[i], y[i]);
+		fprintf(pFile, fmt, t[i], y[i], absval((fsol(t[i])-y[i])));
 	fclose(pFile);
 }
 
@@ -162,10 +163,9 @@ void display (const int numel, double **odesol) {
 	double *t = odesol[0];
 	double *y = odesol[1];
 
+	char fmt[] = "%23.15e %23.15e %23.15e %23.15e\n" ;
 	for (int i = 0 ; i != numel ; ++i) {
-		err = y[i] - fsol(t[i]);
-		err = absval (err);
-		fprintf(stdout, "%23.15e %23.15e %23.15e %23.15e \n",
-			t[i], y[i], fsol(t[i]), err);
+		err = absval( (fsol(t[i]) - y[i]) );
+		fprintf(stdout, fmt, t[i], y[i], fsol(t[i]), err);
 	}
 }
