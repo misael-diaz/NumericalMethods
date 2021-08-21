@@ -34,7 +34,6 @@
 #define RATE 1.0
 
 // prototypes
-double f (double, double) ;		/* ODE RHS Function f(t, y) */
 double fsol (double t) ;		// analytic solution
 void display (const int, double**) ;
 void write   (char*, const int, double**) ;
@@ -68,8 +67,8 @@ int main() {
 
 
 	/* solves the ode numerically via the specified methods */
-	oderet = Euler   (odesol[0], ti, tf, yi, N, f);
-	oderet = EulerRK2(odesol[1], ti, tf, yi, N, f);
+	oderet = Euler   (odesol[0], ti, tf, yi, N, odefun, iSolverParams);
+	oderet = EulerRK2(odesol[1], ti, tf, yi, N, odefun, iSolverParams);
 	oderet = iEuler  (odesol[2], ti, tf, yi, N, odefun, iSolverParams);
 
 
@@ -93,14 +92,6 @@ int main() {
 	free (odesol[2][0]) ;
 	free (odesol[2][1]) ;
 	return 0 ;
-}
-
-
-// implementations
-double f (double t, double y) {
-	// ODE function used by the explicit ODE solvers
-	double k = RATE ;
-	return  (-k * y) ;
 }
 
 
@@ -142,6 +133,7 @@ double fsol (double t) {
 
 void write (char filename[], const int numel, double **odesol) {
 	// writes the numerical solution to a data file
+	double err ;
 	double *t = odesol[0] ;
 	double *y = odesol[1] ;
 
@@ -154,8 +146,12 @@ void write (char filename[], const int numel, double **odesol) {
 		exit(EXIT_FAILURE) ;
 	}
 
-	for (int i = 0 ; i != numel ; ++i)
-		fprintf(pFile, "%23.15e \t %23.15e \n", t[i], y[i]) ;
+	char fmt[] = "%23.15e %23.15e %23.15e\n" ;	// format string
+	for (int i = 0 ; i != numel ; ++i) {
+		err = y[i] - fsol(t[i]);
+		err = absval (err) ;
+		fprintf(pFile, fmt, t[i], y[i], err);
+	}
 	fclose(pFile) ;
 }
 
