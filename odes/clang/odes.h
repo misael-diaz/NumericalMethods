@@ -39,9 +39,9 @@ typedef struct {
 
 // Methods
 double**  Euler   (double**, double, double, double, const int,
-                   double f(double, double) ) ;
+                   double odefun(double, double, double*), void*) ;
 double** iEuler   (double**, double, double, double, const int,
                    double odefun(double, double, double*), void*) ;
 double** EulerRK2 (double**, double, double, double, const int,
-                   double f(double, double) ) ;
+                   double odefun(double, double, double*), void*) ;
 #endif

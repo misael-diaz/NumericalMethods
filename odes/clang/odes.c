@@ -62,8 +62,13 @@ static double* linspace (double *t, double ti, double tf, const int numel)
 
 // method interfaces
 double** Euler ( double **odesol, double ti, double tf, double yi,
-		 const int N, double f(double t, double y) )
+		 const int N, double f(double t, double y, double* prms),
+		 void *vprms )
 {	// applies Euler's method to integrate the ODE
+
+	// unpacks parameters
+	iODE_solverParams *params = vprms ;
+	double *prms = params -> prms ;
 
 	double *t = NULL, *y = NULL ;			// t, y(t)
 	double dt = (tf - ti) / ( (double) N ) ;	// time-step
@@ -73,7 +78,7 @@ double** Euler ( double **odesol, double ti, double tf, double yi,
 
 	y[0] = yi ;
 	for (int i = 0 ; i != N ; ++i)
-		y[i + 1] = y[i] + dt * f(t[i], y[i]) ;
+		y[i + 1] = y[i] + dt * f(t[i], y[i], prms);
 
 	return odesol ;
 }
@@ -119,9 +124,14 @@ double** iEuler ( double **odesol, double ti, double tf, double yi,
 }
 
 
-double** EulerRK2 ( double **odesol, double ti, double tf, double yi,
-		    const int N, double f(double t, double y) )
+double** EulerRK2 (double **odesol, double ti, double tf, double yi,
+		   const int N, double f(double t, double y, double *prms),
+		   void *vprms)
 {	// applies an Euler-based, second-order, Runge-Kutta method
+
+	// unpacks parameters
+	iODE_solverParams *params = vprms ;
+	double *prms = params -> prms ;
 
 	double K1, K2 ;
 	double *t = NULL, *y = NULL ;
@@ -132,8 +142,8 @@ double** EulerRK2 ( double **odesol, double ti, double tf, double yi,
 
 	y[0] = yi ;
 	for (int i = 0 ; i != N ; ++i) {
-		K1 = f(t[i], y[i]) ;
-		K2 = f(t[i] + dt, y[i] + K1 * dt) ;
+		K1 = f(t[i], y[i], prms) ;
+		K2 = f(t[i] + dt, y[i] + K1 * dt, prms) ;
 		y[i + 1] = y[i] + 0.5 * dt * (K1 + K2) ;
 	}
 
