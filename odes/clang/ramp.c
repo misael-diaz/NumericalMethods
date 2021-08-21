@@ -60,17 +60,23 @@ int main() {
 
 	// creates placeholders for the numerical solution, odesol = [t, y]
 	double **oderet = NULL ;
-	double *odesol[] = {NULL, NULL};
+	double *odesol[][2] = { {NULL, NULL}, {NULL, NULL} };
 	// solves the ODE numerically and writes results to a data file
-	oderet = iEuler (odesol, ti, tf, yi, N, odefun, iSolverParams);
+	oderet = iEuler  (odesol[0], ti, tf, yi, N, odefun, iSolverParams);
+	oderet = EulerRK2(odesol[1], ti, tf, yi, N, odefun, iSolverParams);
+	// writes numerical results
 	char filename[] = "output/ramp/iEuler.dat" ;
-	write  (filename, numel, oderet);
-	display (numel, oderet);
+	write  (filename, numel, odesol[0]);
+	strcpy (filename, "output/ramp/EulRK2.dat");
+	write  (filename, numel, odesol[1]);
+	display(numel, oderet);
 
 	// frees memory buffers
 	free (iSolverParams);
-	free (odesol[0]);
-	free (odesol[1]);
+	free (odesol[0][0]);
+	free (odesol[0][1]);
+	free (odesol[1][0]);
+	free (odesol[1][1]);
 	return 0 ;
 }
 
