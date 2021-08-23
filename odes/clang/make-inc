@@ -29,6 +29,7 @@ NUM_INTEGRATION_SRC = odes.c
 TEST_NUMINT_SRC     = test.c
 TEST_RAMP_SRC       = ramp.c
 TEST_SINUSOID_SRC   = sinusoid.c
+TEST_KINETICS_SRC   = isothermal-second-order-kinetics-batch-reactor.c
 
 
 # objects
@@ -37,6 +38,7 @@ NUM_INTEGRATION_OBJ = odes.o
 TEST_NUMINT_OBJ     = test.o
 TEST_RAMP_OBJ       = ramp.o
 TEST_SINUSOID_OBJ   = sinusoid.o
+TEST_KINETICS_OBJ   = isothermal-second-order-kinetics-batch-reactor.o
 OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATION_OBJ)
 
 
@@ -44,4 +46,6 @@ OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATION_OBJ)
 TEST_NUMINT_EXE   = test-odes
 TEST_RAMP_EXE     = test-ramp-input
 TEST_SINUSOID_EXE = test-sinusoid-input
-TESTS = $(TEST_NUMINT_EXE) $(TEST_RAMP_EXE) $(TEST_SINUSOID_EXE)
+TEST_KINETICS_EXE = test-nonlinear-ode-reaction-kinetics
+TESTS             = $(TEST_NUMINT_EXE) $(TEST_RAMP_EXE)\
+                    $(TEST_SINUSOID_EXE) $(TEST_KINETICS_EXE)
