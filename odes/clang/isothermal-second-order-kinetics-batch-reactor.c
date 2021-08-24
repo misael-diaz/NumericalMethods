@@ -26,6 +26,7 @@
  *     Scientists, 3rd edition.
  * [1] A Koenig and B Moo, Accelerated C++ Practical Programming by
  *     Example.
+ * [2] HS Fogler, Elements of Chemical Reaction Engineering, 6th edition
  *
  */
 
