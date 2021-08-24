@@ -6,7 +6,7 @@
  * source: isothermal-second-order-kinetics-batch-reactor.c
  *
  * Synopsis:
- * Obtains the transient response of a second-order nonlinear Ordinary
+ * Obtains the transient response of a nonlinear Ordinary
  * Differential Equation ODE, which describes the depletion of a chemical
  * species by a chemical reaction of second-order kinetics carried out in a
  * isothermal batch reactor. It's assumed that the chemical reaction takes
