@@ -7,7 +7,7 @@
  *
  * Synopsis:
  * Obtains the transient response of a first-order Ordinary Differential
- * Equation ODE subject to a impulse-input.
+ * Equation ODE subject to an impulse-input.
  *
  *
  * Copyright (c) 2021 Misael Diaz-Maldonado
@@ -147,7 +147,7 @@ double fstep (double t) {
 double fimpulse (double t) {
 /* 
  * Synopsis:
- * Analytic solution of the first-order ODE subject to a impulse input:
+ * Analytic solution of the first-order ODE subject to an impulse input:
  *  		y' + k * y = b * u(t), 		y(t = 0) = yi,
  * where k is the rate constant, and b is the external forcing constant,
  * u(t) is the unit-impulse, and yi is the initial-value. 
