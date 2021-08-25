@@ -28,6 +28,7 @@ NL_SOLVER_FZERO_SRC = fzero.c
 NUM_INTEGRATION_SRC = odes.c
 TEST_NUMINT_SRC     = test.c
 TEST_RAMP_SRC       = ramp.c
+TEST_IMPULSE_SRC    = impulse.c
 TEST_SINUSOID_SRC   = sinusoid.c
 TEST_KINETICS_SRC   = isothermal-second-order-kinetics-batch-reactor.c
 TEST_RADIATION_SRC  = radiation-heat-transfer.c
@@ -38,6 +39,7 @@ NL_SOLVER_FZERO_OBJ = fzero.o
 NUM_INTEGRATION_OBJ = odes.o
 TEST_NUMINT_OBJ     = test.o
 TEST_RAMP_OBJ       = ramp.o
+TEST_IMPULSE_OBJ    = impulse.o
 TEST_SINUSOID_OBJ   = sinusoid.o
 TEST_KINETICS_OBJ   = isothermal-second-order-kinetics-batch-reactor.o
 TEST_RADIATION_OBJ  = radiation-heat-transfer.o
@@ -47,9 +49,10 @@ OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATION_OBJ)
 # executables
 TEST_NUMINT_EXE    = test-odes
 TEST_RAMP_EXE      = test-ramp-input
+TEST_IMPULSE_EXE   = test-impulse-input
 TEST_SINUSOID_EXE  = test-sinusoid-input
 TEST_KINETICS_EXE  = test-nonlinear-ode-reaction-kinetics
 TEST_RADIATION_EXE = test-radiation-heat-transfer
 TESTS              = $(TEST_NUMINT_EXE) $(TEST_RAMP_EXE)\
-                     $(TEST_SINUSOID_EXE) $(TEST_KINETICS_EXE)\
-                     $(TEST_RADIATION_EXE)
+                     $(TEST_IMPULSE_EXE) $(TEST_SINUSOID_EXE)\
+                     $(TEST_KINETICS_EXE) $(TEST_RADIATION_EXE)
