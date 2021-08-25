@@ -30,6 +30,7 @@ from ode import iEuler
 from ode import EulerRK2 as RK2
 import numpy as np
 from numpy import exp
+from scipy.integrate import solve_ivp
 import matplotlib as mpl
 mpl.use("qt5agg")
 from matplotlib import pyplot as plt
@@ -46,16 +47,19 @@ impulse = lambda t: -k * (yi - b / k) * exp(-k * t)
 
 n = 255                         # number of integration time-steps
 ti, tf = (0.0, 5.0)             # initial time ti and final time tf
-trange = (ti, tf)               # time range tuple
+tspan  = (ti, tf)               # time span tuple
 odesol = np.empty([2, n+1, 2])  # preallocates array for speed
 
 
 """ solves the ODE with Euler's and second-order Runge-Kutta Methods """
-odesol[:, :, 0] = iEuler(n, trange, yi, odefun)
-odesol[:, :, 1] = RK2   (n, trange, yi, odefun)
+odesol[:, :, 0] = iEuler(n, tspan, yi, odefun)
+odesol[:, :, 1] = RK2   (n, tspan, yi, odefun)
+# uses scipy's implementation of the fourth-order Runge-Kutta method
+odesol_scipy_IVP_Solver = solve_ivp(odefun, tspan, [yi], method="RK45")
 # unpacks the numerical solutions
 t, y_Euler, y_RK2 = (odesol[0, :, 0], odesol[1, :, 0], odesol[1, :, 1])
-
+t_scipy, y_scipy  = (odesol_scipy_IVP_Solver.t, odesol_scipy_IVP_Solver.y)
+y_scipy = y_scipy[0, :]
 
 """plots and compares the numerical solutions against the analytic ones"""
 
@@ -66,6 +70,8 @@ fig, ax = plt.subplots()    # effectively plots on the same figure
 
 ax.plot(t, step(t), color="black", linewidth=2.0,
         label="analytic solution")
+ax.plot(t_scipy, y_scipy, color="blue", marker="v", linestyle="",
+        label="scipy's IVP Solver")
 ax.plot(t[::8], y_Euler[::8], color="orange", marker="o", linestyle="",
         label="implicit Euler's Method")
 ax.plot(t[::16], y_RK2[::16], color="red",    marker="s", linestyle="",
@@ -87,6 +93,8 @@ fig, ax = plt.subplots()
 
 ax.plot(t, impulse(t), color="black", linewidth=2.0,
         label="analytic solution")
+ax.plot(t_scipy, odefun(t_scipy, y_scipy), color="blue", marker="v",
+        linestyle="", label="scipy's IVP Solver")
 ax.plot(t[::8], odefun(t[::8], y_Euler[::8]), color="orange", marker="o",
         linestyle="", label="implicit Euler's Method")
 ax.plot(t[::16], odefun(t[::8], y_RK2[::16]), color="red",    marker="s",
