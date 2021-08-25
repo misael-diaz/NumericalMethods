@@ -22,6 +22,7 @@
  *     Scientists, 3rd edition.
  * [1] A Koenig and B Moo, Accelerated C++ Practical Programming by
  *     Example.
+ * [2] CA Kluever, Dynamic Systems: Modeling, Simulation, and Control
  *
  */
 
