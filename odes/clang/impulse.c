@@ -186,7 +186,7 @@ void write (char filename[], const int numel, double **odesol) {
 	}
 
 	double prms[] = {.0, .0, .0, RATE, FEXT};
-	char fmt[] = "%23.15e %23.15e %23.15e %23.15e\n" ;
+	char fmt[] = "%23.15e %23.15e %23.15e %23.15e %23.15e\n" ;
 	for (int i = 0 ; i != numel ; ++i) {
 		Dy = odefun(t[i], y[i], prms);
 		err_step    = absval( (fstep(t[i]) - y[i]) );
