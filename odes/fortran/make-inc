@@ -27,6 +27,7 @@ LIBS =
 NL_SOLVER_FZERO_SRC = fzero.for
 NUM_INTEGRATORS_SRC = odes.for
 TEST_NUMINT_SRC     = test.for
+TEST_RAMP_SRC       = ramp.for
 TEST_IMPULSE_SRC    = impulse.for
 
 
@@ -34,11 +35,13 @@ TEST_IMPULSE_SRC    = impulse.for
 NL_SOLVER_FZERO_OBJ = fzero.o
 NUM_INTEGRATORS_OBJ = odes.o
 TEST_NUMINT_OBJ     = test.o
+TEST_RAMP_OBJ       = ramp.o
 TEST_IMPULSE_OBJ    = impulse.o
 OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATORS_OBJ)
 
 
 # executables
 TEST_NUMINT_EXE  = test-ode-solvers
+TEST_RAMP_EXE    = test-ramp-input
 TEST_IMPULSE_EXE = test-impulse-input
-TESTS = $(TEST_NUMINT_EXE) $(TEST_IMPULSE_EXE)
+TESTS            = $(TEST_NUMINT_EXE) $(TEST_RAMP_EXE) $(TEST_IMPULSE_EXE)
