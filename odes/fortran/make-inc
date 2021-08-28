@@ -17,7 +17,7 @@
 FC = gfortran-10
 
 # options
-FCOPT = -ffree-form -g -fbacktrace -Wall -O0
+FCOPT = -cpp -ffree-form -g -fbacktrace -Wall -O0
 
 # libraries
 LIBS =
@@ -26,16 +26,19 @@ LIBS =
 # sources
 NL_SOLVER_FZERO_SRC = fzero.for
 NUM_INTEGRATORS_SRC = odes.for
-TEST_NUMINT_SRC = test.for
+TEST_NUMINT_SRC     = test.for
+TEST_IMPULSE_SRC    = impulse.for
 
 
 # objects
 NL_SOLVER_FZERO_OBJ = fzero.o
 NUM_INTEGRATORS_OBJ = odes.o
-TEST_NUMINT_OBJ = test.o
+TEST_NUMINT_OBJ     = test.o
+TEST_IMPULSE_OBJ    = impulse.o
 OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATORS_OBJ)
 
 
 # executables
-TEST_NUMINT_EXE = test-ode-solvers
-TESTS = $(TEST_NUMINT_EXE)
+TEST_NUMINT_EXE  = test-ode-solvers
+TEST_IMPULSE_EXE = test-impulse-input
+TESTS = $(TEST_NUMINT_EXE) $(TEST_IMPULSE_EXE)
