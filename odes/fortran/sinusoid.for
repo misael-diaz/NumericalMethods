@@ -184,25 +184,3 @@ program tests
     deallocate (params, odesol, filename, stat=mstat)
     if (mstat /= 0) error stop "unexpected memory deallocation error"
 end program
-
-
-subroutine write (odesol, filename)
-    ! Synopsis: Writes the numerical solution (t, y) to a data file
-    use, intrinsic :: iso_fortran_env, only: int64, real64
-    implicit none
-    integer(kind = int64) :: i, nrows, unit, iostat
-    real(kind = real64), intent(in) :: odesol(:, :)
-    character(len=*), intent(in) :: filename
-
-    unit = 100
-    open (unit=unit, file=filename, action='write', iostat = iostat)
-    if (iostat /= 0) error stop ("I/O error: " // filename)
-
-    nrows = size (array = odesol, dim = 1, kind = int64)
-    do i = 1, nrows
-        write (unit, '(2E25.15)') odesol(i, :)
-    end do
-
-    close(unit)
-    return
-end subroutine
