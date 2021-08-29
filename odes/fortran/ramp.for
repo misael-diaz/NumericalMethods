@@ -4,7 +4,7 @@
 !
 !   Synopsis:
 !   Solves for the transient response of a first-order dynamic system
-!   subject to a unit-step input:
+!   subject to a unit-ramp input:
 !
 !                       y' + k * y = b * u(t),
 !
@@ -49,7 +49,7 @@ module ramp_odefuns
     contains
         function odefun(t, y, params) result(f)
             ! Synopsis:
-            ! RHS of the first-order ODE subject to a unit-step input.
+            ! RHS of the first-order ODE subject to a unit-ramp input.
             real(kind = real64), intent(in) :: t
             real(kind = real64), intent(in) :: y
             real(kind = real64), intent(in) :: params(:)
