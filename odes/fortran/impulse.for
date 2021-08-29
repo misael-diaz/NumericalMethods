@@ -117,7 +117,7 @@ module impulse_odefuns
                 err_step = dabs( fstep( t(i) ) - y(i) )
                 err_impulse = dabs( fimpulse( t(i) ) -&
                     & odefun(t(i), y(i), params) )
-                write (unit, '(5E25.15)') t(i), y(i), odefun(t(i), y(i), &
+                write (unit, '(5E25.16)') t(i), y(i), odefun(t(i), y(i), &
                     & params), err_step, err_impulse
             end do
 
