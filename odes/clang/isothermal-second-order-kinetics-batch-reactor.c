@@ -6,12 +6,20 @@
  * source: isothermal-second-order-kinetics-batch-reactor.c
  *
  * Synopsis:
- * Obtains the transient response of a nonlinear Ordinary
- * Differential Equation ODE, which describes the depletion of a chemical
- * species by a chemical reaction of second-order kinetics carried out in a
- * isothermal batch reactor. It's assumed that the chemical reaction takes
- * place in a liquid so that the volume of the reactor can be regarded as
- * constant.
+ * Obtains the transient response of a nonlinear Ordinary Differential
+ * Equation ODE, which describes the depletion of a chemical species by a
+ * chemical reaction of second-order kinetics carried out in a isothermal
+ * batch reactor:
+ *
+ *			y' = -beta * y**2,
+ *
+ * where `beta' is the effective reaction rate constant, beta = k * Ca0,
+ * where `k' is the reaction rate constant, `Ca0' is the initial reactant
+ * concentration (moles / volume), `y' is the non-dimensional reactant
+ * concentration y(t) = Ca(t) / Ca0, and `t' is the time.
+ *
+ * It's assumed that the chemical reaction takes place in a liquid so that
+ * the volume of the reactor can be regarded as constant.
  *
  *
  * Copyright (c) 2021 Misael Diaz-Maldonado
@@ -27,6 +35,7 @@
  * [1] A Koenig and B Moo, Accelerated C++ Practical Programming by
  *     Example.
  * [2] HS Fogler, Elements of Chemical Reaction Engineering, 6th edition
+ * [3] CA Kluever, Dynamic Systems: Modeling, Simulation, and Control
  *
  */
 
@@ -104,7 +113,7 @@ double objf (double yn, void *vprms)
 
 
 double odefun (double t, double y, double* prms)
-{	// Synopsis: Right-hand side of the ODE.
+{	// Synopsis: Right-hand side RHS of the ODE (molar balance eqtn).
 
 //      double dt   = prms[0];
 //      double yi   = prms[1];
@@ -115,21 +124,13 @@ double odefun (double t, double y, double* prms)
 
 
 double fsol (double t) {
-/* 
- * Synopsis:
- * Analytic solution of the first-order nonlinear ODE:
- *  		y' = -BETA * y**2 		y(t = 0) = 1,
- * where BETA is the effective rate constant, and `y' is the concentration
- * of the chemical species. Note that the concentration has been made
- * non-dimensional by the initial concentration (Ca ~ C{a,0}).
- *
- */
+	// Synopsis: The analytic expression for the concentration y(t).
 	return ( 1.0 / (1.0 + BETA * t) );
 }
 
 
 void write (char filename[], const int numel, double **odesol) {
-	// writes the numerical solution and error to a data file
+	// Synopsis: Writes the numerical solution and error to a data file
 	double *t = odesol[0];
 	double *y = odesol[1];
 
@@ -150,6 +151,7 @@ void write (char filename[], const int numel, double **odesol) {
 
 
 void display (const int numel, double **odesol) {
+	// Synopsis:
 	// Displays the numerical and exact solutions, and the absolute 
 	// error to the standard output.
 
