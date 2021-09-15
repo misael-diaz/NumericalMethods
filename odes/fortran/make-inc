@@ -31,6 +31,7 @@ TEST_RAMP_SRC       = ramp.for
 TEST_IMPULSE_SRC    = impulse.for
 TEST_SINUSOID_SRC   = sinusoid.for
 TEST_KINETICS_SRC   = isothermal-second-order-kinetics-batch-reactor.for
+TEST_RADIATION_SRC  = radiation-heat-transfer.for
 
 
 # objects
@@ -41,16 +42,18 @@ TEST_RAMP_OBJ       = ramp.o
 TEST_IMPULSE_OBJ    = impulse.o
 TEST_SINUSOID_OBJ   = sinusoid.o
 TEST_KINETICS_OBJ   = isothermal-second-order-kinetics-batch-reactor.o
+TEST_RADIATION_OBJ  = radiation-heat-transfer.o
 OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATORS_OBJ)
 
 
 # executables
-TEST_NUMINT_EXE   = test-ode-solvers
-TEST_RAMP_EXE     = test-ramp-input
-TEST_IMPULSE_EXE  = test-impulse-input
-TEST_SINUSOID_EXE = test-sinusoid-input
-TEST_KINETICS_EXE = test-nonlinear-ode-reaction-kinetics
-TESTS             = $(TEST_NUMINT_EXE) $(TEST_RAMP_EXE)\
-                    $(TEST_IMPULSE_EXE) $(TEST_SINUSOID_EXE)\
-                    $(TEST_KINETICS_EXE)
+TEST_NUMINT_EXE    = test-ode-solvers
+TEST_RAMP_EXE      = test-ramp-input
+TEST_IMPULSE_EXE   = test-impulse-input
+TEST_SINUSOID_EXE  = test-sinusoid-input
+TEST_KINETICS_EXE  = test-nonlinear-ode-reaction-kinetics
+TEST_RADIATION_EXE = test-radiation-heat-transfer
+TESTS              = $(TEST_NUMINT_EXE) $(TEST_RAMP_EXE)\
+                     $(TEST_IMPULSE_EXE) $(TEST_SINUSOID_EXE)\
+                     $(TEST_KINETICS_EXE) $(TEST_RADIATION_EXE)
                 
