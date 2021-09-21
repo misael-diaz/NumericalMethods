@@ -38,7 +38,6 @@
 ! MACROS for the rate and forcing constants, and the initial value y(0)
 #define RATE 1.0_real64
 #define FEXT 1.0_real64
-#define YINI 0.0_real64
 
 module impulse_odefuns
     ! defines functions for solving for the impulse response
@@ -71,9 +70,8 @@ module impulse_odefuns
             real(kind = real64), intent(in) :: t
             real(kind = real64), parameter :: k  = RATE
             real(kind = real64), parameter :: b  = FEXT
-            real(kind = real64), parameter :: yi = YINI
 
-            y = ( (yi - b / k) * dexp(-k * t) + b / k )
+            y = ( -(b / k) * dexp(-k * t) + b / k )
             
             return
         end function
@@ -85,9 +83,8 @@ module impulse_odefuns
             real(kind = real64), intent(in) :: t
             real(kind = real64), parameter :: k  = RATE
             real(kind = real64), parameter :: b  = FEXT
-            real(kind = real64), parameter :: yi = YINI
 
-            y = ( -k * (yi - b / k) * dexp(-k * t) )
+            y = ( b * dexp(-k * t) )
             
             return
         end function
@@ -167,7 +164,7 @@ program tests
     fp => odefun
     ti = 0.0_real64             ! initial time
     tf = 3.0e1_real64           ! final time
-    yi = YINI                   ! initial value, y(t = ti) = yi
+    yi = 0.0_real64             ! initial value, y(0) = 0
     k  = RATE                   ! rate constant
     b  = FEXT                   ! forcing constant
 
