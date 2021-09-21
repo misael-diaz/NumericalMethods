@@ -7,7 +7,12 @@
  *
  * Synopsis:
  * Obtains the transient response of a first-order Ordinary Differential
- * Equation ODE subject to an impulse-input.
+ * Equation ODE subject to either a unit-step or the unit-impulse:
+ *
+ * 			y' + k * y = b * u(t),	y(0) = 0,
+ *
+ * where k and b are the rate and forcing constants, respectively, and u(t)
+ * represents either the unit-step or unit-impulse functions.
  *
  *
  * Copyright (c) 2021 Misael Diaz-Maldonado
@@ -35,7 +40,6 @@
 // MACROS for the rate and external forcing constants, respectively
 #define RATE 1.0
 #define FEXT 1.0
-#define YINI 0.0
 
 // prototypes
 double fstep   (double t);				// step solution
@@ -51,7 +55,7 @@ int main() {
 	const int N = 511 ;		// number of intervals
 	const int numel = N + 1 ;	// number of elements in time array
 	double ti = 0.0, tf = 3.0e1 ;	// initial and final times
-	double yi = YINI ;		// initial value
+	double yi = 0.0 ;		// initial value
 
 	// allocates and packs the parameters for implicit solver
 	double prms[] = {.0, .0, .0, RATE, FEXT};
@@ -140,8 +144,7 @@ double fstep (double t) {
  */
 	double k  = RATE;
 	double b  = FEXT;
-	double yi = YINI;
-	return ( (yi - b / k) * exp(-k * t) + b / k );
+	return ( -(b / k) * exp(-k * t) + b / k );
 }
 
 
@@ -161,8 +164,7 @@ double fimpulse (double t) {
  */
 	double k  = RATE;
 	double b  = FEXT;
-	double yi = YINI;
-	return ( -k * (yi - b / k) * exp(-k * t) );
+	return ( b * exp(-k * t) );
 }
 
 
