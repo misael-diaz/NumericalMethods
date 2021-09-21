@@ -8,7 +8,12 @@ Prof. M. Diaz-Maldonado
 
 Synopsis:
 Solves for the transient response of a first-order system when subjected
-to an impulse-input.
+to either a unit-step or unit-impulse:
+
+            y' + k * y = b * u(t),  y(0) = 0,
+
+where k and b are the rate and forcing constants, respectively, and u(t)
+represents either the unit-step or unit-impulse functions.
 
 
 Copyright (c) 2021 Misael Diaz-Maldonado
@@ -41,8 +46,8 @@ yi, k, b = (0.0, 1.0, 1.0)
 # defines the right-hand side RHS of the ODE: dy/dt = f(t, y) as a lambda
 odefun = lambda t, y: (b - k * y)
 # defines lambdas for the step and impulse-response for validation
-step    = lambda t: (yi - b / k) * exp(-k * t) + b / k 
-impulse = lambda t: -k * (yi - b / k) * exp(-k * t)
+step    = lambda t: -(b / k) * exp(-k * t) + b / k
+impulse = lambda t: b * exp(-k * t)
 
 
 n = 255                         # number of integration time-steps
