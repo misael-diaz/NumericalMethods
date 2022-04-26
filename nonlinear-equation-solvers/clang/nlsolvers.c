@@ -122,7 +122,7 @@ double shifter_base ( double lb, double ub, double f(double),
 
 void report (int max_iter, int n, char nm[], bool verbose) {
 	// reports if the method has been successful
-	if (n != max_iter) {
+	if (n < max_iter) {
 		if (verbose) {
 			printf("%s Method:\n", nm) ;
 			printf("solution found in %d iterations\n", n) ;
