@@ -70,7 +70,7 @@ module nlsolvers
             call bounds_check  (lb, ub, a, b)
             call optset(conf, opts)
 
-            n = 1
+            n = 0
             x = 0.5_real64 * (a + b)
             do while (n /= conf % max_iter .and. abs( fp(x) ) > conf % tol)
                 call bisector (a, b, x, fp)
@@ -118,7 +118,7 @@ module nlsolvers
             call bounds_check  (lb, ub, a, b)
             call optset(conf, opts)
 
-            n = 1
+            n = 0
             x = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
             do while (n /= conf % max_iter .and. abs( fp(x) ) > conf % tol)
                 call interp (a, b, x, fp)
@@ -163,7 +163,7 @@ module nlsolvers
             call bounds_check  (lb, ub, a, b)
             call optset(conf, opts)
 
-            n = 1
+            n = 0
             x1 = 0.5_real64 * (a + b)
             x2 = ( a * fp(b) - b * fp(a) ) / ( fp(b) - fp(a) )
             ! selects the approximate (presumably) closer to the root
@@ -219,7 +219,7 @@ module nlsolvers
             character(len=*), parameter :: errmsg = &
                 & "method needs more iterations for convergence"
 
-            if (n /= conf % max_iter) then
+            if (n < conf % max_iter) then
                 if (conf % verbose) then
                     print *, name // " Method: "
                     print *, "solution found in ", n, " iterations"

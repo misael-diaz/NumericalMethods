@@ -45,7 +45,7 @@ function x = bisect(a, b, f, opt)
     check_bounds
     check_bracket
 
-    n = 1;
+    n = 0;
     x = 0.5 * (a + b);
     while ( n ~= MAX_ITER && abs( f(x) ) > TOL )
 
@@ -107,7 +107,7 @@ function x = bisect(a, b, f, opt)
 
     function report
         % Synopsis: Reports to the user if the method has been successful.
-        if ( n ~= MAX_ITER )
+        if ( n < MAX_ITER )
 	    if (VERBOSE)
                 fprintf('%s Method:\n', name)
                 fprintf('>> Solution found in %d iterations\n', n)
