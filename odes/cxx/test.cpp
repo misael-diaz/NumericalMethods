@@ -45,6 +45,7 @@ using std::tuple ;
 using std::string ;
 using std::vector ;
 using std::ofstream ;
+using std::function ;
 using std::scientific ;
 using std::streamsize ;
 using std::setprecision ;
@@ -70,10 +71,9 @@ int main() {
 
 	double k = 1.0 ;
 	// lambda, odefun, RHS of the ODE f(t, y)
-	std::function < double(double, double) >
-	f = [k](double t, double y) -> double {
-		return (-k * y) ;
-       	} ;
+	function < double(double, double) > f = [k](double t, double y) {
+		return (-k * y);
+	};
 
 	// solves the ODE using the specified method
 	odesol_Euler  =  Euler(odesol_Euler,  ti, tf, yi, N, f) ;
