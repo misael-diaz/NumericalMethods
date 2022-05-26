@@ -153,16 +153,22 @@ ode::RK2 ( std::tuple< std::vector<double>, std::vector<double> >& odesol,
 }
 
 
-std::vector<double>& linspace (std::vector<double>& t, double ti,
-			       double tf, int numel)
+std::vector<double>& linspace (std::vector<double>& t, double start,
+			       double end, int numel)
 {	// implements a numpy-like linspace method
 	t.clear();				// clears (existing) data
 	t.reserve (numel);			// prellocates for speed
-	std::vector<int> idx (numel);		// index vector [0, numel)
-	std::iota (idx.begin(), idx.end(), 0);
-	double dt = (tf - ti) / ( (double) (numel - 1) );
-	auto f = [&](const int& i) { return (ti + ( (double) i) * dt); };
-	std::transform (idx.begin(), idx.end(), std::back_inserter(t), f);
+
+	// calculates the time-step
+	double dt = (end - start) / ( (double) (numel - 1) );
+
+	// computes the time vector
+	for (int i = 0; i != numel; ++i)
+	{
+		double ti = (start + ( (double) i ) * dt);	// t[i]
+		t.push_back (ti);
+	}
+
 	return t ;
 }
 
