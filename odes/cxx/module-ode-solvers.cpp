@@ -43,33 +43,31 @@ export namespace ode {
 	// Euler's Method
 	std::tuple< std::vector<double>, std::vector<double> >&
 	Euler ( std::tuple< std::vector<double>, std::vector<double> >&,
-		const double&, const double&, const double&, const int&,
-		std::function< double(const double&, const double&) >& ) ;
+		double, double, double, int,
+		std::function< double(double, double) >& ) ;
 
 	// implicit Euler's method
 	std::tuple< std::vector<double>, std::vector<double> >&
 	iEuler ( std::tuple< std::vector<double>, std::vector<double> >&,
-		 const double&, const double&, const double&, const int&,
-		 std::function< double(const double&, const double&) >& ) ;
+		 double, double, double, int,
+		 std::function< double(double, double) >& ) ;
 	
 	// second-order Runge-Kutta Method
 	std::tuple< std::vector<double>, std::vector<double> >&
 	RK2 ( std::tuple< std::vector<double>, std::vector<double> >&,
-	      const double&, const double&, const double&, const int&,
-	      std::function< double(const double&, const double&) >& ) ;
+	      double, double, double, int,
+	      std::function< double(double, double) >& ) ;
 
 }
 
 // declarations
-std::vector<double>& linspace ( std::vector<double>&, const double&,
-		                const double&, const int& ) ;
+std::vector<double>& linspace (std::vector<double>&, double, double, int);
 
 // implementations
 std::tuple< std::vector<double>, std::vector<double> >&
 ode::Euler (std::tuple< std::vector<double>, std::vector<double> >& odesol,
-	    const double& ti, const double& tf, const double& yi,
-	    const int& N,
-	    std::function< double(const double&, const double&) >& f )
+	    double ti, double tf, double yi, int N,
+	    std::function< double(double, double) >& f )
 {	// possible implementation of Euler's explicit method
 
 	double dt = (tf - ti) / ( (double) N );		// time-step, dt
@@ -92,9 +90,8 @@ ode::Euler (std::tuple< std::vector<double>, std::vector<double> >& odesol,
 
 std::tuple< std::vector<double>, std::vector<double> >&
 ode::iEuler(std::tuple< std::vector<double>, std::vector<double> >& odesol,
-	    const double& ti, const double& tf, const double& yi,
-	    const int& N,
-	    std::function< double(const double&, const double&) >& f )
+	    double ti, double tf, double yi, int N,
+	    std::function< double(double, double) >& f )
 {	// possible implementation of Euler's implicit method
 
 	double K1, K2 ;					// slopes
@@ -131,9 +128,8 @@ ode::iEuler(std::tuple< std::vector<double>, std::vector<double> >& odesol,
 
 std::tuple< std::vector<double>, std::vector<double> >&
 ode::RK2 ( std::tuple< std::vector<double>, std::vector<double> >& odesol,
-	   const double& ti, const double& tf, const double& yi,
-	   const int& N,
-	   std::function< double(const double&, const double&) >& f )
+	   double ti, double tf, double yi, int N,
+	   std::function< double(double, double) >& f )
 {	// implements an Euler-based, second-order, Runge-Kutta Method
 
 	double K1, K2 ;					// slopes
@@ -157,8 +153,8 @@ ode::RK2 ( std::tuple< std::vector<double>, std::vector<double> >& odesol,
 }
 
 
-std::vector<double>& linspace (std::vector<double>& t, const double& ti,
-		               const double& tf, const int& numel)
+std::vector<double>& linspace (std::vector<double>& t, double ti,
+			       double tf, int numel)
 {	// implements a numpy-like linspace method
 	t.clear();				// clears (existing) data
 	t.reserve (numel);			// prellocates for speed
