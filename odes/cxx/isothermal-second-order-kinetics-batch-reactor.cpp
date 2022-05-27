@@ -74,14 +74,14 @@ using ode::iEuler ;
 using ode::RK2 ;
 
 // lambda, odefun, RHS of the ODE f(t, y)
-std::function < double(const double&, const double&) >
-odefun = [](const double& t, const double& y) -> double {
+std::function < double(double, double) >
+odefun = [](double t, double y) -> double {
 	const double beta = BETA ;
 	return (-beta * y * y);
 } ;
 
 // analytic expression for the non-dimensional reactant concentration, y(t)
-auto fsol = [](const double& t) -> double {
+auto fsol = [](double t) -> double {
 	return ( 1.0 / (1.0 + BETA * t) );
 } ;
 

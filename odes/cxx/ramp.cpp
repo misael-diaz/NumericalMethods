@@ -66,15 +66,15 @@ using ode::iEuler ;
 using ode::RK2 ;
 
 // lambda, odefun, RHS of the ODE f(t, y)
-std::function < double(const double&, const double&) >
-odefun = [](const double& t, const double& y) -> double {
+std::function < double(double, double) >
+odefun = [](double t, double y) -> double {
 	const double k = RATE ;
 	const double b = FEXT ;
 	return (b * t - k * y) ;
 } ;
 
 // analytic expression for the ramp-response, y(t)
-auto framp = [](const double& t) -> double {
+auto framp = [](double t) -> double {
 	const double k  = RATE ;
 	const double b  = FEXT ;
 	return (b / (k * k) * (exp(-k * t) - 1.0) + b / k * t);

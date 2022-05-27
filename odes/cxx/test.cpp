@@ -69,8 +69,8 @@ int main() {
 	tuple < vector<double>, vector<double> > odesol_RK2 ;
 
 	// lambda, odefun, RHS of the ODE f(t, y)
-	std::function < double(const double&, const double&) >
-	f = [](const double& t, const double& y) -> double {
+	std::function < double(double, double) >
+	f = [](double t, double y) -> double {
 		const double k = 1.0 ;
 		return (-k * y) ;
        	} ;
