@@ -34,7 +34,7 @@ function x = shifter(a, b, f, opt)
     check_bounds
     check_bracket
 
-    n = 0;
+    n = 1;
     shift
     while ( n ~= MAX_ITER && abs( f(x) ) > TOL )
 
@@ -107,7 +107,7 @@ function x = shifter(a, b, f, opt)
 
     function report
         % Synopsis: Reports to the user if the method has been successful.
-        if ( n < MAX_ITER )
+        if ( n ~= MAX_ITER )
 	    if (VERBOSE)
                 fprintf('%s Method:\n', name)
                 fprintf('>> Solution found in %d iterations\n', n)

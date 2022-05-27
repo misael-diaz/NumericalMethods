@@ -167,7 +167,7 @@ void report (const int& n, const std::string& nm,
              const nlsolver::config& opt)
 {
 	// reports if the method has been successful
-	if (n < opt.max_iter) {
+	if (n != opt.max_iter) {
 		if (opt.verbose) {
 			std::cout << nm << " Method:" << std::endl ;
 			std::cout << "solution found in " << n << " "
