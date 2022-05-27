@@ -66,22 +66,22 @@ using ode::iEuler ;
 using ode::RK2 ;
 
 // lambda, odefun, RHS of the ODE f(t, y)
-std::function < double(const double&, const double&) >
-odefun = [](const double& t, const double& y) -> double {
+std::function < double(double, double) >
+odefun = [](double t, double y) -> double {
 	const double k = RATE ;
 	const double b = FEXT ;
 	return (b - k * y) ;
 } ;
 
 // analytic expression for the step-response, y(t)
-auto fstep = [](const double& t) -> double {
+auto fstep = [](double t) -> double {
 	const double k  = RATE ;
 	const double b  = FEXT ;
 	return ( -(b / k) * exp(-k * t) + b / k ) ;
 } ;
 
 // analytic expression for the impulse-response, y(t)
-auto fimpulse = [](const double& t) -> double {
+auto fimpulse = [](double t) -> double {
 	const double k  = RATE ;
 	const double b  = FEXT ;
 	return  ( b * exp(-k * t) );

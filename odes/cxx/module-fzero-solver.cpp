@@ -60,27 +60,26 @@ export namespace nlsolver {
 		bool verbose ;
 	} ;
 
-	double fzero(double,double,std::function<double(const double&)>&,
-		     config ) ;
+	double fzero(double, double, std::function<double(double)>&,
+		     config);
 }
 
 
 // declarations (prototypes)
-void report (const int& n, const std::string& nm,
-             const nlsolver::config& opt) ;
+void report (int n, std::string nm, const nlsolver::config& opt) ;
 void check_bounds ( double& lb, double& ub ) ;
 
-void check_bracket ( const double&, const double&, const std::string&,
-	       	     std::function<double(const double&)>& ) ;
+void check_bracket ( double, double, std::string,
+		     std::function<double(double)>& ) ;
 
 double shift ( double&, double&, double&, 
-	       std::function<double(const double&)>& ) ;
+	       std::function<double(double)>& ) ;
 
 
 
 // implementations
 double nlsolver::fzero   ( double lb, double ub, 
-		           std::function<double(const double&)>& f,
+		           std::function<double(double)>& f,
 	       	           config opt = config() )
 {	// Shifter Method
 
@@ -109,9 +108,8 @@ void check_bounds ( double& lb, double& ub ) {
 }
 
 
-void check_bracket ( const double& lb, const double& ub, 
-		     const std::string& nm, 
-		     std::function<double(const double&)>& f )
+void check_bracket ( double lb, double ub, std::string nm,
+		     std::function<double(double)>& f )
 {
 	// complains if there's no root in given interval
 	if ( f(lb) * f(ub) > 0. ) {
@@ -124,8 +122,7 @@ void check_bracket ( const double& lb, const double& ub,
 }
 
 
-void report (const int& n, const std::string& nm,
-             const nlsolver::config& opt)
+void report (int n, std::string nm, const nlsolver::config& opt)
 {
 	// reports if the method has been successful
 	if (n != opt.max_iter) {
@@ -143,7 +140,7 @@ void report (const int& n, const std::string& nm,
 
 
 double shift ( double& lb, double& ub, double& xn,
-	       std::function<double(const double&)>& f )
+	       std::function<double(double)>& f )
 {	// like bisector but uses the step (presumably) closer to the root
 	double fn ;
 	double xb = 0.5 * (lb + ub) ;
