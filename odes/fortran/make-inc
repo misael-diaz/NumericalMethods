@@ -17,7 +17,7 @@
 FC = gfortran-10
 
 # options
-FCOPT = -ffree-form -g -fbacktrace -Wall -O0
+FCOPT = -cpp -ffree-form -g -fbacktrace -Wall -O0
 
 # libraries
 LIBS =
@@ -26,16 +26,34 @@ LIBS =
 # sources
 NL_SOLVER_FZERO_SRC = fzero.for
 NUM_INTEGRATORS_SRC = odes.for
-TEST_NUMINT_SRC = test.for
+TEST_NUMINT_SRC     = test.for
+TEST_RAMP_SRC       = ramp.for
+TEST_IMPULSE_SRC    = impulse.for
+TEST_SINUSOID_SRC   = sinusoid.for
+TEST_KINETICS_SRC   = isothermal-second-order-kinetics-batch-reactor.for
+TEST_RADIATION_SRC  = radiation-heat-transfer.for
 
 
 # objects
 NL_SOLVER_FZERO_OBJ = fzero.o
 NUM_INTEGRATORS_OBJ = odes.o
-TEST_NUMINT_OBJ = test.o
-OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATORS_OBJ) $(TEST_NUMINT_OBJ)
+TEST_NUMINT_OBJ     = test.o
+TEST_RAMP_OBJ       = ramp.o
+TEST_IMPULSE_OBJ    = impulse.o
+TEST_SINUSOID_OBJ   = sinusoid.o
+TEST_KINETICS_OBJ   = isothermal-second-order-kinetics-batch-reactor.o
+TEST_RADIATION_OBJ  = radiation-heat-transfer.o
+OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATORS_OBJ)
 
 
 # executables
-TEST_NUMINT_EXE = test-ode-solvers
-TESTS = $(TEST_NUMINT_EXE)
+TEST_NUMINT_EXE    = test-ode-solvers
+TEST_RAMP_EXE      = test-ramp-input
+TEST_IMPULSE_EXE   = test-impulse-input
+TEST_SINUSOID_EXE  = test-sinusoid-input
+TEST_KINETICS_EXE  = test-nonlinear-ode-reaction-kinetics
+TEST_RADIATION_EXE = test-radiation-heat-transfer
+TESTS              = $(TEST_NUMINT_EXE) $(TEST_RAMP_EXE)\
+                     $(TEST_IMPULSE_EXE) $(TEST_SINUSOID_EXE)\
+                     $(TEST_KINETICS_EXE) $(TEST_RADIATION_EXE)
+                

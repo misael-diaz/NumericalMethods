@@ -1,0 +1,186 @@
+!
+!   Applied Numerical Analysis                              August 29, 2021
+!   Prof. M Diaz-Maldonado
+!
+!   Synopsis:
+!   Solves for the transient response of a first-order dynamic system
+!   subject to a sinusoid input:
+!
+!                       y' + k * y = b * u(t),
+!
+!   where k is the rate, b is the forcing constant, and u(t) = sin(w * t)
+!   is the sinusoid input function for t > 0.
+!
+!
+!   Copyright (C) 2021 Misael Diaz-Maldonado
+!
+!   This program is free software: you can redistribute it and/or modify
+!   it under the terms of the GNU General Public License as published by
+!   the Free Software Foundation, either version 3 of the License, or
+!   (at your option) any later version.
+!
+!   This program is distributed in the hope that it will be useful,
+!   but WITHOUT ANY WARRANTY; without even the implied warranty of
+!   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!   GNU General Public License for more details.
+!
+!   You should have received a copy of the GNU General Public License
+!   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+!
+!
+!   References:
+!   [0] A Gilat and V Subramanian, Numerical Methods for Engineers and
+!       Scientists, 3rd edition.
+!   [1] CA Kluever, Dynamic Systems: Modeling, Simulation, and Control
+!   [2] SJ Chapman, FORTRAN for Scientists and Engineers, 4th edition
+
+
+! MACROS for the rate, forcing, and frequency constants, and the initial
+! value y(0), respectively
+#define RATE  1.0_real64
+#define FEXT  1.0_real64
+#define OMEGA 1.0_real64
+#define YINI  0.0_real64
+
+
+module sinusoid_odefuns
+    ! defines functions for solving for the sinusoid response
+    use, intrinsic :: iso_fortran_env, only: int64, real64
+    implicit none
+    private
+    public :: odefun
+    public :: odesol_Write
+    contains
+        function odefun(t, y, params) result(f)
+            ! Synopsis:
+            ! RHS of the first-order ODE subject to a sinusoid input.
+            real(kind = real64), intent(in) :: t
+            real(kind = real64), intent(in) :: y
+            real(kind = real64), intent(in) :: params(:)
+            real(kind = real64):: k, b, w
+            real(kind = real64):: f
+
+            k = params(1)
+            b = params(2)
+            w = params(3)
+            f = (b * dsin(w * t) - k * y)
+            
+            return
+        end function
+
+
+        function fsinusoid(t) result(y)
+            ! Synopsis: Analytic expression for the sinusoid response y(t).
+            real(kind = real64) :: y
+            real(kind = real64) :: A0, A1
+            real(kind = real64), intent(in) :: t
+            real(kind = real64), parameter :: k  = RATE
+            real(kind = real64), parameter :: b  = FEXT
+            real(kind = real64), parameter :: w  = OMEGA
+                
+            A0 = -w * b / (w * w + k * k)
+            A1 =  k * b / (w * w + k * k)
+
+            y = ( A0 * ( dcos(w * t) - dexp(-k * t) ) + A1 * dsin(w * t) )
+            
+            return
+        end function
+
+
+        subroutine odesol_Write (odesol, filename)
+            ! Synopsis: Writes the numerical solution (t, y) to a data file
+            integer(kind = int64) :: i, nrows, unit, iostat
+            real(kind = real64) :: err
+            real(kind = real64), intent(in), target :: odesol(:, :)
+            real(kind = real64), pointer, contiguous :: t(:) => null()
+            real(kind = real64), pointer, contiguous :: y(:) => null()
+            character(len=*), intent(in) :: filename
+
+            unit = 100
+            open(unit=unit, file=filename, action='write', iostat = iostat)
+            if (iostat /= 0) error stop ("I/O error: " // filename)
+
+            t => odesol(:, 1)
+            y => odesol(:, 2)
+
+            nrows = size (array = odesol, dim = 1, kind = int64)
+            do i = 1, nrows
+                err = dabs( fsinusoid( t(i) ) - y(i) )
+                write (unit, '(3E25.16)') t(i), y(i), err
+            end do
+
+            close(unit)
+            return
+        end subroutine
+end module
+
+
+program tests
+    ! Solves first-order Ordinary Differential Equations ODEs numerically.
+    use, intrinsic :: iso_c_binding, only: c_loc
+    use, intrinsic :: iso_fortran_env, only: int64, real64
+    use odes, only: iEuler, RK2, ODE_solverParams
+    use sinusoid_odefuns, only: odefun
+    use sinusoid_odefuns, only: write => odesol_Write
+    implicit none
+
+
+    real(kind = real64):: k                                     ! rate
+    real(kind = real64):: b                                     ! forcing
+    real(kind = real64):: w                                     ! frequency
+    real(kind = real64):: yi                                    ! y(t = ti)
+    real(kind = real64):: ti, tf                                ! tspan
+    integer(kind = int64), parameter :: n = 255                 ! num steps
+    real(kind = real64), allocatable, target :: odesol(:, :, :) ! solution
+    type(ODE_solverParams), allocatable, target :: params       ! ODE Param
+    real(kind = real64), pointer, contiguous :: p_odesol(:, :) => null()
+    procedure(odefun), pointer :: fp => null()
+    integer(kind = int64) :: mstat
+    character(:), allocatable :: filename
+    character(*), parameter :: BaseFilename = "output/sinusoid/Euler.dat"
+
+
+    !! memory allocations
+    allocate (params, odesol(n + 1, 2, 2), stat=mstat)
+    if (mstat /= 0) error stop "failed to allocate memory buffers"
+
+    allocate (params % prms(3), stat=mstat)
+    if (mstat /= 0) error stop "failed to allocate array of parameters"
+
+    allocate (character( len = len(BaseFilename) ) :: filename, &
+        & stat = mstat) ! dynamically allocated string of characters
+    if (mstat /= 0) error stop "failed to allocate memory for string"
+
+
+    !! initializations
+    fp => odefun
+    ti = 0.0_real64             ! initial time
+    tf = 5.0_real64             ! final time
+    yi = YINI                   ! initial value, y(t = ti) = yi
+    k  = RATE                   ! rate constant
+    b  = FEXT                   ! forcing constant
+    w  = OMEGA                  ! frequency (radians / second)
+
+    associate (prms => params % prms)
+        prms(1) = k
+        prms(2) = b
+        prms(3) = w
+    end associate
+
+
+    !! solves the ODEs with the specified method and exports results
+    p_odesol => odesol(:, :, 1)
+    call iEuler ( p_odesol, ti, tf, yi, n, fp, c_loc(params) )
+    filename = "output/sinusoid/iEulr.dat"
+    call write (p_odesol, filename)
+
+    p_odesol => odesol(:, :, 2)
+    call RK2    ( p_odesol, ti, tf, yi, n, fp, c_loc(params) )
+    filename = "output/sinusoid/EuRK2.dat"
+    call write (p_odesol, filename)
+
+
+    !! frees memory buffers
+    deallocate (params, odesol, filename, stat=mstat)
+    if (mstat /= 0) error stop "unexpected memory deallocation error"
+end program

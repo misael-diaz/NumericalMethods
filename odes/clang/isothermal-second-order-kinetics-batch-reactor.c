@@ -1,13 +1,25 @@
 /*
- * Applied Numerical Analysis				    August 20, 2021
+ * Applied Numerical Analysis				    August 23, 2021
  * ME 2020 FA21
  * Prof. M Diaz-Maldonado
  *
- * source: ramp.c
+ * source: isothermal-second-order-kinetics-batch-reactor.c
  *
  * Synopsis:
- * Obtains the transient response of a first-order Ordinary Differential
- * Equation ODE subject to a ramp input.
+ * Obtains the transient response of a nonlinear Ordinary Differential
+ * Equation ODE, which describes the depletion of a chemical species by a
+ * chemical reaction of second-order kinetics carried out in a isothermal
+ * batch reactor:
+ *
+ *			y' = -beta * y**2,
+ *
+ * where `beta' is the effective reaction rate constant, beta = k * Ca0,
+ * where `k' is the reaction rate constant, `Ca0' is the initial reactant
+ * concentration (moles / volume), `y' is the non-dimensional reactant
+ * concentration y(t) = Ca(t) / Ca0, and `t' is the time.
+ *
+ * It's assumed that the chemical reaction takes place in a liquid so that
+ * the volume of the reactor can be regarded as constant.
  *
  *
  * Copyright (c) 2021 Misael Diaz-Maldonado
@@ -22,7 +34,8 @@
  *     Scientists, 3rd edition.
  * [1] A Koenig and B Moo, Accelerated C++ Practical Programming by
  *     Example.
- * [2] CA Kluever, Dynamic Systems: Modeling, Simulation, and Control
+ * [2] HS Fogler, Elements of Chemical Reaction Engineering, 6th edition
+ * [3] CA Kluever, Dynamic Systems: Modeling, Simulation, and Control
  *
  */
 
@@ -32,9 +45,8 @@
 #include <string.h>
 #include "odes.h"
 
-// MACROS for the rate and external forcing constants, respectively
-#define RATE 1.0
-#define FEXT 1.0
+// MACROS for the effective reaction rate constant
+#define BETA 1.0
 
 // prototypes
 double fsol    (double t);				// exact solution
@@ -48,11 +60,11 @@ int main() {
 
 	const int N = 255 ;		// number of intervals
 	const int numel = N + 1 ;	// number of elements in time array
-	double ti = 0.0, tf = 5.0 ;	// initial and final times
-	double yi = 0.0 ;		// initial value, y = y(t = 0) = 0
+	double ti = 0.0, tf = 10.0 ;	// initial and final times
+	double yi = 1.0 ;		// initial value, y = y(t = 0) = 1
 
 	// allocates and packs the parameters for implicit solver
-	double prms[] = {0., 0., 0., RATE, FEXT};
+	double prms[] = {0., 0., 0., BETA};
 	iODE_solverParams *iSolverParams =
 	    (iODE_solverParams*) malloc ( sizeof(iODE_solverParams) );
 	iSolverParams -> objf   = objf ;
@@ -66,11 +78,11 @@ int main() {
 	oderet = iEuler  (odesol[0], ti, tf, yi, N, odefun, iSolverParams);
 	oderet = EulerRK2(odesol[1], ti, tf, yi, N, odefun, iSolverParams);
 	// writes numerical results
-	char filename[] = "output/ramp/iEuler.dat" ;
+	char filename[] = "output/cheme/kinetics/iEuler.dat" ;
 	write  (filename, numel, odesol[0]);
-	strcpy (filename, "output/ramp/EulRK2.dat");
+	strcpy (filename, "output/cheme/kinetics/EulRK2.dat");
 	write  (filename, numel, odesol[1]);
-	display(numel, oderet);
+	display (numel, oderet);
 
 	// frees memory buffers
 	free (iSolverParams);
@@ -92,44 +104,33 @@ double objf (double yn, void *vprms)
         iODE_solverParams *params = vprms ;
         double (*fp) (double, double, double*) = params -> odefun ;
         double *prms = params -> prms ;
-        double dt = prms[0];
-        double yi = prms[1];
-        double tn = prms[2];
-//      double k  = prms[3];	// rate constant
-//      double b  = prms[4];	// external forcing constant
+        double dt   = prms[0];
+        double yi   = prms[1];
+        double tn   = prms[2];
+//      double beta = prms[3];
         return ( yn - yi - dt * fp(tn, yn, prms) );
 }
 
 
 double odefun (double t, double y, double* prms)
-{	// Synopsis: Right-hand side of the ODE with ramp input.
+{	// Synopsis: Right-hand side RHS of the ODE (molar balance eqtn).
 
-//      double dt = prms[0];
-//      double yi = prms[1];
-//      double tn = prms[2];
-	double k  = prms[3];
-	double b  = prms[4];
-	return (b * t - k * y);
+//      double dt   = prms[0];
+//      double yi   = prms[1];
+//      double tn   = prms[2];
+	double beta = prms[3];
+	return (-beta * y * y);
 }
 
 
 double fsol (double t) {
-/* 
- * Synopsis:
- * Analytic solution of the first-order ODE subject to a ramp input:
- *  		y' + k * y = b * t, 		y(t = 0) = 0,
- * where k is the rate constant, and b is the external forcing constant.
- *
- */
-	double k = RATE;
-	double b = FEXT;
-	return (b / (k * k) * (exp(-k * t) - 1.0) + b / k * t);
+	// Synopsis: The analytic expression for the concentration y(t).
+	return ( 1.0 / (1.0 + BETA * t) );
 }
 
 
 void write (char filename[], const int numel, double **odesol) {
-	// writes the numerical solution to a data file
-	double err ;
+	// Synopsis: Writes the numerical solution and error to a data file
 	double *t = odesol[0];
 	double *y = odesol[1];
 
@@ -143,24 +144,24 @@ void write (char filename[], const int numel, double **odesol) {
 	}
 
 	char fmt[] = "%23.15e %23.15e %23.15e\n" ;
-	for (int i = 0 ; i != numel ; ++i) {
-		err = absval( (fsol(t[i]) - y[i]) );
-		fprintf(pFile, fmt, t[i], y[i], err);
-	}
+	for (int i = 0 ; i != numel ; ++i)
+		fprintf(pFile, fmt, t[i], y[i], absval((fsol(t[i])-y[i])));
 	fclose(pFile);
 }
 
 
 void display (const int numel, double **odesol) {
-	// displays the numerical solution and absolute error to stdout
+	// Synopsis:
+	// Displays the numerical and exact solutions, and the absolute 
+	// error to the standard output.
 
 	double err ;
 	double *t = odesol[0];
 	double *y = odesol[1];
 
-	char fmt[] = "%23.15e %23.15e %23.15e\n" ;
+	char fmt[] = "%23.15e %23.15e %23.15e %23.15e\n" ;
 	for (int i = 0 ; i != numel ; ++i) {
 		err = absval( (fsol(t[i]) - y[i]) );
-		fprintf(stdout, fmt, t[i], y[i], err);
+		fprintf(stdout, fmt, t[i], y[i], fsol(t[i]), err);
 	}
 }

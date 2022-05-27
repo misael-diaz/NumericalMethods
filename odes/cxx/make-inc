@@ -28,19 +28,31 @@ CXXOPT  = -fmodules-ts -g -Wall -O0
 NL_SOLVER_FZERO_MOD      = module-fzero-solver.cpp
 NUM_INTEGRATORS_MOD      = module-ode-solvers.cpp
 TEST_NUM_INTEGRATORS_CXX = test.cpp
+TEST_RAMP_CXX            = ramp.cpp
+TEST_IMPULSE_CXX         = impulse.cpp
+TEST_SINUSOID_CXX        = sinusoid.cpp
+TEST_KINETICS_CXX        = isothermal-second-order-kinetics-batch-reactor.cpp
 
 
 # objects
 NL_SOLVER_FZERO_OBJ      = module-fzero-solver.o
 NUM_INTEGRATORS_OBJ      = module_ode_solvers.o
 TEST_NUM_INTEGRATORS_OBJ = test_odes.o
-OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATORS_OBJ)\
-          $(TEST_NUM_INTEGRATORS_OBJ)
+TEST_RAMP_OBJ            = ramp.o
+TEST_IMPULSE_OBJ         = impulse.o
+TEST_SINUSOID_OBJ        = sinusoid.o
+TEST_KINETICS_OBJ        = isothermal-second-order-kinetics-batch-reactor.o
+OBJECTS = $(NL_SOLVER_FZERO_OBJ) $(NUM_INTEGRATORS_OBJ)
 
 
 # executables
 TEST_NUM_INTEGRATORS_EXE = test-ode-solvers
-TESTS = $(TEST_NUM_INTEGRATORS_EXE)
+TEST_RAMP_EXE            = test-ramp
+TEST_IMPULSE_EXE         = test-impulse
+TEST_SINUSOID_EXE        = test-sinusoid
+TEST_KINETICS_EXE        = test-nonlinear-ode-reaction-kinetics
+TESTS = $(TEST_NUM_INTEGRATORS_EXE) $(TEST_RAMP_EXE) $(TEST_IMPULSE_EXE)\
+        $(TEST_SINUSOID_EXE) $(TEST_KINETICS_EXE)
 
 # gcm cache
 GCM_CACHE = gcm.cache

@@ -67,7 +67,7 @@ program tests
     real(kind = real64):: yi                                    ! y(t = ti)
     real(kind = real64):: ti, tf                                ! tspan
     integer(kind = int64), parameter :: n = 255                 ! num steps
-    real(kind = real64), allocatable, target :: odesol(:, :)    ! solution
+    real(kind = real64), allocatable, target :: odesol(:, :, :) ! solution
     type(ODE_solverParams), allocatable, target :: params       ! ODE Param
     real(kind = real64), pointer, contiguous :: p_odesol(:, :) => null()
     procedure(odefun), pointer :: fp => null()
@@ -76,7 +76,7 @@ program tests
 
 
     !! memory allocations
-    allocate (params, odesol(n + 1, 6), stat=mstat)
+    allocate (params, odesol(n + 1, 2, 3), stat=mstat)
     if (mstat /= 0) error stop "failed to allocate memory buffers"
 
     allocate (params % prms(1), stat=mstat)
@@ -100,17 +100,17 @@ program tests
 
 
     !! solves the ODEs with the specified method and exports results
-    p_odesol => odesol(:, 1:2)
+    p_odesol => odesol(:, :, 1)
     call Euler ( p_odesol, ti, tf, yi, n, fp, c_loc(params) )
     filename = "output/Euler.dat"
     call write (p_odesol, filename)
 
-    p_odesol => odesol(:, 3:4)
+    p_odesol => odesol(:, :, 2)
     call iEuler ( p_odesol, ti, tf, yi, n, fp, c_loc(params) )
     filename = "output/iEulr.dat"
     call write (p_odesol, filename)
 
-    p_odesol => odesol(:, 5:6)
+    p_odesol => odesol(:, :, 3)
     call RK2 ( p_odesol, ti, tf, yi, n, fp, c_loc(params) )
     filename = "output/EuRK2.dat"
     call write (p_odesol, filename)

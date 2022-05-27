@@ -1,13 +1,18 @@
 /*
- * Applied Numerical Analysis				    August 20, 2021
+ * Applied Numerical Analysis				    August 25, 2021
  * ME 2020 FA21
  * Prof. M Diaz-Maldonado
  *
- * source: ramp.c
+ * source: impulse.c
  *
  * Synopsis:
  * Obtains the transient response of a first-order Ordinary Differential
- * Equation ODE subject to a ramp input.
+ * Equation ODE subject to either a unit-step or the unit-impulse:
+ *
+ * 			y' + k * y = b * u(t),	y(0) = 0,
+ *
+ * where k and b are the rate and forcing constants, respectively, and u(t)
+ * represents either the unit-step or unit-impulse functions.
  *
  *
  * Copyright (c) 2021 Misael Diaz-Maldonado
@@ -37,7 +42,8 @@
 #define FEXT 1.0
 
 // prototypes
-double fsol    (double t);				// exact solution
+double fstep   (double t);				// step solution
+double fimpulse(double t);				// impulse solution
 double objf    (double yn, void *vprms);		// objective fun
 double odefun  (double t, double y, double* prms);	// RHS ODE, f(t, y)
 void   write   (char*, const int, double**);		// writes to file
@@ -46,13 +52,13 @@ void   display (const int, double**);			// writes to stdout
 int main() {
 	// Solves first-order ODEs using Euler's implicit Method
 
-	const int N = 255 ;		// number of intervals
+	const int N = 511 ;		// number of intervals
 	const int numel = N + 1 ;	// number of elements in time array
-	double ti = 0.0, tf = 5.0 ;	// initial and final times
-	double yi = 0.0 ;		// initial value, y = y(t = 0) = 0
+	double ti = 0.0, tf = 3.0e1 ;	// initial and final times
+	double yi = 0.0 ;		// initial value
 
 	// allocates and packs the parameters for implicit solver
-	double prms[] = {0., 0., 0., RATE, FEXT};
+	double prms[] = {.0, .0, .0, RATE, FEXT};
 	iODE_solverParams *iSolverParams =
 	    (iODE_solverParams*) malloc ( sizeof(iODE_solverParams) );
 	iSolverParams -> objf   = objf ;
@@ -66,9 +72,9 @@ int main() {
 	oderet = iEuler  (odesol[0], ti, tf, yi, N, odefun, iSolverParams);
 	oderet = EulerRK2(odesol[1], ti, tf, yi, N, odefun, iSolverParams);
 	// writes numerical results
-	char filename[] = "output/ramp/iEuler.dat" ;
+	char filename[] = "output/impulse/iEuler.dat" ;
 	write  (filename, numel, odesol[0]);
-	strcpy (filename, "output/ramp/EulRK2.dat");
+	strcpy (filename, "output/impulse/EulRK2.dat");
 	write  (filename, numel, odesol[1]);
 	display(numel, oderet);
 
@@ -102,36 +108,75 @@ double objf (double yn, void *vprms)
 
 
 double odefun (double t, double y, double* prms)
-{	// Synopsis: Right-hand side of the ODE with ramp input.
+{
+
+/*
+ * Synopsis: 
+ * Right-hand side of the ODE with step input.
+ * 
+ * Comments:
+ * We take advantage of the linearity of the ODE to obtain the transient
+ * response of the system to an impulse-input. Note that the 
+ * first-derivative of the step-response y'(t) is equal to the response
+ * of the (same) system when subjected to an impulse-input. So we solve
+ * for the step-response y(t) and evaluate this function to obtain 
+ * the impulse-response y'(t).
+ *
+ */
 
 //      double dt = prms[0];
 //      double yi = prms[1];
 //      double tn = prms[2];
 	double k  = prms[3];
 	double b  = prms[4];
-	return (b * t - k * y);
+	return (b - k * y);
 }
 
 
-double fsol (double t) {
+double fstep (double t) {
 /* 
  * Synopsis:
- * Analytic solution of the first-order ODE subject to a ramp input:
- *  		y' + k * y = b * t, 		y(t = 0) = 0,
- * where k is the rate constant, and b is the external forcing constant.
+ * Analytic solution of the first-order ODE subject to a step input:
+ *  		y' + k * y = b * u(t), 		y(t = 0) = yi,
+ * where k is the rate constant, and b is the external forcing constant,
+ * u(t) is the unit-step, and yi is the initial-value.
  *
  */
-	double k = RATE;
-	double b = FEXT;
-	return (b / (k * k) * (exp(-k * t) - 1.0) + b / k * t);
+	double k  = RATE;
+	double b  = FEXT;
+	return ( -(b / k) * exp(-k * t) + b / k );
 }
+
+
+double fimpulse (double t) {
+/* 
+ * Synopsis:
+ * Analytic solution of the first-order ODE subject to an impulse input:
+ *  		y' + k * y = b * u(t), 		y(t = 0) = yi,
+ * where k is the rate constant, and b is the external forcing constant,
+ * u(t) is the unit-impulse, and yi is the initial-value. 
+ *
+ * Comments:
+ * Note that this function returns the first-derivative of the 
+ * step-response y'(t); compare the mathematical expression with that
+ * defined in the fstep() function above.
+ *
+ */
+	double k  = RATE;
+	double b  = FEXT;
+	return ( b * exp(-k * t) );
+}
+
 
 
 void write (char filename[], const int numel, double **odesol) {
-	// writes the numerical solution to a data file
-	double err ;
-	double *t = odesol[0];
-	double *y = odesol[1];
+	// writes the step and impulse-response to a data file
+
+	double Dy ;		// first-derivative y'(t), impulse response
+	double *t = odesol[0];	// time, t
+	double *y = odesol[1];	// step-response, y(t)
+	double err_step ;	// error
+	double err_impulse ;	// error
 
 	FILE *pFile = NULL ;
 	pFile = fopen(filename, "w");
@@ -142,10 +187,16 @@ void write (char filename[], const int numel, double **odesol) {
 		exit(EXIT_FAILURE);
 	}
 
-	char fmt[] = "%23.15e %23.15e %23.15e\n" ;
+	double prms[] = {.0, .0, .0, RATE, FEXT};
+	char fmt[] = "%23.15e %23.15e %23.15e %23.15e %23.15e\n" ;
 	for (int i = 0 ; i != numel ; ++i) {
-		err = absval( (fsol(t[i]) - y[i]) );
-		fprintf(pFile, fmt, t[i], y[i], err);
+		Dy = odefun(t[i], y[i], prms);
+		err_step    = absval( (fstep(t[i]) - y[i]) );
+		err_impulse = absval( 
+			( fimpulse(t[i]) - odefun(t[i], y[i], prms) )
+		);
+		// writes the time t, step y(t), impulse y'(t), and errors
+		fprintf(pFile, fmt, t[i], y[i], Dy, err_step, err_impulse);
 	}
 	fclose(pFile);
 }
@@ -160,7 +211,7 @@ void display (const int numel, double **odesol) {
 
 	char fmt[] = "%23.15e %23.15e %23.15e\n" ;
 	for (int i = 0 ; i != numel ; ++i) {
-		err = absval( (fsol(t[i]) - y[i]) );
+		err = absval( (fstep(t[i]) - y[i]) );
 		fprintf(stdout, fmt, t[i], y[i], err);
 	}
 }
