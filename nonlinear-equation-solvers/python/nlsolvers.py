@@ -45,7 +45,7 @@ def bisect(bounds, f, **kwargs):
     a, b = check_bounds(bounds)
 
 
-    n, x = (0, (a + b) / 2)
+    n, x = (1, (a + b) / 2)
     while ( n != max_iter and abs( f(x) ) > tol ):
 
         # updates bracketing interval [a, b]
@@ -73,7 +73,7 @@ def regfal(bounds, f, **kwargs):
     lb, ub = check_bounds(bounds)
 
 
-    n, x = ( 0, ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) ) )
+    n, x = ( 1, ( lb * f(ub) - ub * f(lb) ) / ( f(ub) - f(lb) ) )
     while ( n != max_iter and abs( f(x) ) > tol ):
 
         if f(lb) * f(x) < 0:
@@ -102,7 +102,7 @@ def shifter(bounds, f, **kwargs):
     lb, ub = check_bounds(bounds)
 
 
-    n, x = ( 0, shift(lb, ub, f) )
+    n, x = ( 1, shift(lb, ub, f) )
     while ( n != max_iter and abs( f(x) ) > tol ):
 
         if f(lb) * f(x) < 0:
@@ -166,7 +166,7 @@ def optset(**kwargs):
 
 def report(max_iter, it, name, verbose):
     """ Synopsis: Reports if the method has been successful. """
-    if (it < max_iter):
+    if (it != max_iter):
         if verbose:
             print(name + " Method:")
             print(f"solution found in {it} iterations")
