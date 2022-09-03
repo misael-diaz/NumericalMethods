@@ -57,29 +57,6 @@ for p = 1:(N - 1)
 end
 
 % obtains the solution vector `x' via back substitution
-x = backSubs;
-
-% defines internal procedure(s)
-
-	function x = backSubs
-	% Synopsis:
-	% Possible implementation of the back substitution technique.
-
-	% gets the number of rows and columns
-
-	% preallocates the solution vector
-	x = zeros([N, 1]);
-	% applies the back substitution technique
-	for i = N:-1:1
-            x(i) = W(i, M);
-            for j = (i + 1):N
-                x(i) = x(i) - W(i, j) * x(j);
-            end
-            x(i) = x(i) / W(i, i);
-	end
-
-	end
-
-% ends definition of internal procedure(s)
+x = backSubs(W);
 
 end
