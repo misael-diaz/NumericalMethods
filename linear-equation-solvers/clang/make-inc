@@ -1,0 +1,39 @@
+#
+# source: make-inc
+# author: misael-diaz
+# date:   2021/07/20
+#
+# Synopsis:
+# Defines the include file for building the program with GNU make.
+#
+# Copyright (c) 2021 Misael Diaz-Maldonado
+#
+# This file is released under the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# clang compiler
+CC = gcc-10
+
+# options
+CCOPT = -g -Wall -O0
+
+# libraries
+LIBS = -lm
+
+
+# sources
+MATRIX_SRC      = Matrix.c
+TEST_MATRIX_SRC = test.c
+
+
+# objects
+MATRIX_OBJ      = matrix.o
+TEST_MATRIX_OBJ = test.o
+OBJECTS         = $(MATRIX_OBJ) $(TEST_MATRIX_OBJ)
+
+
+# executables
+TEST_MATRIX_EXE = test-matrix
+TESTS           = $(TEST_MATRIX_EXE)
