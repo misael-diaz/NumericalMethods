@@ -163,5 +163,40 @@ static matrix_t* zeros (size_t rows, size_t cols)
 }
 
 
-// creates a namespace for the matrix constructor and destructor
-matrix_namespace const matrix = {zeros, create, destroy};
+static matrix_t* mult (matrix_t *matA, matrix_t *matB)
+// implements the matrix multiplication C = A * B
+{
+	// references the data buffers of each respective matrix
+	double *A = (matA -> buffer);
+	double *B = (matB -> buffer);
+
+	// gets the shapes of the matrices
+	size_t rows = (matA -> rows);		// rows x knum matrix
+	size_t cols = (matB -> cols);		// knum x cols matrix
+	size_t knum = (matA -> cols);		// rows x cols matrix
+
+	double prod = 0;
+	// initializes the output matrix
+	matrix_t *matC = zeros (rows, cols);
+	double *C = (matC -> buffer);
+	// performs the matrix multiplication C = A * B
+	for (size_t i = 0; i != rows; ++i)
+	{
+		for (size_t j = 0; j != cols; ++j)
+		{
+			C[j + i * cols] = 0;
+			for (size_t k = 0; k != knum; ++k)
+			/* C[i][j] += A[i][k] * B[k][j] */
+			{
+				prod = A[k + i * knum] * B[j + k * cols];
+				C[j + i * cols] += prod;
+			}
+		}
+	}
+
+	return matC;
+}
+
+
+// creates a namespace for the matrix class
+matrix_namespace const matrix = {zeros, create, destroy, mult};

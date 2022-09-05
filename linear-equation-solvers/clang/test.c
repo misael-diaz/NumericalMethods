@@ -35,11 +35,13 @@ extern matrix_namespace const matrix;	// imports the matrix namespace
 // prototypes:
 void print ();
 void zeros ();
+void mmult ();
 
 int main() {
 
 	print ();
 	zeros ();
+	mmult ();
 	return 0;
 }
 
@@ -89,4 +91,46 @@ void zeros ()
 
 	// destroys the matrix
 	mat = matrix.destroy(mat);
+}
+
+
+void mmult ()
+// tests matrix multiplication
+{
+	// creates the second-rank arrays for the test
+	double A[ROWS][COLS] = {
+		{2, 1, 1, 0, 1},
+		{4, 3, 3, 1, 1},
+		{8, 7, 9, 5, 2},
+		{6, 7, 9, 8, 4}
+	};
+
+	double B[COLS][ROWS] = {
+		{2, 4, 8, 6},
+		{1, 3, 7, 7},
+		{1, 3, 9, 9},
+		{0, 1, 5, 8},
+		{1, 1, 2, 4}
+	};
+
+	// creates the matrices A and B from the second-rank arrays
+	matrix_t *matA = matrix.create (ROWS, COLS, A);
+	matrix_t *matB = matrix.create (COLS, ROWS, B);
+
+	// computes the matrix product: C = A * B
+	matrix_t *matC = matrix.mult (matA, matB);
+
+	printf("\nC = mult(A, B):\n");
+	// prints the elements of the resulting matrix on the console
+	for (size_t i = 0; i != (matC -> rows); ++i)
+	{
+		for (size_t j = 0; j != (matC -> cols); ++j)
+			printf("%8.2f", matC -> get(matC, i, j));
+		printf("\n");
+	}
+
+	// destroys the matrices
+	matA = matrix.destroy (matA);
+	matB = matrix.destroy (matB);
+	matC = matrix.destroy (matC);
 }
