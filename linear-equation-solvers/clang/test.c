@@ -32,8 +32,20 @@
 
 extern matrix_namespace const matrix;	// imports the matrix namespace
 
+// prototypes:
+void print ();
+
 int main() {
 
+	print ();
+	return 0;
+}
+
+
+// tests:
+void print ()
+// creates a matrix from a second-rank array, prints it, and destroys it
+{
 	// creates a second-rank array
 	double M[ROWS][COLS] = {
 		{2, 1, 1, 0, 1},
@@ -55,5 +67,4 @@ int main() {
 
 	// destroys the matrix
 	mat = matrix.destroy(mat);
-	return 0;
 }
