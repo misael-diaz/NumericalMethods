@@ -72,6 +72,17 @@ static double* util_alloc_array_double_t (size_t size)
 	return array;
 }
 
+static double* util_init_from_const_double_t (
+	size_t size, double data[size], double c
+)
+// initializes the first-rank array `data' from the constant `c'
+{
+	for (size_t i = 0; i != size; ++i)
+		data[i] = c;
+
+	return data;
+}
+
 
 static double* util_init_from_array_double_t (
 	size_t r, size_t c, size_t sz, double array[r][c], double data[sz]
@@ -128,5 +139,29 @@ static matrix_t* create (size_t rows, size_t cols, double A[rows][cols])
 }
 
 
+static matrix_t* zeros (size_t rows, size_t cols)
+// constructs a matrix of zeros of requested shape
+{
+	// allocates memory for the matrix
+	matrix_t *mat = util_alloc_matrix_t ();
+
+	size_t size = (rows * cols);
+	// allocates memory for the data buffer of the matrix
+	mat -> buffer = util_alloc_array_double_t (size);
+
+	double *data = mat -> buffer;
+	// fills the data buffer of the matrix with zeros
+	data = util_init_from_const_double_t (size, data, 0);
+
+	// defines the matrix shape and size
+	mat -> rows = rows;
+	mat -> cols = cols;
+	mat -> size = size;
+	// binds methods
+	mat -> get  = get_method;
+	return mat;
+}
+
+
 // creates a namespace for the matrix constructor and destructor
-matrix_namespace const matrix = {create, destroy};
+matrix_namespace const matrix = {zeros, create, destroy};

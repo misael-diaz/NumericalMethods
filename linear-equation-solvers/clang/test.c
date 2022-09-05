@@ -34,10 +34,12 @@ extern matrix_namespace const matrix;	// imports the matrix namespace
 
 // prototypes:
 void print ();
+void zeros ();
 
 int main() {
 
 	print ();
+	zeros ();
 	return 0;
 }
 
@@ -57,6 +59,26 @@ void print ()
 	// creates the matrix from the second-rank array
 	matrix_t *mat = matrix.create (ROWS, COLS, M);
 
+	// prints the elements of the matrix on the console
+	for (size_t i = 0; i != (mat -> rows); ++i)
+	{
+		for (size_t j = 0; j != (mat -> cols); ++j)
+			printf("%8.2f", mat -> get(mat, i, j));
+		printf("\n");
+	}
+
+	// destroys the matrix
+	mat = matrix.destroy(mat);
+}
+
+
+void zeros ()
+// creates a matrix of zeros, prints it, and destroys it
+{
+	// creates a rows x cols matrix of zeros
+	matrix_t *mat = matrix.zeros (ROWS, COLS);
+
+	printf("\nzeros:\n");
 	// prints the elements of the matrix on the console
 	for (size_t i = 0; i != (mat -> rows); ++i)
 	{
