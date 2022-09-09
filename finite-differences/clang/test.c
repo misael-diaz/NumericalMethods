@@ -33,10 +33,12 @@ extern vector_namespace const vector;	// imports vector namespace
 
 // prototypes:
 void test_pushback();
+void test_linspace();
 
 int main() {
 
 	test_pushback();
+	test_linspace();
 	return 0;
 }
 
@@ -75,6 +77,25 @@ void test_pushback() {
 
 	// prints the vector size on the console
 	printf("size: %lu \n", vec -> size(vec));
+
+	// frees the memory allocated for the vector
+	vec = vector.destroy (vec);
+}
+
+
+void test_linspace ()
+// tests the linspace method
+{
+	// creates vector of 33 equally spaced elements in [-1, 1]
+	vector_t *vec = vector.linspace(-1, 1, 33);
+
+	// prints the vector size on the console
+	printf("size: %lu \n", vec -> size(vec));
+
+	double *array = (vec -> array);
+	// prints the vector data on the console
+	for (size_t i = 0; i != 33; ++i)
+		printf("%+7.4f\n", array[i]);
 
 	// frees the memory allocated for the vector
 	vec = vector.destroy (vec);

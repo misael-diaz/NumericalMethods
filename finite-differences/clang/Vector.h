@@ -28,8 +28,11 @@
 #include "vector.h"
 
 typedef struct {
-vector_t* (*const create) (size_t);	// constructor
-vector_t* (*const destroy) (vector_t*);	// destructor
+// constructors:
+vector_t* (*const create) (size_t);
+vector_t* (*const linspace) (double, double, size_t);
+// destructor:
+vector_t* (*const destroy) (vector_t*);
 } vector_namespace;
 
 #endif

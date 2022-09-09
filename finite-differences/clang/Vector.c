@@ -183,6 +183,34 @@ static vector_t* create (size_t size)
 }
 
 
+static vector_t* linspace (double x_l, double x_u, size_t size)
+// constructor --- creates a vector x = [x_l, x_u] of requested size
+{
+	// allocates memory for the vector
+	vector_t *vec = util_alloc_vector_t ();
+
+	// allocates memory for the data buffer
+	vec -> array = util_alloc_array_double_t (size);
+
+	double *array = vec -> array;				// alias
+	double dx = (x_u - x_l) / ( (double) (size - 1) );	// step
+	// initializes the elements of the vector's data buffer
+	for (size_t i = 0; i != size; ++i)
+		array[i] = x_l + ( (double) i ) * dx;
+
+	// defines the vector limits
+	vec -> begin = vec -> array;
+	vec -> avail = ( (vec -> begin) + size * sizeof(double) );
+	vec -> limit = ( (vec -> begin) + size * sizeof(double) );
+	// binds the methods
+	vec -> size  = size_method;
+	vec -> clear = clear_method;
+	vec -> push_back = push_back_method;
+
+	return vec;
+}
+
+
 static vector_t* destroy (vector_t* vec)
 // destructor --- frees the memory allocated for the vector
 {
@@ -208,4 +236,4 @@ static vector_t* destroy (vector_t* vec)
 
 
 // creates namespace for the vector class constructor and destructor
-vector_namespace const vector = {create, destroy};
+vector_namespace const vector = {create, linspace, destroy};
