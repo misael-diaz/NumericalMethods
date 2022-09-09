@@ -5,7 +5,7 @@
  * ICI 70320
  * Prof. M Diaz-Maldonado
  *
- * source: vector.h
+ * source: Vector.h
  *
  * Synopsis:
  * Header file for the vector class.
