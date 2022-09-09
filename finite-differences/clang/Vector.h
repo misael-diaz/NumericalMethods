@@ -31,6 +31,7 @@ typedef struct {
 // constructors:
 vector_t* (*const create) (size_t);
 vector_t* (*const zeros) (size_t);
+vector_t* (*const ones) (size_t);
 vector_t* (*const linspace) (double, double, size_t);
 // destructor:
 vector_t* (*const destroy) (vector_t*);

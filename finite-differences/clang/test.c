@@ -34,6 +34,7 @@ extern vector_namespace const vector;	// imports vector namespace
 // prototypes:
 void test_pushback();
 void test_zeros();
+void test_ones();
 void test_linspace();
 
 int main() {
@@ -41,6 +42,7 @@ int main() {
 	test_pushback();
 	test_linspace();
 	test_zeros();
+	test_ones();
 	return 0;
 }
 
@@ -84,12 +86,33 @@ void test_pushback() {
 	vec = vector.destroy (vec);
 }
 
+
 void test_zeros ()
 // tests the zeros method
 {
 	size_t size = 16;
 	// creates vector of zeros
 	vector_t *vec = vector.zeros(size);
+
+	// prints the vector size on the console
+	printf("size: %lu \n", vec -> size(vec));
+
+	double *array = (vec -> array);
+	// prints the vector data on the console
+	for (size_t i = 0; i != size; ++i)
+		printf("%7.4f\n", array[i]);
+
+	// frees the memory allocated for the vector
+	vec = vector.destroy (vec);
+}
+
+
+void test_ones ()
+// tests the ones method
+{
+	size_t size = 16;
+	// creates vector of zeros
+	vector_t *vec = vector.ones(size);
 
 	// prints the vector size on the console
 	printf("size: %lu \n", vec -> size(vec));
