@@ -183,6 +183,31 @@ static vector_t* create (size_t size)
 }
 
 
+static vector_t* zeros (size_t size)
+// constructor --- creates a vector of zeros of requested size
+{
+	// allocates memory for the vector
+	vector_t *vec = util_alloc_vector_t ();
+
+	// allocates memory for the data buffer
+	vec -> array = util_alloc_array_double_t (size);
+
+	double *array = vec -> array;
+	// initializes the elements of the vector's data buffer with zeros
+	array = util_init_array_double_t (size, array);
+
+	// defines the vector limits
+	vec -> begin = vec -> array;
+	vec -> avail = ( (vec -> begin) + size * sizeof(double) );
+	vec -> limit = ( (vec -> begin) + size * sizeof(double) );
+	// binds the methods
+	vec -> size  = size_method;
+	vec -> clear = clear_method;
+	vec -> push_back = push_back_method;
+
+	return vec;
+}
+
 static vector_t* linspace (double x_l, double x_u, size_t size)
 // constructor --- creates a vector x = [x_l, x_u] of requested size
 {
@@ -236,4 +261,4 @@ static vector_t* destroy (vector_t* vec)
 
 
 // creates namespace for the vector class constructor and destructor
-vector_namespace const vector = {create, linspace, destroy};
+vector_namespace const vector = {create, zeros, linspace, destroy};
