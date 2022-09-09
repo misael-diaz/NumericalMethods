@@ -31,9 +31,12 @@
 
 typedef struct {
 	// constructor
+	matrix_t* (*const zeros) (size_t, size_t);
 	matrix_t* (*const create) (size_t n, size_t m, double x[n][m]);
 	// destructor
 	matrix_t* (*const destroy) (matrix_t*);
+	// methods
+	matrix_t* (*const mult) (matrix_t*, matrix_t*);
 } matrix_namespace;
 
 #endif
