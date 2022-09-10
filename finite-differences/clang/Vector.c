@@ -157,6 +157,22 @@ static void push_back_method (void* vector, double data)
 }
 
 
+static void copy_method (void *destination, void *source)
+// performs a shallow copy of the vectors
+{
+	// gets the vector size
+	size_t size = size_method (source);
+	// asserts the vector type
+	vector_t *vsrc = source;
+	vector_t *vdst = destination;
+	// references the data buffers of the vectors
+	double *src = (vsrc -> array);
+	double *dst = (vdst -> array);
+	// delegates the task to the copy utility
+	util_copy_array_double_t (size, src, dst);
+}
+
+
 static vector_t* create (size_t size)
 // constructor --- allocates memory for a vector of requested size
 {
@@ -178,6 +194,7 @@ static vector_t* create (size_t size)
 	vec -> size  = size_method;
 	vec -> clear = clear_method;
 	vec -> push_back = push_back_method;
+	vec -> copy = copy_method;
 
 	return vec;
 }
@@ -204,6 +221,7 @@ static vector_t* zeros (size_t size)
 	vec -> size  = size_method;
 	vec -> clear = clear_method;
 	vec -> push_back = push_back_method;
+	vec -> copy = copy_method;
 
 	return vec;
 }
@@ -231,6 +249,7 @@ static vector_t* ones (size_t size)
 	vec -> size  = size_method;
 	vec -> clear = clear_method;
 	vec -> push_back = push_back_method;
+	vec -> copy = copy_method;
 
 	return vec;
 }
@@ -258,6 +277,7 @@ static vector_t* linspace (double x_l, double x_u, size_t size)
 	vec -> size  = size_method;
 	vec -> clear = clear_method;
 	vec -> push_back = push_back_method;
+	vec -> copy = copy_method;
 
 	return vec;
 }

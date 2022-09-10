@@ -36,5 +36,6 @@ double* array;
 size_t (*size) (void*);
 void (*clear) (void*);
 void (*push_back) (void*, double);
+void (*copy) (void*, void*);
 } vector_t;
 #endif

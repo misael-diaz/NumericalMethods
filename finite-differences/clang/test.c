@@ -36,6 +36,7 @@ void test_pushback();
 void test_zeros();
 void test_ones();
 void test_linspace();
+void test_copy();
 
 int main() {
 
@@ -43,6 +44,7 @@ int main() {
 	test_linspace();
 	test_zeros();
 	test_ones();
+	test_copy();
 	return 0;
 }
 
@@ -143,4 +145,44 @@ void test_linspace ()
 
 	// frees the memory allocated for the vector
 	vec = vector.destroy (vec);
+}
+
+
+void test_copy ()
+// tests the (shallow) copy method of the vector class
+{
+	// creates a vector
+	size_t size = 17;
+	double x_l = -1, x_u = 1;
+	vector_t *vec_x = vector.linspace(x_l, x_u, size);
+	// creates another vector of the same size
+	vector_t *vec_y = vector.zeros(size);
+	// copies the contents of vector `x' into vector `y'
+	vec_y -> copy (vec_y, vec_x);
+
+	/* tests the copy method */
+
+	double diff = 0;
+	double *x = (vec_x -> array);
+	double *y = (vec_y -> array);
+	// computes the differences
+	for (size_t i = 0; i != size; ++i)
+		diff += (x[i] - y[i]);
+
+	printf("copy-method-test[0](): ");
+	if (diff != 0.0)
+		printf("FAIL\n");	// fails if there are differences
+	else
+		printf("pass\n");	// passes if the are none
+
+	// checks if the data buffers of the vectors are different objects
+	printf("copy-method-test[1](): ");
+	if (x == y)
+		printf("FAIL\n");	// fails if objects are equal
+	else
+		printf("pass\n");	// passes if different
+
+	// frees the memory allocated for the vectors
+	vec_x = vector.destroy (vec_x);
+	vec_y = vector.destroy (vec_y);
 }
