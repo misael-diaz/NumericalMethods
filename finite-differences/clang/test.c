@@ -26,8 +26,10 @@
  *
  */
 
+#include <math.h>
 #include <stdio.h>
 #include "Vector.h"
+#include "isolver.h"
 
 extern vector_namespace const vector;	// imports vector namespace
 
@@ -38,15 +40,26 @@ void test_ones();
 void test_linspace();
 void test_copy();
 void test_qnorm();
+vector_t** Jacobi (vector_t *odesol[2], vector_t*, isolver_prms_t);
+vector_t** GaussSeidel (vector_t *odesol[2], vector_t*, isolver_prms_t);
+void test_steady_1d_transport_Jacobi();
+void test_steady_1d_transport_GaussSeidel();
 
 int main() {
 
+	/*
 	test_pushback();
 	test_linspace();
 	test_zeros();
 	test_ones();
 	test_copy();
 	test_qnorm();
+	*/
+
+	// solves the steady 1d transport problem with the Jacobi method
+	test_steady_1d_transport_Jacobi();
+	// applies the Gauss-Seidel method to solve the same problem
+	test_steady_1d_transport_GaussSeidel();
 	return 0;
 }
 
@@ -289,4 +302,372 @@ void test_qnorm()
 
 	// frees the memory allocated for the vector
 	vec = vector.destroy (vec);
+}
+
+
+vector_t** Jacobi (
+	vector_t *odesol[2], vector_t *odevec, isolver_prms_t prms
+)
+// possible tailored implementation of the Jacobi method
+{
+	// gets the tolerance and the maximum number of iterations
+	double tol = prms.tol;
+	size_t iters = prms.iters;
+
+
+	// references the position and (temperature) field variables
+	vector_t *vec_x = odesol[0];
+	vector_t *vec_g = odesol[1];
+	// references the (heat) source term vector
+	vector_t *vec_b = odevec;
+
+
+	// gets the size of the vectors
+	size_t size = vec_x -> size (vec_x);
+	// initializes the guess vector
+	vector_t *vec_g0  = vector.zeros(size);
+	// initializes the error vector
+	vector_t *vec_err = vector.zeros(size);
+
+
+	// defines iterators
+	double *b   = (vec_b   -> array);
+	double *g   = (vec_g   -> array);
+	double *g0  = (vec_g0  -> array);
+	double *err = (vec_err -> array);
+
+
+	// initializes the norm of the error vector
+	double norm = 0;
+	// gets the number of discretization intervals
+	size_t N = (size - 1);
+	/* applies the Jacobi method to solve for the field variable */
+	for (size_t i = 0; i != iters; ++i)
+	{
+
+		// updates the node next to the lower boundary, x_l
+		g[1] = -0.5 * (b[1] - g0[2]);
+
+		// updates the intermediate nodes
+		for (size_t j = 2; j != (N - 1); ++j)
+			g[j] = -0.5 * (b[j] - g0[j - 1] - g0[j + 1]);
+
+		// updates the node next to the upper boundary, x_u
+		g[N - 1] = -0.5 * (b[N - 1] - g0[N - 2]);
+
+
+		// computes the error vector
+		for (size_t n = 0; n != size; ++n)
+			err[n] = (g[n] - g0[n]);
+
+
+		// computes the norm of the error vector
+		norm = vec_err -> qnorm (vec_err);
+		/* checks for convergence */
+		if (norm < tol)
+		{
+			char msg [] = "Jacobi(): solution found after "
+				"%lu iters\n";
+			printf(msg, i + 1);
+			break;
+		}
+
+
+		// copies the field (g0 <- g) for the next iteration
+		vec_g0 -> copy (vec_g0, vec_g);
+	}
+
+	// frees the vectors from memory
+	vec_g0  = vector.destroy (vec_g0);
+	vec_err = vector.destroy (vec_err);
+
+	return odesol;
+}
+
+
+vector_t** GaussSeidel (
+	vector_t *odesol[2], vector_t *odevec, isolver_prms_t prms
+)
+// possible tailored implementation of the Gauss-Seidel method
+{
+	// gets the tolerance and the maximum number of iterations
+	double tol = prms.tol;
+	size_t iters = prms.iters;
+
+
+	// references the position and (temperature) field variables
+	vector_t *vec_x = odesol[0];
+	vector_t *vec_g = odesol[1];
+	// references the (heat) source term vector
+	vector_t *vec_b = odevec;
+
+
+	// gets the size of the vectors
+	size_t size = vec_x -> size (vec_x);
+	// initializes the guess vector
+	vector_t *vec_g0  = vector.zeros(size);
+	// initializes the error vector
+	vector_t *vec_err = vector.zeros(size);
+
+
+	// defines iterators
+	double *b   = (vec_b   -> array);
+	double *g   = (vec_g   -> array);
+	double *g0  = (vec_g0  -> array);
+	double *err = (vec_err -> array);
+
+
+	// initializes the norm of the error vector
+	double norm = 0;
+	// gets the number of discretization intervals
+	size_t N = (size - 1);
+	/* applies the Jacobi method to solve for the field variable */
+	for (size_t i = 0; i != iters; ++i)
+	{
+
+		// updates the node next to the lower boundary, x_l
+		g[1] = -0.5 * (b[1] - g0[2]);
+
+		// updates the intermediate nodes
+		for (size_t j = 2; j != (N - 1); ++j)
+			g[j] = -0.5 * (b[j] - g[j - 1] - g0[j + 1]);
+
+		// updates the node next to the upper boundary, x_u
+		g[N - 1] = -0.5 * (b[N - 1] - g[N - 2]);
+
+
+		// computes the error vector
+		for (size_t n = 0; n != size; ++n)
+			err[n] = (g[n] - g0[n]);
+
+
+		// computes the norm of the error vector
+		norm = vec_err -> qnorm (vec_err);
+		/* checks for convergence */
+		if (norm < tol)
+		{
+			char msg [] = "Gauss-Seidel(): solution found "
+				"after %lu iters\n";
+			printf(msg, i + 1);
+			break;
+		}
+
+
+		// copies the field (g0 <- g) for the next iteration
+		vec_g0 -> copy (vec_g0, vec_g);
+	}
+
+	// frees the vectors from memory
+	vec_g0  = vector.destroy (vec_g0);
+	vec_err = vector.destroy (vec_err);
+
+	return odesol;
+}
+
+
+void test_steady_1d_transport_Jacobi ()
+// solves a steady one-dimensional transport problem via finite-differences
+{
+
+	/* defines the solver parameters */
+
+
+	// defines the tolerance of the linear solver
+	double tol = 1.0 / ( (double) (0x400000000000) );	// ~1.4e-14
+	// defines the maximum number of iterations of the linear solver
+	size_t iters = (0x0008FFFF);	// about 500K iterations
+
+	// initializes the iterative solver parameters
+	isolver_prms_t const prms = {.tol = tol, .iters = iters};
+
+
+	/* defines the finite-differences problem */
+
+
+	// sets the number of discretization intervals to 256
+	size_t N = (0x00000100);
+	// defines the vector size
+	size_t size = (N + 1);
+
+
+	// defines the system domain limits along the x-axis
+	double x_l = -1.0, x_u = 1.0;
+	// computes the step-size
+	double dx = (x_u - x_l) / ( (double) N );
+
+
+	// initializes the placeholder for the solution of the ODE
+	vector_t *odesol[2] = {NULL, NULL};
+	// initializes the position vector
+	odesol[0] = vector.linspace(x_l, x_u, size);
+	// initializes the (temperature) field variable
+	odesol[1] = vector.zeros(size);
+
+
+	// initializes the (heat) source vector
+	vector_t *odevec = vector.zeros(size);
+	// creates alias for the source vector
+	vector_t *vec_b  = odevec;
+	// defines an iterator for the source vector
+	double *b = (vec_b -> array);
+
+	// defines the non-dimensional volumetric (heat) source term
+	double H = 1;
+	// defines the constant (heat) source vector
+	for (size_t i = 0; i != size; ++i)
+		b[i] = -(dx) * (dx) * H;
+
+
+	/* numeric solution */
+
+
+	// solves for the (temperature) field variable iteratively
+	vector_t **ret = Jacobi (odesol, odevec, prms);
+
+
+	/* post-processing */
+
+
+	// references the returned position vector and the field variable
+	vector_t *vec_x = ret[0];
+	vector_t *vec_g = ret[1];
+
+
+	// initializes the analytic solution vector
+	vector_t *vec_analytic = vector.zeros(size);
+	// initializes the error vector
+	vector_t *vec_err = vector.zeros(size);
+
+
+	// defines iterators
+	double *x = (vec_x -> array);
+	double *g = (vec_g -> array);
+	double *err = (vec_err -> array);
+	double *analytic = (vec_analytic -> array);
+
+
+	// computes the analytic solution
+	for (size_t i = 0; i != size; ++i)
+		analytic[i] = 0.5 * H * (1.0 - x[i]) * (1.0 + x[i]);
+
+	// computes the differences between the exact and numeric solutions
+	for (size_t i = 0; i != size; ++i)
+		err[i] = (g[i] - analytic[i]);
+
+
+	// reports the average error
+	double norm = vec_err -> qnorm (vec_err);
+	printf("error: %.4e\n", sqrt(norm) / size );
+
+
+	// frees the vectors from memory
+	vec_x = vector.destroy (vec_x);
+	vec_g = vector.destroy (vec_g);
+	vec_b = vector.destroy (vec_b);
+	vec_err = vector.destroy (vec_err);
+	vec_analytic = vector.destroy (vec_analytic);
+}
+
+
+void test_steady_1d_transport_GaussSeidel ()
+// solves a steady one-dimensional transport problem via finite-differences
+{
+
+	/* defines the solver parameters */
+
+
+	// defines the tolerance of the linear solver
+	double tol = 1.0 / ( (double) (0x400000000000) );	// ~1.4e-14
+	// defines the maximum number of iterations of the linear solver
+	size_t iters = (0x0008FFFF);	// about 500K iterations
+
+	// initializes the iterative solver parameters
+	isolver_prms_t const prms = {.tol = tol, .iters = iters};
+
+
+	/* defines the finite-differences problem */
+
+
+	// sets the number of discretization intervals to 256
+	size_t N = (0x00000100);
+	// defines the vector size
+	size_t size = (N + 1);
+
+
+	// defines the system domain limits along the x-axis
+	double x_l = -1.0, x_u = 1.0;
+	// computes the step-size
+	double dx = (x_u - x_l) / ( (double) N );
+
+
+	// initializes the placeholder for the solution of the ODE
+	vector_t *odesol[2] = {NULL, NULL};
+	// initializes the position vector
+	odesol[0] = vector.linspace(x_l, x_u, size);
+	// initializes the (temperature) field variable
+	odesol[1] = vector.zeros(size);
+
+
+	// initializes the (heat) source vector
+	vector_t *odevec = vector.zeros(size);
+	// creates alias for the source vector
+	vector_t *vec_b  = odevec;
+	// defines an iterator for the source vector
+	double *b = (vec_b -> array);
+
+	// defines the non-dimensional volumetric (heat) source term
+	double H = 1;
+	// defines the constant (heat) source vector
+	for (size_t i = 0; i != size; ++i)
+		b[i] = -(dx) * (dx) * H;
+
+
+	/* numeric solution */
+
+
+	// solves for the (temperature) field variable iteratively
+	vector_t **ret = GaussSeidel (odesol, odevec, prms);
+
+
+	/* post-processing */
+
+
+	// references the returned position vector and the field variable
+	vector_t *vec_x = ret[0];
+	vector_t *vec_g = ret[1];
+
+
+	// initializes the analytic solution vector
+	vector_t *vec_analytic = vector.zeros(size);
+	// initializes the error vector
+	vector_t *vec_err = vector.zeros(size);
+
+
+	// defines iterators
+	double *x = (vec_x -> array);
+	double *g = (vec_g -> array);
+	double *err = (vec_err -> array);
+	double *analytic = (vec_analytic -> array);
+
+
+	// computes the analytic solution
+	for (size_t i = 0; i != size; ++i)
+		analytic[i] = 0.5 * H * (1.0 - x[i]) * (1.0 + x[i]);
+
+	// computes the differences between the exact and numeric solutions
+	for (size_t i = 0; i != size; ++i)
+		err[i] = (g[i] - analytic[i]);
+
+
+	// reports the average error
+	double norm = vec_err -> qnorm (vec_err);
+	printf("error: %.4e\n", sqrt(norm) / size );
+
+
+	// frees the vectors from memory
+	vec_x = vector.destroy (vec_x);
+	vec_g = vector.destroy (vec_g);
+	vec_b = vector.destroy (vec_b);
+	vec_err = vector.destroy (vec_err);
+	vec_analytic = vector.destroy (vec_analytic);
 }
