@@ -59,30 +59,61 @@ void test_pushback() {
 	for (int i = 0; i != 32; ++i)
 		vec -> push_back (vec, i);
 
-	double *array = (vec -> array);
-	// prints the data on the console
-	for (size_t i = 0; i != 32; ++i)
-		printf("%f\n", array[i]);
+	// stores same data in array temporary
+	double data [32];
+	for (int i = 0; i != 32; ++i)
+		data[i] = i;
 
-	// prints the vector size on the console
-	printf("size: %lu \n", vec -> size(vec));
+	double diff = 0;
+	double *array = (vec -> array);
+	// computes differences
+	for (size_t i = 0; i != 32; ++i)
+		diff += (data[i] - array[i]);
+
+	printf("push-back-method-test[0]: ");
+	if (diff != 0.0)
+		printf("FAIL\n");	// fails if there are differences
+	else
+		printf("pass\n");	// passes if the are none
+
+
+	printf("push-back-method-test[1]: ");
+	if (vec -> size(vec) != 32)
+		printf("FAIL\n");	// fails if size does not match
+	else
+		printf("pass\n");	// passes otherwise
+
 
 	// clears the data stored in vector
 	vec -> clear(vec);
-	printf("cleared vector\n");
-	printf("size: %lu \n", vec -> size(vec));
+	printf("push-back-method-test[2]: ");
+	if (vec -> size(vec) != 0)
+		printf("FAIL\n");	// fails if size does not match
+	else
+		printf("pass\n");	// passes otherwise
+
 
 	// pushes new data unto the back of the vector
 	for (int i = 0; i != 32; ++i)
 		vec -> push_back (vec, 32 - i);
 
-	array = (vec -> array);
-	// prints the new data on the console
-	for (size_t i = 0; i != 32; ++i)
-		printf("%f\n", array[i]);
+	// stores same data in array temporary
+	for (int i = 0; i != 32; ++i)
+		data[i] = (32 - i);
 
-	// prints the vector size on the console
-	printf("size: %lu \n", vec -> size(vec));
+
+	diff = 0.0;
+	array = (vec -> array);
+	// computes differences
+	for (size_t i = 0; i != 32; ++i)
+		diff += (data[i] - array[i]);
+
+	printf("push-back-method-test[3]: ");
+	if (diff != 0.0)
+		printf("FAIL\n");	// fails if there are differences
+	else
+		printf("pass\n");	// passes if the are none
+
 
 	// frees the memory allocated for the vector
 	vec = vector.destroy (vec);
