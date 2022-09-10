@@ -173,6 +173,23 @@ static void copy_method (void *destination, void *source)
 }
 
 
+static double qnorm_method (void *vector)
+// quick norm method --- does not compute the squared root
+{
+	// gets the vector size
+	size_t size = size_method (vector);
+	// asserts that the type of the (universal) pointer is a vector
+	vector_t *vec = vector;
+
+	double norm = 0;
+	double *data = (vec -> array);
+	for (size_t i = 0; i != size; ++i)
+		norm += (data[i] * data[i]);
+
+	return norm;
+}
+
+
 static vector_t* create (size_t size)
 // constructor --- allocates memory for a vector of requested size
 {
@@ -195,6 +212,7 @@ static vector_t* create (size_t size)
 	vec -> clear = clear_method;
 	vec -> push_back = push_back_method;
 	vec -> copy = copy_method;
+	vec -> qnorm = qnorm_method;
 
 	return vec;
 }
@@ -222,6 +240,7 @@ static vector_t* zeros (size_t size)
 	vec -> clear = clear_method;
 	vec -> push_back = push_back_method;
 	vec -> copy = copy_method;
+	vec -> qnorm = qnorm_method;
 
 	return vec;
 }
@@ -250,6 +269,7 @@ static vector_t* ones (size_t size)
 	vec -> clear = clear_method;
 	vec -> push_back = push_back_method;
 	vec -> copy = copy_method;
+	vec -> qnorm = qnorm_method;
 
 	return vec;
 }
@@ -278,6 +298,7 @@ static vector_t* linspace (double x_l, double x_u, size_t size)
 	vec -> clear = clear_method;
 	vec -> push_back = push_back_method;
 	vec -> copy = copy_method;
+	vec -> qnorm = qnorm_method;
 
 	return vec;
 }

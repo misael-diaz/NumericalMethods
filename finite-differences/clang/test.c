@@ -37,6 +37,7 @@ void test_zeros();
 void test_ones();
 void test_linspace();
 void test_copy();
+void test_qnorm();
 
 int main() {
 
@@ -45,6 +46,7 @@ int main() {
 	test_zeros();
 	test_ones();
 	test_copy();
+	test_qnorm();
 	return 0;
 }
 
@@ -261,4 +263,30 @@ void test_copy ()
 	// frees the memory allocated for the vectors
 	vec_x = vector.destroy (vec_x);
 	vec_y = vector.destroy (vec_y);
+}
+
+
+void test_qnorm()
+// tests the quick-norm method
+{
+	// creates a vector that stores the integers in the range [0, 256)
+	size_t size = 256;
+	double x_l = 0, x_u = 255;
+	vector_t *vec = vector.linspace(x_l, x_u, size);
+
+
+	// computes the norm
+	double norm = vec -> qnorm (vec);
+	// computes the expected result -- the sum of squares in [0, 256)
+	double sum_squares = (size * (size - 1) * (2 * size - 1) / 6);
+
+	printf("quick-norm-method-test[0]: ");
+	if (norm != sum_squares)
+		printf("FAIL\n");
+	else
+		printf("pass\n");
+
+
+	// frees the memory allocated for the vector
+	vec = vector.destroy (vec);
 }

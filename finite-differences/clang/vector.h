@@ -37,5 +37,6 @@ size_t (*size) (void*);
 void (*clear) (void*);
 void (*push_back) (void*, double);
 void (*copy) (void*, void*);
+double (*qnorm) (void*);		// quick norm
 } vector_t;
 #endif
