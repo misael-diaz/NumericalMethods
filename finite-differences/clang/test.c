@@ -191,15 +191,19 @@ void test_ones ()
 void test_linspace ()
 // tests the linspace method
 {
-	// creates vector of 33 equally spaced elements in [-1, 1]
-	vector_t *vec = vector.linspace(-1, 1, 33);
+	// defines the vector size
+	size_t size = 33;
+	// defines the vector limits
+	double x_l = -1, x_u = 1;
+	// creates vector of `size' equally spaced elements in [-1, 1]
+	vector_t *vec = vector.linspace(x_l, x_u, size);
 
 	// prints the vector size on the console
 	printf("size: %lu \n", vec -> size(vec));
 
 	double *array = (vec -> array);
 	// prints the vector data on the console
-	for (size_t i = 0; i != 33; ++i)
+	for (size_t i = 0; i != size; ++i)
 		printf("%+7.4f\n", array[i]);
 
 	// frees the memory allocated for the vector
