@@ -157,13 +157,31 @@ void test_ones ()
 	// creates vector of zeros
 	vector_t *vec = vector.ones(size);
 
-	// prints the vector size on the console
-	printf("size: %lu \n", vec -> size(vec));
 
+	double diff = 0;
 	double *array = (vec -> array);
-	// prints the vector data on the console
+	// computes differences
 	for (size_t i = 0; i != size; ++i)
-		printf("%7.4f\n", array[i]);
+		diff += (1.0 - array[i]);
+
+	printf("ones-test[0]: ");
+	if (diff != 0.0)
+		printf("FAIL\n");	// fails if there are differences
+	else
+		printf("pass\n");	// passes if the are none
+
+
+	double sum = 0;
+	// checks the vector size
+	for (size_t i = 0; i != size; ++i)
+		sum += array[i];
+
+	printf("ones-test[1]: ");
+	if (sum != size)
+		printf("FAIL\n");	// fails if size differs
+	else
+		printf("pass\n");	// passes otherwise
+
 
 	// frees the memory allocated for the vector
 	vec = vector.destroy (vec);
