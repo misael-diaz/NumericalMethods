@@ -198,13 +198,26 @@ void test_linspace ()
 	// creates vector of `size' equally spaced elements in [-1, 1]
 	vector_t *vec = vector.linspace(x_l, x_u, size);
 
-	// prints the vector size on the console
-	printf("size: %lu \n", vec -> size(vec));
 
-	double *array = (vec -> array);
-	// prints the vector data on the console
+	double data [size];
+	double dx = (x_u - x_l) / ( (double) (size - 1) );
+	// stores same data in array temporary
 	for (size_t i = 0; i != size; ++i)
-		printf("%+7.4f\n", array[i]);
+		data[i] = x_l + ( (double) i ) * dx;
+
+
+	double diff = 0;
+	double *array = (vec -> array);
+	// computes differences between the stored and expected data
+	for (size_t i = 0; i != 32; ++i)
+		diff += (data[i] - array[i]);
+
+	printf("linspace-test[0]: ");
+	if (diff != 0.0)
+		printf("FAIL\n");	// fails if there are differences
+	else
+		printf("pass\n");	// passes if the are none
+
 
 	// frees the memory allocated for the vector
 	vec = vector.destroy (vec);
