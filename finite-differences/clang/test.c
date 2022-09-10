@@ -127,13 +127,23 @@ void test_zeros ()
 	// creates vector of zeros
 	vector_t *vec = vector.zeros(size);
 
-	// prints the vector size on the console
-	printf("size: %lu \n", vec -> size(vec));
-
+	double sum = 0;
 	double *array = (vec -> array);
-	// prints the vector data on the console
+	// accumulates the data stored in the vector
 	for (size_t i = 0; i != size; ++i)
-		printf("%7.4f\n", array[i]);
+		sum += array[i];
+
+	printf("zeros-test[0]: ");	// checks stored data
+	if (sum != 0.0)
+		printf("FAIL\n");
+	else
+		printf("pass\n");
+
+	printf("zeros-test[1]: ");
+	if (vec -> size(vec) != size)	// checks vector size
+		printf("FAIL\n");
+	else
+		printf("pass\n");
 
 	// frees the memory allocated for the vector
 	vec = vector.destroy (vec);
