@@ -421,7 +421,7 @@ vector_t** GaussSeidel (
 	double norm = 0;
 	// gets the number of discretization intervals
 	size_t N = (size - 1);
-	/* applies the Jacobi method to solve for the field variable */
+	/* uses the Gauss-Seidel method to solve for the field variable */
 	for (size_t i = 0; i != iters; ++i)
 	{
 
