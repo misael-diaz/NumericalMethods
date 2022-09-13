@@ -40,9 +40,9 @@ void test_ones();
 void test_linspace();
 void test_copy();
 void test_qnorm();
-vector_t** Jacobi (vector_t *pdesol[5], vector_t*, const isolver_prms_t*);
+vector_t** Jacobi (vector_t *pdesol[6], vector_t*, const isolver_prms_t*);
 vector_t** GaussSeidel (
-	vector_t *pdesol[5], vector_t*, const isolver_prms_t*
+	vector_t *pdesol[6], vector_t*, const isolver_prms_t*
 );
 void test_steady_1d_transport_Jacobi();
 void test_steady_1d_transport_GaussSeidel();
@@ -308,7 +308,7 @@ void test_qnorm()
 
 
 vector_t** Jacobi (
-	vector_t *pdesol[5], vector_t *pdevec, const isolver_prms_t* prms
+	vector_t *pdesol[6], vector_t *pdevec, const isolver_prms_t* prms
 )
 // possible tailored implementation of the Jacobi method
 {
@@ -330,6 +330,8 @@ vector_t** Jacobi (
 	vector_t *vec_g0  = pdesol[3];
 	// references the error vector
 	vector_t *vec_err = pdesol[4];
+	// references the state vector
+	vector_t *vec_state = pdesol[5];
 	// references the right-hand side, finite-difference, vector
 	vector_t *vec_b = pdevec;
 
@@ -345,6 +347,7 @@ vector_t** Jacobi (
 	double *g   = (vec_g   -> array);
 	double *g0  = (vec_g0  -> array);
 	double *err = (vec_err -> array);
+	double *state = (vec_state -> array);
 
 
 	// updates the finite-difference vector with the transient vector
@@ -352,6 +355,8 @@ vector_t** Jacobi (
 		b[i] += (-alpha * g[i]);
 
 
+	// initializes the state
+	state[0] = 1.0;
 	// initializes the norm of the error vector
 	double norm = 0;
 	// gets the number of discretization intervals
@@ -383,6 +388,7 @@ vector_t** Jacobi (
 		/* checks for convergence */
 		if (norm < tol)
 		{
+			state[0] = 0.0;
 			char msg [] = "Jacobi(): solution found after "
 				"%lu iters\n";
 			if (verbose) printf(msg, i + 1);
@@ -399,7 +405,7 @@ vector_t** Jacobi (
 
 
 vector_t** GaussSeidel (
-	vector_t *pdesol[5], vector_t *pdevec, const isolver_prms_t* prms
+	vector_t *pdesol[6], vector_t *pdevec, const isolver_prms_t* prms
 )
 // possible tailored implementation of the Gauss-Seidel method
 {
@@ -421,6 +427,8 @@ vector_t** GaussSeidel (
 	vector_t *vec_g0  = pdesol[3];
 	// references the error vector
 	vector_t *vec_err = pdesol[4];
+	// references the state vector
+	vector_t *vec_state = pdesol[5];
 	// references the right-hand side, finite-difference, vector
 	vector_t *vec_b = pdevec;
 
@@ -436,6 +444,7 @@ vector_t** GaussSeidel (
 	double *g   = (vec_g   -> array);
 	double *g0  = (vec_g0  -> array);
 	double *err = (vec_err -> array);
+	double *state = (vec_state -> array);
 
 
 	// updates the finite-difference vector with the transient vector
@@ -443,6 +452,8 @@ vector_t** GaussSeidel (
 		b[i] += (-alpha * g[i]);
 
 
+	// initializes the state
+	state[0] = 1.0;
 	// initializes the norm of the error vector
 	double norm = 0;
 	// gets the number of discretization intervals
@@ -474,6 +485,7 @@ vector_t** GaussSeidel (
 		/* checks for convergence */
 		if (norm < tol)
 		{
+			state[0] = 0.0;
 			char msg [] = "Gauss-Seidel(): solution found "
 				"after %lu iters\n";
 			if (verbose) printf(msg, i + 1);
@@ -527,7 +539,7 @@ void test_steady_1d_transport_Jacobi ()
 
 
 	// initializes the placeholder for the solution of the PDE
-	vector_t *pdesol[5] = {NULL, NULL, NULL, NULL, NULL};
+	vector_t *pdesol[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 	// initializes the position vector
 	pdesol[0] = vector.linspace(x_l, x_u, size);
 	// initializes the (temperature) field variable
@@ -538,6 +550,8 @@ void test_steady_1d_transport_Jacobi ()
 	pdesol[3] = vector.zeros(size);
 	// initializes the error vector
 	pdesol[4] = vector.zeros(size);
+	// initializes the state vector
+	pdesol[5] = vector.zeros(1);
 
 
 	// creates the finite-difference vector (right-hand side of SLE)
@@ -574,6 +588,7 @@ void test_steady_1d_transport_Jacobi ()
 	vector_t *vec_src = ret[2];
 	vector_t *vec_g0  = ret[3];
 	vector_t *vec_err = ret[4];
+	vector_t *vec_state = ret[5];
 
 
 	// initializes the analytic solution vector
@@ -608,6 +623,7 @@ void test_steady_1d_transport_Jacobi ()
 	vec_g0 = vector.destroy (vec_g0);
 	vec_src = vector.destroy (vec_src);
 	vec_err = vector.destroy (vec_err);
+	vec_state = vector.destroy (vec_state);
 	vec_analytic = vector.destroy (vec_analytic);
 }
 
@@ -651,7 +667,7 @@ void test_steady_1d_transport_GaussSeidel ()
 
 
 	// initializes the placeholder for the solution of the PDE
-	vector_t *pdesol[5] = {NULL, NULL, NULL, NULL, NULL};
+	vector_t *pdesol[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 	// initializes the position vector
 	pdesol[0] = vector.linspace(x_l, x_u, size);
 	// initializes the (temperature) field variable
@@ -662,6 +678,8 @@ void test_steady_1d_transport_GaussSeidel ()
 	pdesol[3] = vector.zeros(size);
 	// initializes the error vector
 	pdesol[4] = vector.zeros(size);
+	// initializes the state vector
+	pdesol[5] = vector.zeros(1);
 
 
 	// creates the finite-difference vector (right-hand side of SLE)
@@ -698,6 +716,7 @@ void test_steady_1d_transport_GaussSeidel ()
 	vector_t *vec_src = ret[2];
 	vector_t *vec_g0  = ret[3];
 	vector_t *vec_err = ret[4];
+	vector_t *vec_state = ret[5];
 
 
 	// initializes the analytic solution vector
@@ -732,5 +751,6 @@ void test_steady_1d_transport_GaussSeidel ()
 	vec_g0 = vector.destroy (vec_g0);
 	vec_src = vector.destroy (vec_src);
 	vec_err = vector.destroy (vec_err);
+	vec_state = vector.destroy (vec_state);
 	vec_analytic = vector.destroy (vec_analytic);
 }
