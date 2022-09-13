@@ -511,7 +511,10 @@ void test_steady_1d_transport_Jacobi ()
 	bool verbose = true;
 
 	// initializes the iterative solver parameters
-	isolver_prms_t const prms = {.alpha = alpha, .tol = tol, .iters = iters, .verbose = verbose};
+	isolver_prms_t const prms = {
+		.alpha = alpha, .tol = tol,
+		.iters = iters, .verbose = verbose
+	};
 
 
 	/* defines the finite-differences problem */
@@ -627,7 +630,10 @@ void test_steady_1d_transport_GaussSeidel ()
 	bool verbose = true;
 
 	// initializes the iterative solver parameters
-	isolver_prms_t const prms = {.alpha = alpha, .tol = tol, .iters = iters, .verbose = verbose};
+	isolver_prms_t const prms = {
+		.alpha = alpha, .tol = tol,
+		.iters = iters, .verbose = verbose
+	};
 
 
 	/* defines the finite-differences problem */
