@@ -315,6 +315,8 @@ vector_t** Jacobi (
 	// gets the tolerance and the maximum number of iterations
 	double tol = prms.tol;
 	size_t iters = prms.iters;
+	// gets the verbose parameter
+	bool verbose = prms.verbose;
 
 
 	// references the position and (temperature) field variables
@@ -381,7 +383,7 @@ vector_t** Jacobi (
 		{
 			char msg [] = "Jacobi(): solution found after "
 				"%lu iters\n";
-			printf(msg, i + 1);
+			if (verbose) printf(msg, i + 1);
 			break;
 		}
 
@@ -408,6 +410,8 @@ vector_t** GaussSeidel (
 	// gets the tolerance and the maximum number of iterations
 	double tol = prms.tol;
 	size_t iters = prms.iters;
+	// gets the verbose parameter
+	bool verbose = prms.verbose;
 
 
 	// references the position and (temperature) field variables
@@ -474,7 +478,7 @@ vector_t** GaussSeidel (
 		{
 			char msg [] = "Gauss-Seidel(): solution found "
 				"after %lu iters\n";
-			printf(msg, i + 1);
+			if (verbose) printf(msg, i + 1);
 			break;
 		}
 
@@ -503,9 +507,11 @@ void test_steady_1d_transport_Jacobi ()
 	double tol = 1.0 / ( (double) (0x400000000000) );	// ~1.4e-14
 	// defines the maximum number of iterations of the linear solver
 	size_t iters = (0x0008FFFF);	// about 500K iterations
+	// sets the solver to be verbose
+	bool verbose = true;
 
 	// initializes the iterative solver parameters
-	isolver_prms_t const prms = {.alpha = alpha, .tol = tol, .iters = iters};
+	isolver_prms_t const prms = {.alpha = alpha, .tol = tol, .iters = iters, .verbose = verbose};
 
 
 	/* defines the finite-differences problem */
@@ -617,9 +623,11 @@ void test_steady_1d_transport_GaussSeidel ()
 	double tol = 1.0 / ( (double) (0x400000000000) );	// ~1.4e-14
 	// defines the maximum number of iterations of the linear solver
 	size_t iters = (0x0008FFFF);	// about 500K iterations
+	// sets the solver to be verbose
+	bool verbose = true;
 
 	// initializes the iterative solver parameters
-	isolver_prms_t const prms = {.alpha = alpha, .tol = tol, .iters = iters};
+	isolver_prms_t const prms = {.alpha = alpha, .tol = tol, .iters = iters, .verbose = verbose};
 
 
 	/* defines the finite-differences problem */
