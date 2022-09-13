@@ -40,8 +40,8 @@ void test_ones();
 void test_linspace();
 void test_copy();
 void test_qnorm();
-vector_t** Jacobi (vector_t *odesol[2], vector_t*, isolver_prms_t);
-vector_t** GaussSeidel (vector_t *odesol[2], vector_t*, isolver_prms_t);
+vector_t** Jacobi (vector_t *odesol[3], vector_t*, isolver_prms_t);
+vector_t** GaussSeidel (vector_t *odesol[3], vector_t*, isolver_prms_t);
 void test_steady_1d_transport_Jacobi();
 void test_steady_1d_transport_GaussSeidel();
 
@@ -306,7 +306,7 @@ void test_qnorm()
 
 
 vector_t** Jacobi (
-	vector_t *odesol[2], vector_t *odevec, isolver_prms_t prms
+	vector_t *odesol[3], vector_t *odevec, isolver_prms_t prms
 )
 // possible tailored implementation of the Jacobi method
 {
@@ -319,6 +319,8 @@ vector_t** Jacobi (
 	vector_t *vec_x = odesol[0];
 	vector_t *vec_g = odesol[1];
 	// references the (heat) source term vector
+	vector_t *vec_src = odesol[2];
+	// references the right-hand side, finite-difference, vector
 	vector_t *vec_b = odevec;
 
 
@@ -328,6 +330,8 @@ vector_t** Jacobi (
 	vector_t *vec_g0  = vector.zeros(size);
 	// initializes the error vector
 	vector_t *vec_err = vector.zeros(size);
+	// initializes the finite-difference vector with the source vector
+	vec_b -> copy (vec_b, vec_src);
 
 
 	// defines iterators
@@ -386,7 +390,7 @@ vector_t** Jacobi (
 
 
 vector_t** GaussSeidel (
-	vector_t *odesol[2], vector_t *odevec, isolver_prms_t prms
+	vector_t *odesol[3], vector_t *odevec, isolver_prms_t prms
 )
 // possible tailored implementation of the Gauss-Seidel method
 {
@@ -399,6 +403,8 @@ vector_t** GaussSeidel (
 	vector_t *vec_x = odesol[0];
 	vector_t *vec_g = odesol[1];
 	// references the (heat) source term vector
+	vector_t *vec_src = odesol[2];
+	// references the right-hand side, finite-difference, vector
 	vector_t *vec_b = odevec;
 
 
@@ -408,6 +414,8 @@ vector_t** GaussSeidel (
 	vector_t *vec_g0  = vector.zeros(size);
 	// initializes the error vector
 	vector_t *vec_err = vector.zeros(size);
+	// initializes the finite-difference vector with the source vector
+	vec_b -> copy (vec_b, vec_src);
 
 
 	// defines iterators
@@ -497,25 +505,31 @@ void test_steady_1d_transport_Jacobi ()
 
 
 	// initializes the placeholder for the solution of the ODE
-	vector_t *odesol[2] = {NULL, NULL};
+	vector_t *odesol[3] = {NULL, NULL, NULL};
 	// initializes the position vector
 	odesol[0] = vector.linspace(x_l, x_u, size);
 	// initializes the (temperature) field variable
 	odesol[1] = vector.zeros(size);
-
-
 	// initializes the (heat) source vector
+	odesol[2] = vector.zeros(size);
+
+
+	// creates the finite-difference vector (right-hand side of SLE)
 	vector_t *odevec = vector.zeros(size);
 	// creates alias for the source vector
 	vector_t *vec_b  = odevec;
-	// defines an iterator for the source vector
-	double *b = (vec_b -> array);
+
+
+	// references the (heat) source vector
+	vector_t *vec_source = odesol[2];
+	// defines an iterator for the (heat) source vector
+	double *source = (vec_source -> array);
 
 	// defines the non-dimensional volumetric (heat) source term
 	double H = 1;
 	// defines the constant (heat) source vector
 	for (size_t i = 0; i != size; ++i)
-		b[i] = -(dx) * (dx) * H;
+		source[i] = -(dx) * (dx) * H;
 
 
 	/* numeric solution */
@@ -531,6 +545,7 @@ void test_steady_1d_transport_Jacobi ()
 	// references the returned position vector and the field variable
 	vector_t *vec_x = ret[0];
 	vector_t *vec_g = ret[1];
+	vector_t *vec_src = ret[2];
 
 
 	// initializes the analytic solution vector
@@ -564,6 +579,7 @@ void test_steady_1d_transport_Jacobi ()
 	vec_x = vector.destroy (vec_x);
 	vec_g = vector.destroy (vec_g);
 	vec_b = vector.destroy (vec_b);
+	vec_src = vector.destroy (vec_src);
 	vec_err = vector.destroy (vec_err);
 	vec_analytic = vector.destroy (vec_analytic);
 }
@@ -601,25 +617,31 @@ void test_steady_1d_transport_GaussSeidel ()
 
 
 	// initializes the placeholder for the solution of the ODE
-	vector_t *odesol[2] = {NULL, NULL};
+	vector_t *odesol[3] = {NULL, NULL, NULL};
 	// initializes the position vector
 	odesol[0] = vector.linspace(x_l, x_u, size);
 	// initializes the (temperature) field variable
 	odesol[1] = vector.zeros(size);
-
-
 	// initializes the (heat) source vector
+	odesol[2] = vector.zeros(size);
+
+
+	// creates the finite-difference vector (right-hand side of SLE)
 	vector_t *odevec = vector.zeros(size);
 	// creates alias for the source vector
 	vector_t *vec_b  = odevec;
-	// defines an iterator for the source vector
-	double *b = (vec_b -> array);
+
+
+	// references the (heat) source vector
+	vector_t *vec_source = odesol[2];
+	// defines an iterator for the (heat) source vector
+	double *source = (vec_source -> array);
 
 	// defines the non-dimensional volumetric (heat) source term
 	double H = 1;
 	// defines the constant (heat) source vector
 	for (size_t i = 0; i != size; ++i)
-		b[i] = -(dx) * (dx) * H;
+		source[i] = -(dx) * (dx) * H;
 
 
 	/* numeric solution */
@@ -635,6 +657,7 @@ void test_steady_1d_transport_GaussSeidel ()
 	// references the returned position vector and the field variable
 	vector_t *vec_x = ret[0];
 	vector_t *vec_g = ret[1];
+	vector_t *vec_src = ret[2];
 
 
 	// initializes the analytic solution vector
@@ -668,6 +691,7 @@ void test_steady_1d_transport_GaussSeidel ()
 	vec_x = vector.destroy (vec_x);
 	vec_g = vector.destroy (vec_g);
 	vec_b = vector.destroy (vec_b);
+	vec_src = vector.destroy (vec_src);
 	vec_err = vector.destroy (vec_err);
 	vec_analytic = vector.destroy (vec_analytic);
 }
