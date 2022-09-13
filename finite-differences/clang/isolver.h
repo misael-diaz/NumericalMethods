@@ -26,6 +26,8 @@
  */
 
 typedef struct {
+// alpha = 0 for steady and (dx* dx / dt) for transient problems
+double alpha;
 double tol;		// tolerance
 size_t iters;		// maximum number of iterations
 } isolver_prms_t;

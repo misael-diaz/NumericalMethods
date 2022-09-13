@@ -310,6 +310,8 @@ vector_t** Jacobi (
 )
 // possible tailored implementation of the Jacobi method
 {
+	// gets the transient parameter
+	double alpha = prms.alpha;
 	// gets the tolerance and the maximum number of iterations
 	double tol = prms.tol;
 	size_t iters = prms.iters;
@@ -341,23 +343,30 @@ vector_t** Jacobi (
 	double *err = (vec_err -> array);
 
 
+	// updates the finite-difference vector with the transient vector
+	for (size_t i = 0; i != size; ++i)
+		b[i] += (-alpha * g[i]);
+
+
 	// initializes the norm of the error vector
 	double norm = 0;
 	// gets the number of discretization intervals
 	size_t N = (size - 1);
+	// updates the diagonal coefficient with the transient contribution
+	double c = 1.0 / (alpha + 2.0);
 	/* applies the Jacobi method to solve for the field variable */
 	for (size_t i = 0; i != iters; ++i)
 	{
 
 		// updates the node next to the lower boundary, x_l
-		g[1] = -0.5 * (b[1] - g0[2]);
+		g[1] = -c * (b[1] - g0[2]);
 
 		// updates the intermediate nodes
 		for (size_t j = 2; j != (N - 1); ++j)
-			g[j] = -0.5 * (b[j] - g0[j - 1] - g0[j + 1]);
+			g[j] = -c * (b[j] - g0[j - 1] - g0[j + 1]);
 
 		// updates the node next to the upper boundary, x_u
-		g[N - 1] = -0.5 * (b[N - 1] - g0[N - 2]);
+		g[N - 1] = -c * (b[N - 1] - g0[N - 2]);
 
 
 		// computes the error vector
@@ -394,6 +403,8 @@ vector_t** GaussSeidel (
 )
 // possible tailored implementation of the Gauss-Seidel method
 {
+	// gets the transient parameter
+	double alpha = prms.alpha;
 	// gets the tolerance and the maximum number of iterations
 	double tol = prms.tol;
 	size_t iters = prms.iters;
@@ -425,23 +436,30 @@ vector_t** GaussSeidel (
 	double *err = (vec_err -> array);
 
 
+	// updates the finite-difference vector with the transient vector
+	for (size_t i = 0; i != size; ++i)
+		b[i] += (-alpha * g[i]);
+
+
 	// initializes the norm of the error vector
 	double norm = 0;
 	// gets the number of discretization intervals
 	size_t N = (size - 1);
+	// updates the diagonal coefficient with the transient contribution
+	double c = 1.0 / (alpha + 2.0);
 	/* uses the Gauss-Seidel method to solve for the field variable */
 	for (size_t i = 0; i != iters; ++i)
 	{
 
 		// updates the node next to the lower boundary, x_l
-		g[1] = -0.5 * (b[1] - g0[2]);
+		g[1] = -c * (b[1] - g0[2]);
 
 		// updates the intermediate nodes
 		for (size_t j = 2; j != (N - 1); ++j)
-			g[j] = -0.5 * (b[j] - g[j - 1] - g0[j + 1]);
+			g[j] = -c * (b[j] - g[j - 1] - g0[j + 1]);
 
 		// updates the node next to the upper boundary, x_u
-		g[N - 1] = -0.5 * (b[N - 1] - g[N - 2]);
+		g[N - 1] = -c * (b[N - 1] - g[N - 2]);
 
 
 		// computes the error vector
@@ -479,14 +497,15 @@ void test_steady_1d_transport_Jacobi ()
 
 	/* defines the solver parameters */
 
-
+	// defines the steady parameter
+	double alpha = 0;
 	// defines the tolerance of the linear solver
 	double tol = 1.0 / ( (double) (0x400000000000) );	// ~1.4e-14
 	// defines the maximum number of iterations of the linear solver
 	size_t iters = (0x0008FFFF);	// about 500K iterations
 
 	// initializes the iterative solver parameters
-	isolver_prms_t const prms = {.tol = tol, .iters = iters};
+	isolver_prms_t const prms = {.alpha = alpha, .tol = tol, .iters = iters};
 
 
 	/* defines the finite-differences problem */
@@ -592,13 +611,15 @@ void test_steady_1d_transport_GaussSeidel ()
 	/* defines the solver parameters */
 
 
+	// defines the steady parameter
+	double alpha = 0;
 	// defines the tolerance of the linear solver
 	double tol = 1.0 / ( (double) (0x400000000000) );	// ~1.4e-14
 	// defines the maximum number of iterations of the linear solver
 	size_t iters = (0x0008FFFF);	// about 500K iterations
 
 	// initializes the iterative solver parameters
-	isolver_prms_t const prms = {.tol = tol, .iters = iters};
+	isolver_prms_t const prms = {.alpha = alpha, .tol = tol, .iters = iters};
 
 
 	/* defines the finite-differences problem */
