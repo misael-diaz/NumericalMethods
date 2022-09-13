@@ -40,9 +40,9 @@ void test_ones();
 void test_linspace();
 void test_copy();
 void test_qnorm();
-vector_t** Jacobi (vector_t *pdesol[3], vector_t*, const isolver_prms_t*);
+vector_t** Jacobi (vector_t *pdesol[5], vector_t*, const isolver_prms_t*);
 vector_t** GaussSeidel (
-	vector_t *pdesol[3], vector_t*, const isolver_prms_t*
+	vector_t *pdesol[5], vector_t*, const isolver_prms_t*
 );
 void test_steady_1d_transport_Jacobi();
 void test_steady_1d_transport_GaussSeidel();
@@ -308,7 +308,7 @@ void test_qnorm()
 
 
 vector_t** Jacobi (
-	vector_t *pdesol[3], vector_t *pdevec, const isolver_prms_t* prms
+	vector_t *pdesol[5], vector_t *pdevec, const isolver_prms_t* prms
 )
 // possible tailored implementation of the Jacobi method
 {
@@ -326,16 +326,16 @@ vector_t** Jacobi (
 	vector_t *vec_g = pdesol[1];
 	// references the (heat) source term vector
 	vector_t *vec_src = pdesol[2];
+	// references the guess vector
+	vector_t *vec_g0  = pdesol[3];
+	// references the error vector
+	vector_t *vec_err = pdesol[4];
 	// references the right-hand side, finite-difference, vector
 	vector_t *vec_b = pdevec;
 
 
 	// gets the size of the vectors
 	size_t size = vec_x -> size (vec_x);
-	// initializes the guess vector
-	vector_t *vec_g0  = vector.zeros(size);
-	// initializes the error vector
-	vector_t *vec_err = vector.zeros(size);
 	// initializes the finite-difference vector with the source vector
 	vec_b -> copy (vec_b, vec_src);
 
@@ -394,16 +394,12 @@ vector_t** Jacobi (
 		vec_g0 -> copy (vec_g0, vec_g);
 	}
 
-	// frees the vectors from memory
-	vec_g0  = vector.destroy (vec_g0);
-	vec_err = vector.destroy (vec_err);
-
 	return pdesol;
 }
 
 
 vector_t** GaussSeidel (
-	vector_t *pdesol[3], vector_t *pdevec, const isolver_prms_t* prms
+	vector_t *pdesol[5], vector_t *pdevec, const isolver_prms_t* prms
 )
 // possible tailored implementation of the Gauss-Seidel method
 {
@@ -421,16 +417,16 @@ vector_t** GaussSeidel (
 	vector_t *vec_g = pdesol[1];
 	// references the (heat) source term vector
 	vector_t *vec_src = pdesol[2];
+	// references the guess vector
+	vector_t *vec_g0  = pdesol[3];
+	// references the error vector
+	vector_t *vec_err = pdesol[4];
 	// references the right-hand side, finite-difference, vector
 	vector_t *vec_b = pdevec;
 
 
 	// gets the size of the vectors
 	size_t size = vec_x -> size (vec_x);
-	// initializes the guess vector
-	vector_t *vec_g0  = vector.zeros(size);
-	// initializes the error vector
-	vector_t *vec_err = vector.zeros(size);
 	// initializes the finite-difference vector with the source vector
 	vec_b -> copy (vec_b, vec_src);
 
@@ -489,10 +485,6 @@ vector_t** GaussSeidel (
 		vec_g0 -> copy (vec_g0, vec_g);
 	}
 
-	// frees the vectors from memory
-	vec_g0  = vector.destroy (vec_g0);
-	vec_err = vector.destroy (vec_err);
-
 	return pdesol;
 }
 
@@ -535,13 +527,17 @@ void test_steady_1d_transport_Jacobi ()
 
 
 	// initializes the placeholder for the solution of the PDE
-	vector_t *pdesol[3] = {NULL, NULL, NULL};
+	vector_t *pdesol[5] = {NULL, NULL, NULL, NULL, NULL};
 	// initializes the position vector
 	pdesol[0] = vector.linspace(x_l, x_u, size);
 	// initializes the (temperature) field variable
 	pdesol[1] = vector.zeros(size);
 	// initializes the (heat) source vector
 	pdesol[2] = vector.zeros(size);
+	// initializes the guess vector
+	pdesol[3] = vector.zeros(size);
+	// initializes the error vector
+	pdesol[4] = vector.zeros(size);
 
 
 	// creates the finite-difference vector (right-hand side of SLE)
@@ -576,12 +572,12 @@ void test_steady_1d_transport_Jacobi ()
 	vector_t *vec_x = ret[0];
 	vector_t *vec_g = ret[1];
 	vector_t *vec_src = ret[2];
+	vector_t *vec_g0  = ret[3];
+	vector_t *vec_err = ret[4];
 
 
 	// initializes the analytic solution vector
 	vector_t *vec_analytic = vector.zeros(size);
-	// initializes the error vector
-	vector_t *vec_err = vector.zeros(size);
 
 
 	// defines iterators
@@ -609,6 +605,7 @@ void test_steady_1d_transport_Jacobi ()
 	vec_x = vector.destroy (vec_x);
 	vec_g = vector.destroy (vec_g);
 	vec_b = vector.destroy (vec_b);
+	vec_g0 = vector.destroy (vec_g0);
 	vec_src = vector.destroy (vec_src);
 	vec_err = vector.destroy (vec_err);
 	vec_analytic = vector.destroy (vec_analytic);
@@ -654,13 +651,17 @@ void test_steady_1d_transport_GaussSeidel ()
 
 
 	// initializes the placeholder for the solution of the PDE
-	vector_t *pdesol[3] = {NULL, NULL, NULL};
+	vector_t *pdesol[5] = {NULL, NULL, NULL, NULL, NULL};
 	// initializes the position vector
 	pdesol[0] = vector.linspace(x_l, x_u, size);
 	// initializes the (temperature) field variable
 	pdesol[1] = vector.zeros(size);
 	// initializes the (heat) source vector
 	pdesol[2] = vector.zeros(size);
+	// initializes the guess vector
+	pdesol[3] = vector.zeros(size);
+	// initializes the error vector
+	pdesol[4] = vector.zeros(size);
 
 
 	// creates the finite-difference vector (right-hand side of SLE)
@@ -695,12 +696,12 @@ void test_steady_1d_transport_GaussSeidel ()
 	vector_t *vec_x = ret[0];
 	vector_t *vec_g = ret[1];
 	vector_t *vec_src = ret[2];
+	vector_t *vec_g0  = ret[3];
+	vector_t *vec_err = ret[4];
 
 
 	// initializes the analytic solution vector
 	vector_t *vec_analytic = vector.zeros(size);
-	// initializes the error vector
-	vector_t *vec_err = vector.zeros(size);
 
 
 	// defines iterators
@@ -728,6 +729,7 @@ void test_steady_1d_transport_GaussSeidel ()
 	vec_x = vector.destroy (vec_x);
 	vec_g = vector.destroy (vec_g);
 	vec_b = vector.destroy (vec_b);
+	vec_g0 = vector.destroy (vec_g0);
 	vec_src = vector.destroy (vec_src);
 	vec_err = vector.destroy (vec_err);
 	vec_analytic = vector.destroy (vec_analytic);
