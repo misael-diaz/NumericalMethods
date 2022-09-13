@@ -47,6 +47,7 @@ vector_t** GaussSeidel (
 void test_steady_1d_transport_Jacobi();
 void test_steady_1d_transport_GaussSeidel();
 void test_transient_1d_transport_Jacobi ();
+void test_transient_1d_transport_GaussSeidel ();
 
 int main() {
 
@@ -66,6 +67,8 @@ int main() {
 
 	// solves the transient 1d transport problem with the Jacobi method
 	test_transient_1d_transport_Jacobi ();
+	// solves the transient problem with the Gauss-Seidel method
+	test_transient_1d_transport_GaussSeidel ();
 	return 0;
 }
 
@@ -889,6 +892,151 @@ void test_transient_1d_transport_Jacobi ()
 	// computes the time t
 	double t = ( (double) (steps - 1) ) * dt;
 	printf("Jacobi(): steady-state solution\n");
+	printf("time : %.4e\n", t);
+	printf("error: %.4e\n", sqrt(norm) / size );
+
+
+	// frees the vectors from memory
+	vec_x = vector.destroy (vec_x);
+	vec_g = vector.destroy (vec_g);
+	vec_b = vector.destroy (vec_b);
+	vec_g0 = vector.destroy (vec_g0);
+	vec_src = vector.destroy (vec_src);
+	vec_err = vector.destroy (vec_err);
+	vec_state = vector.destroy (vec_state);
+	vec_analytic = vector.destroy (vec_analytic);
+}
+
+
+void test_transient_1d_transport_GaussSeidel ()
+// solves a transient 1d transport problem via finite-differences
+{
+
+	/* defines the solver parameters */
+
+	// defines the steady parameter
+	double alpha = 2.0;
+	// defines the tolerance of the linear solver
+	double tol = 1.0 / ( (double) (0x400000000000) );	// ~1.4e-14
+	// defines the maximum number of iterations of the linear solver
+	size_t iters = (0x0008FFFF);	// about 500K iterations
+	// sets the solver to be verbose
+	bool verbose = false;
+
+	// initializes the iterative solver parameters
+	isolver_prms_t const prms = {
+		.alpha = alpha, .tol = tol,
+		.iters = iters, .verbose = verbose
+	};
+
+
+	/* defines the finite-differences problem */
+
+
+	// sets the number of discretization intervals to 256
+	size_t N = (0x00000100);
+	// defines the vector size
+	size_t size = (N + 1);
+
+
+	// defines the system domain limits along the x-axis
+	double x_l = -1.0, x_u = 1.0;
+	// computes the step-size
+	double dx = (x_u - x_l) / ( (double) N );
+	// computes the time step
+	double dt = (dx * dx) / alpha;
+
+
+	// initializes the placeholder for the solution of the PDE
+	vector_t *pdesol[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+	// initializes the position vector
+	pdesol[0] = vector.linspace(x_l, x_u, size);
+	// initializes the (temperature) field variable
+	pdesol[1] = vector.zeros(size);
+	// initializes the (heat) source vector
+	pdesol[2] = vector.zeros(size);
+	// initializes the guess vector
+	pdesol[3] = vector.zeros(size);
+	// initializes the error vector
+	pdesol[4] = vector.zeros(size);
+	// initializes the state vector
+	pdesol[5] = vector.zeros(1);
+
+
+	// creates the finite-difference vector (right-hand side of SLE)
+	vector_t *pdevec = vector.zeros(size);
+	// creates alias for the source vector
+	vector_t *vec_b  = pdevec;
+
+
+	// references the (heat) source vector
+	vector_t *vec_source = pdesol[2];
+	// defines an iterator for the (heat) source vector
+	double *source = (vec_source -> array);
+
+	// defines the non-dimensional volumetric (heat) source term
+	double H = 1;
+	// defines the constant (heat) source vector
+	for (size_t i = 0; i != size; ++i)
+		source[i] = -(dx) * (dx) * H;
+
+
+	/* numeric solution */
+
+
+	size_t steps = (0x00100000);	// sets to ~1 million time steps
+	// solves for the (temperature) field variable iteratively
+	for (size_t i = 0; i != steps; ++i)
+	{
+		vector_t **ret = GaussSeidel (pdesol, pdevec, &prms);
+		vector_t *vec_state = ret[5];
+		double *state = (vec_state -> array);
+		if (state[0] != 0.0)
+		{
+			printf("Gauss-Seidel solver failed\n");
+			printf("try again with different solver params\n");
+			break;
+		}
+	}
+
+
+	/* post-processing */
+
+
+	// references the returned position vector and the field variable
+	vector_t *vec_x     = pdesol[0];
+	vector_t *vec_g     = pdesol[1];
+	vector_t *vec_src   = pdesol[2];
+	vector_t *vec_g0    = pdesol[3];
+	vector_t *vec_err   = pdesol[4];
+	vector_t *vec_state = pdesol[5];
+
+
+	// initializes the analytic (steady-state) solution vector
+	vector_t *vec_analytic = vector.zeros(size);
+
+
+	// defines iterators
+	double *x = (vec_x -> array);
+	double *g = (vec_g -> array);
+	double *err = (vec_err -> array);
+	double *analytic = (vec_analytic -> array);
+
+
+	// computes the analytic (steady-state) solution
+	for (size_t i = 0; i != size; ++i)
+		analytic[i] = 0.5 * H * (1.0 - x[i]) * (1.0 + x[i]);
+
+	// computes the differences between the exact and numeric solutions
+	for (size_t i = 0; i != size; ++i)
+		err[i] = (g[i] - analytic[i]);
+
+
+	// reports the average error
+	double norm = vec_err -> qnorm (vec_err);
+	// computes the time t
+	double t = ( (double) (steps - 1) ) * dt;
+	printf("Gauss-Seidel(): steady-state solution\n");
 	printf("time : %.4e\n", t);
 	printf("error: %.4e\n", sqrt(norm) / size );
 
