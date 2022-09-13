@@ -41,7 +41,9 @@ void test_linspace();
 void test_copy();
 void test_qnorm();
 vector_t** Jacobi (vector_t *odesol[3], vector_t*, const isolver_prms_t*);
-vector_t** GaussSeidel (vector_t *odesol[3], vector_t*, const isolver_prms_t*);
+vector_t** GaussSeidel (
+	vector_t *odesol[3], vector_t*, const isolver_prms_t*
+);
 void test_steady_1d_transport_Jacobi();
 void test_steady_1d_transport_GaussSeidel();
 
