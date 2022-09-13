@@ -40,8 +40,8 @@ void test_ones();
 void test_linspace();
 void test_copy();
 void test_qnorm();
-vector_t** Jacobi (vector_t *odesol[3], vector_t*, isolver_prms_t);
-vector_t** GaussSeidel (vector_t *odesol[3], vector_t*, isolver_prms_t);
+vector_t** Jacobi (vector_t *odesol[3], vector_t*, const isolver_prms_t*);
+vector_t** GaussSeidel (vector_t *odesol[3], vector_t*, const isolver_prms_t*);
 void test_steady_1d_transport_Jacobi();
 void test_steady_1d_transport_GaussSeidel();
 
@@ -306,17 +306,17 @@ void test_qnorm()
 
 
 vector_t** Jacobi (
-	vector_t *odesol[3], vector_t *odevec, isolver_prms_t prms
+	vector_t *odesol[3], vector_t *odevec, const isolver_prms_t* prms
 )
 // possible tailored implementation of the Jacobi method
 {
 	// gets the transient parameter
-	double alpha = prms.alpha;
+	double alpha = prms -> alpha;
 	// gets the tolerance and the maximum number of iterations
-	double tol = prms.tol;
-	size_t iters = prms.iters;
+	double tol = prms -> tol;
+	size_t iters = prms -> iters;
 	// gets the verbose parameter
-	bool verbose = prms.verbose;
+	bool verbose = prms -> verbose;
 
 
 	// references the position and (temperature) field variables
@@ -401,17 +401,17 @@ vector_t** Jacobi (
 
 
 vector_t** GaussSeidel (
-	vector_t *odesol[3], vector_t *odevec, isolver_prms_t prms
+	vector_t *odesol[3], vector_t *odevec, const isolver_prms_t* prms
 )
 // possible tailored implementation of the Gauss-Seidel method
 {
 	// gets the transient parameter
-	double alpha = prms.alpha;
+	double alpha = prms -> alpha;
 	// gets the tolerance and the maximum number of iterations
-	double tol = prms.tol;
-	size_t iters = prms.iters;
+	double tol = prms -> tol;
+	size_t iters = prms -> iters;
 	// gets the verbose parameter
-	bool verbose = prms.verbose;
+	bool verbose = prms -> verbose;
 
 
 	// references the position and (temperature) field variables
@@ -564,7 +564,7 @@ void test_steady_1d_transport_Jacobi ()
 
 
 	// solves for the (temperature) field variable iteratively
-	vector_t **ret = Jacobi (odesol, odevec, prms);
+	vector_t **ret = Jacobi (odesol, odevec, &prms);
 
 
 	/* post-processing */
@@ -683,7 +683,7 @@ void test_steady_1d_transport_GaussSeidel ()
 
 
 	// solves for the (temperature) field variable iteratively
-	vector_t **ret = GaussSeidel (odesol, odevec, prms);
+	vector_t **ret = GaussSeidel (odesol, odevec, &prms);
 
 
 	/* post-processing */
