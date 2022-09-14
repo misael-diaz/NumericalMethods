@@ -1187,6 +1187,7 @@ void test_transient_1d_transport_Jacobi ()
 	/* numeric solution */
 
 
+	bool pdestat = true;		// assumes a successful status
 	size_t steps = (0x00001000);	// sets to ~4 thousand time steps
 	// solves for the (temperature) field variable iteratively
 	for (size_t i = 0; i != steps; ++i)
@@ -1196,6 +1197,7 @@ void test_transient_1d_transport_Jacobi ()
 		double *state = (vec_state -> array);
 		if (state[0] != 0.0)
 		{
+			pdestat = false;// sets failure status
 			printf("Jacobi solver failed\n");
 			printf("try again with different solver params\n");
 			break;
@@ -1235,11 +1237,14 @@ void test_transient_1d_transport_Jacobi ()
 		err[i] = (g[i] - f[i]);
 
 
-	// reports the average error
-	double norm = vec_err -> qnorm (vec_err);
-	printf("Jacobi(): transient solution\n");
-	printf("time : %.4e\n", t);
-	printf("error: %.4e\n", sqrt(norm) / size );
+	// reports the average error if the solver was successful
+	if (pdestat)
+	{
+		double norm = vec_err -> qnorm (vec_err);
+		printf("Jacobi(): transient solution\n");
+		printf("time : %.4e\n", t);
+		printf("error: %.4e\n", sqrt(norm) / size );
+	}
 
 
 	// frees the vectors from memory
@@ -1336,6 +1341,7 @@ void test_transient_1d_transport_GaussSeidel ()
 	/* numeric solution */
 
 
+	bool pdestat = true;		// assumes a success status
 	size_t steps = (0x00001000);	// sets to ~4 thousand time steps
 	// solves for the (temperature) field variable iteratively
 	for (size_t i = 0; i != steps; ++i)
@@ -1345,6 +1351,7 @@ void test_transient_1d_transport_GaussSeidel ()
 		double *state = (vec_state -> array);
 		if (state[0] != 0.0)
 		{
+			pdestat = false;// sets failure status
 			printf("Gauss-Seidel solver failed\n");
 			printf("try again with different solver params\n");
 			break;
@@ -1384,11 +1391,14 @@ void test_transient_1d_transport_GaussSeidel ()
 		err[i] = (g[i] - f[i]);
 
 
-	// reports the average error
-	double norm = vec_err -> qnorm (vec_err);
-	printf("Gauss-Seidel(): transient solution\n");
-	printf("time : %.4e\n", t);
-	printf("error: %.4e\n", sqrt(norm) / size );
+	// reports the average error if the solver was successful
+	if (pdestat)
+	{
+		double norm = vec_err -> qnorm (vec_err);
+		printf("Gauss-Seidel(): transient solution\n");
+		printf("time : %.4e\n", t);
+		printf("error: %.4e\n", sqrt(norm) / size );
+	}
 
 
 	// frees the vectors from memory
