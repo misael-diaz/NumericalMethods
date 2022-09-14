@@ -806,8 +806,8 @@ void test_transient_1d_transport_Jacobi ()
 	vector_t *pdesol[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 	// initializes the position vector
 	pdesol[0] = vector.linspace(x_l, x_u, size);
-	// initializes the (temperature) field variable
-	pdesol[1] = vector.zeros(size);
+	// initializes the (temperature) field variable g(t = 0, x) = 1
+	pdesol[1] = vector.ones (size);
 	// initializes the (heat) source vector
 	pdesol[2] = vector.zeros(size);
 	// initializes the guess vector
@@ -834,6 +834,12 @@ void test_transient_1d_transport_Jacobi ()
 	// defines the constant (heat) source vector
 	for (size_t i = 0; i != size; ++i)
 		source[i] = -(dx) * (dx) * H;
+
+
+	// applies the boundary conditions
+	double *gi = (pdesol[1] -> array);
+	gi[0] = 0.0;	// g(t, x = x_l) = 0
+	gi[N] = 0.0;	// g(t, x = x_u) = 0
 
 
 	/* numeric solution */
@@ -951,8 +957,8 @@ void test_transient_1d_transport_GaussSeidel ()
 	vector_t *pdesol[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 	// initializes the position vector
 	pdesol[0] = vector.linspace(x_l, x_u, size);
-	// initializes the (temperature) field variable
-	pdesol[1] = vector.zeros(size);
+	// initializes the (temperature) field variable g(t = 0, x) = 1
+	pdesol[1] = vector.ones (size);
 	// initializes the (heat) source vector
 	pdesol[2] = vector.zeros(size);
 	// initializes the guess vector
@@ -979,6 +985,12 @@ void test_transient_1d_transport_GaussSeidel ()
 	// defines the constant (heat) source vector
 	for (size_t i = 0; i != size; ++i)
 		source[i] = -(dx) * (dx) * H;
+
+
+	// applies the boundary conditions
+	double *gi = (pdesol[1] -> array);
+	gi[0] = 0.0;	// g(t, x = x_l) = 0
+	gi[N] = 0.0;	// g(t, x = x_u) = 0
 
 
 	/* numeric solution */
