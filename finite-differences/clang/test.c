@@ -1105,6 +1105,48 @@ void fpdesol (double t, double H, vector_t *vec_x, vector_t *vec_f)
 }
 
 
+void write (FILE *file, vector_t *vec_x, vector_t *vec_f, vector_t *vec_g)
+// writes the (temperature) fields with respect to position in a data file
+{
+	// gets read-only access iterators
+	const double *x = vec_x -> array;	// position vector x
+	const double *f = vec_f -> array;	// analytic field f(t, x)
+	const double *g = vec_g -> array;	// numeric  field g(t, x)
+
+	// defines the format for tabulating the results
+	char fmt [] = ("%18.6e %18.6e %18.6e\n");
+	size_t size = vec_x -> size (vec_x);
+	for (size_t i = 0; i != size; ++i)
+		fprintf(file, fmt, x[i], f[i], g[i]);
+}
+
+
+void export (char *name, vector_t *vec_x, vector_t *vec_f, vector_t *vec_g)
+// exports the analytic and numeric fields f(t, x) with respect to position
+{
+	FILE *file = fopen (name, "w");
+	if (file != NULL)
+	{
+		// writes results to data file and closes the file stream
+		write  (file, vec_x, vec_f, vec_g);
+		fclose (file);
+	}
+	else
+	{
+		/*
+
+		Reports to the user that an Input-Output IO error has
+		occurred; however, we let the code continue its execution
+		so that it can free the memory allocated for all the
+		vectors to avert memory leaks.
+
+		*/
+		printf("IO ERROR\n");
+		printf("aborts export of numeric results\n");
+	}
+}
+
+
 void test_transient_1d_transport_Jacobi ()
 // solves a transient 1d transport problem via finite-differences
 {
@@ -1245,6 +1287,11 @@ void test_transient_1d_transport_Jacobi ()
 		printf("time : %.4e\n", t);
 		printf("error: %.4e\n", sqrt(norm) / size );
 	}
+
+
+	// exports the fields f(t, x) if the solver was successful
+	char fname [] = "pdesolJacobi.dat";
+	if (pdestat) export (fname, vec_x, vec_f, vec_g);
 
 
 	// frees the vectors from memory
@@ -1399,6 +1446,11 @@ void test_transient_1d_transport_GaussSeidel ()
 		printf("time : %.4e\n", t);
 		printf("error: %.4e\n", sqrt(norm) / size );
 	}
+
+
+	// exports the fields f(t, x) if the solver was successful
+	char fname [] = "pdesolGauss-Seidel.dat";
+	if (pdestat) export (fname, vec_x, vec_f, vec_g);
 
 
 	// frees the vectors from memory
