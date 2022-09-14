@@ -890,7 +890,7 @@ void test_transient_1d_transport_Jacobi ()
 	// reports the average error
 	double norm = vec_err -> qnorm (vec_err);
 	// computes the time t
-	double t = ( (double) (steps - 1) ) * dt;
+	double t = steps * dt;
 	printf("Jacobi(): steady-state solution\n");
 	printf("time : %.4e\n", t);
 	printf("error: %.4e\n", sqrt(norm) / size );
@@ -1035,7 +1035,7 @@ void test_transient_1d_transport_GaussSeidel ()
 	// reports the average error
 	double norm = vec_err -> qnorm (vec_err);
 	// computes the time t
-	double t = ( (double) (steps - 1) ) * dt;
+	double t = steps * dt;
 	printf("Gauss-Seidel(): steady-state solution\n");
 	printf("time : %.4e\n", t);
 	printf("error: %.4e\n", sqrt(norm) / size );
