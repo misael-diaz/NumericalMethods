@@ -46,8 +46,8 @@ vector_t** GaussSeidel (
 );
 void test_steady_1d_transport_Jacobi();
 void test_steady_1d_transport_GaussSeidel();
-void test_transient_1d_transport_Jacobi ();
-void test_transient_1d_transport_GaussSeidel ();
+void test_transient_1d_transport_steady_solution_Jacobi ();
+void test_transient_1d_transport_steady_solution_GaussSeidel ();
 
 int main() {
 
@@ -66,9 +66,9 @@ int main() {
 	test_steady_1d_transport_GaussSeidel();
 
 	// solves the transient 1d transport problem with the Jacobi method
-	test_transient_1d_transport_Jacobi ();
+	test_transient_1d_transport_steady_solution_Jacobi ();
 	// solves the transient problem with the Gauss-Seidel method
-	test_transient_1d_transport_GaussSeidel ();
+	test_transient_1d_transport_steady_solution_GaussSeidel ();
 	return 0;
 }
 
@@ -763,7 +763,7 @@ void test_steady_1d_transport_GaussSeidel ()
 }
 
 
-void test_transient_1d_transport_Jacobi ()
+void test_transient_1d_transport_steady_solution_Jacobi ()
 // solves a transient 1d transport problem via finite-differences
 {
 
@@ -914,7 +914,7 @@ void test_transient_1d_transport_Jacobi ()
 }
 
 
-void test_transient_1d_transport_GaussSeidel ()
+void test_transient_1d_transport_steady_solution_GaussSeidel ()
 // solves a transient 1d transport problem via finite-differences
 {
 
