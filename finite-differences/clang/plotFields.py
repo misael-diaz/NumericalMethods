@@ -40,3 +40,28 @@ ax.plot(x[::32], g_GaussSeidel[::32], linestyle='', marker='*',
 ax.set_xlabel('x')
 ax.set_ylabel('f(t, x)')
 ax.legend()
+
+
+# loads the transient data g(t, x) for visualization
+transient = loadtxt('transient_Gauss-Seidel.dat')
+# unpacks the time (1st-rank array) and the field g(t, x) (2nd-rank array)
+t, g_trans = (transient[:, 0], transient[:, 1:])
+
+
+# creates a new figure for ploting the field g(t, x) at different times
+fig, ax = plt.subplots()
+# defines colors for the g(t, x) profiles
+colors = ['blue', 'black', 'orange', 'red']
+for i in range(4):
+    # selects profiles sufficiently far apart with respect time
+    n = 32 * i
+    # plots g(t, x) with respect to position x and constant time t
+    ax.plot(x, g_trans[n, :], color=colors[i], label=f't = {t[n]}')
+
+# plots the steady-state solution to provide a reference
+ax.plot(x, 0.5 * (1 - x) * (1 + x), color='black', linestyle='--',
+        label='steady-state')
+ax.set_xlabel('x')
+ax.set_ylabel('f(t, x)')
+ax.set_title('transient temperature profiles')
+ax.legend()
