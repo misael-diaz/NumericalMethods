@@ -1105,6 +1105,28 @@ void fpdesol (double t, double H, vector_t *vec_x, vector_t *vec_f)
 }
 
 
+void writeField (FILE *file, vector_t *vec_g, double time, size_t record)
+// writes the numeric field g(t, x) at constant time `t' in the data file
+{
+	// gets read-only access iterators
+	const double *g = vec_g -> array;	// numeric  field g(t, x)
+
+	// writes a new line for the current record unless its is the first
+	if (record != 0) fprintf(file, "\n");
+
+	// defines the output data format
+	char fmt [] = "%18.6e";
+	// writes the time `t' at the beginning (of the record)
+	fprintf(file, fmt, time);
+	// writes the field f(t, x) on the same record
+	size_t size = vec_g -> size (vec_g);
+	for (size_t i = 0; i != size; ++i)
+		fprintf(file, fmt, g[i]);
+
+	// no need to write a new line for we are accounting for that above
+}
+
+
 void write (FILE *file, vector_t *vec_x, vector_t *vec_f, vector_t *vec_g)
 // writes the (temperature) fields with respect to position in a data file
 {
@@ -1230,7 +1252,7 @@ void test_transient_1d_transport_Jacobi ()
 
 
 	bool pdestat = true;		// assumes a successful status
-	size_t steps = (0x00001000);	// sets to ~4 thousand time steps
+	size_t steps = (0x00010000);	// sets to ~60 thousand time steps
 	// solves for the (temperature) field variable iteratively
 	for (size_t i = 0; i != steps; ++i)
 	{
@@ -1386,12 +1408,23 @@ void test_transient_1d_transport_GaussSeidel ()
 
 	/* numeric solution */
 
-
+	size_t lines = 0;		// initializes line counter
 	bool pdestat = true;		// assumes a success status
-	size_t steps = (0x00001000);	// sets to ~4 thousand time steps
+	size_t steps = (0x00010000);	// sets to ~60 thousand time steps
+	char pdedata [] = "transient_Gauss-Seidel.dat";
+	FILE *pdefile = fopen(pdedata, "w");
 	// solves for the (temperature) field variable iteratively
 	for (size_t i = 0; i != steps; ++i)
 	{
+		// writes g(t, x) to the data file every 256 steps
+		if (i % (0x00000100) == 0)
+		{
+			vector_t *vec_g = pdesol[1];
+			double time = ( (double) i ) * dt;
+			writeField (pdefile, vec_g, time, lines);
+			++lines;
+		}
+
 		vector_t **ret = GaussSeidel (pdesol, pdevec, &prms);
 		vector_t *vec_state = ret[5];
 		double *state = (vec_state -> array);
@@ -1460,4 +1493,7 @@ void test_transient_1d_transport_GaussSeidel ()
 	vec_src = vector.destroy (vec_src);
 	vec_err = vector.destroy (vec_err);
 	vec_state = vector.destroy (vec_state);
+
+	// closes the data file that stores the transient data
+	fclose(pdefile);
 }
