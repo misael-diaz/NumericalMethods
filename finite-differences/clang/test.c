@@ -1269,19 +1269,18 @@ void test_transient_1d_transport_Jacobi ()
 	double *err = (vec_err -> array);
 
 
-	// computes the time t
-	double t = steps * dt;
-	// computes the analytic (transient) solution
-	fpdesol (t, H, vec_x, vec_f);
-
-	// computes the differences between the exact and numeric solutions
-	for (size_t i = 0; i != size; ++i)
-		err[i] = (g[i] - f[i]);
-
-
-	// reports the average error if the solver was successful
 	if (pdestat)
 	{
+		// computes the time t
+		double t = steps * dt;
+		// computes the analytic (transient) solution
+		fpdesol (t, H, vec_x, vec_f);
+
+		// computes the differences
+		for (size_t i = 0; i != size; ++i)
+			err[i] = (g[i] - f[i]);
+
+		// reports the average error if the solver was successful
 		double norm = vec_err -> qnorm (vec_err);
 		printf("Jacobi(): transient solution\n");
 		printf("time : %.4e\n", t);
@@ -1428,19 +1427,18 @@ void test_transient_1d_transport_GaussSeidel ()
 	double *err = (vec_err -> array);
 
 
-	// computes the time t
-	double t = steps * dt;
-	// computes the analytic (transient) solution
-	fpdesol (t, H, vec_x, vec_f);
-
-	// computes the differences between the exact and numeric solutions
-	for (size_t i = 0; i != size; ++i)
-		err[i] = (g[i] - f[i]);
-
-
-	// reports the average error if the solver was successful
 	if (pdestat)
 	{
+		// computes the time t
+		double t = steps * dt;
+		// computes the analytic (transient) solution
+		fpdesol (t, H, vec_x, vec_f);
+
+		// computes the differences
+		for (size_t i = 0; i != size; ++i)
+			err[i] = (g[i] - f[i]);
+
+		// reports the average error if the solver was successful
 		double norm = vec_err -> qnorm (vec_err);
 		printf("Gauss-Seidel(): transient solution\n");
 		printf("time : %.4e\n", t);
