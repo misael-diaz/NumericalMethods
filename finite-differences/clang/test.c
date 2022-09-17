@@ -1417,7 +1417,7 @@ void test_transient_1d_transport_GaussSeidel ()
 	for (size_t i = 0; i != steps; ++i)
 	{
 		// writes g(t, x) to the data file every 256 steps
-		if (i % (0x00000100) == 0)
+		if (pdefile && i % (0x00000100) == 0)
 		{
 			vector_t *vec_g = pdesol[1];
 			double time = ( (double) i ) * dt;
@@ -1495,5 +1495,5 @@ void test_transient_1d_transport_GaussSeidel ()
 	vec_state = vector.destroy (vec_state);
 
 	// closes the data file that stores the transient data
-	fclose(pdefile);
+	if (pdefile) fclose(pdefile);
 }
