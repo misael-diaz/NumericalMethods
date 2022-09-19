@@ -40,8 +40,8 @@ void test_ones();
 void test_linspace();
 void test_copy();
 void test_qnorm();
-vector_t** Jacobi (vector_t *pdesol[6], vector_t*, const isolver_prms_t*);
-vector_t** GaussSeidel (
+vector_t** JacobiSolver1D (vector_t *pdesol[6], vector_t*, const isolver_prms_t*);
+vector_t** GaussSeidelSolver1D (
 	vector_t *pdesol[6], vector_t*, const isolver_prms_t*
 );
 void test_steady_1d_transport_Jacobi();
@@ -321,7 +321,7 @@ void test_qnorm()
 }
 
 
-vector_t** Jacobi (
+vector_t** JacobiSolver1D (
 	vector_t *pdesol[6], vector_t *pdevec, const isolver_prms_t* prms
 )
 // possible tailored implementation of the Jacobi method
@@ -418,7 +418,7 @@ vector_t** Jacobi (
 }
 
 
-vector_t** GaussSeidel (
+vector_t** GaussSeidelSolver1D (
 	vector_t *pdesol[6], vector_t *pdevec, const isolver_prms_t* prms
 )
 // possible tailored implementation of the Gauss-Seidel method
@@ -590,7 +590,7 @@ void test_steady_1d_transport_Jacobi ()
 
 
 	// solves for the (temperature) field variable iteratively
-	vector_t **ret = Jacobi (pdesol, pdevec, &prms);
+	vector_t **ret = JacobiSolver1D (pdesol, pdevec, &prms);
 
 
 	/* post-processing */
@@ -718,7 +718,7 @@ void test_steady_1d_transport_GaussSeidel ()
 
 
 	// solves for the (temperature) field variable iteratively
-	vector_t **ret = GaussSeidel (pdesol, pdevec, &prms);
+	vector_t **ret = GaussSeidelSolver1D (pdesol, pdevec, &prms);
 
 
 	/* post-processing */
@@ -856,7 +856,7 @@ void test_transient_1d_transport_steady_solution_Jacobi ()
 	// solves for the (temperature) field variable iteratively
 	for (size_t i = 0; i != steps; ++i)
 	{
-		vector_t **ret = Jacobi (pdesol, pdevec, &prms);
+		vector_t **ret = JacobiSolver1D (pdesol, pdevec, &prms);
 		vector_t *vec_state = ret[5];
 		double *state = (vec_state -> array);
 		if (state[0] != 0.0)
@@ -1007,7 +1007,7 @@ void test_transient_1d_transport_steady_solution_GaussSeidel ()
 	// solves for the (temperature) field variable iteratively
 	for (size_t i = 0; i != steps; ++i)
 	{
-		vector_t **ret = GaussSeidel (pdesol, pdevec, &prms);
+		vector_t **ret = GaussSeidelSolver1D (pdesol, pdevec, &prms);
 		vector_t *vec_state = ret[5];
 		double *state = (vec_state -> array);
 		if (state[0] != 0.0)
@@ -1256,7 +1256,7 @@ void test_transient_1d_transport_Jacobi ()
 	// solves for the (temperature) field variable iteratively
 	for (size_t i = 0; i != steps; ++i)
 	{
-		vector_t **ret = Jacobi (pdesol, pdevec, &prms);
+		vector_t **ret = JacobiSolver1D (pdesol, pdevec, &prms);
 		vector_t *vec_state = ret[5];
 		double *state = (vec_state -> array);
 		if (state[0] != 0.0)
@@ -1425,7 +1425,7 @@ void test_transient_1d_transport_GaussSeidel ()
 			++lines;
 		}
 
-		vector_t **ret = GaussSeidel (pdesol, pdevec, &prms);
+		vector_t **ret = GaussSeidelSolver1D (pdesol, pdevec, &prms);
 		vector_t *vec_state = ret[5];
 		double *state = (vec_state -> array);
 		if (state[0] != 0.0)
