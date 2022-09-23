@@ -40,8 +40,10 @@ void test_ones();
 void test_linspace();
 void test_copy();
 void test_qnorm();
-vector_t** Jacobi (vector_t *pdesol[6], vector_t*, const isolver_prms_t*);
-vector_t** GaussSeidel (
+vector_t** JacobiSolver1D (
+	vector_t *pdesol[6], vector_t*, const isolver_prms_t*
+);
+vector_t** GaussSeidelSolver1D (
 	vector_t *pdesol[6], vector_t*, const isolver_prms_t*
 );
 void test_steady_1d_transport_Jacobi();
@@ -50,6 +52,7 @@ void test_transient_1d_transport_steady_solution_Jacobi ();
 void test_transient_1d_transport_steady_solution_GaussSeidel ();
 void test_transient_1d_transport_Jacobi ();
 void test_transient_1d_transport_GaussSeidel ();
+void test_transient_2d_transport_Jacobi ();
 
 int main() {
 
@@ -60,7 +63,6 @@ int main() {
 	test_ones();
 	test_copy();
 	test_qnorm();
-	*/
 
 	// solves the steady 1d transport problem with the Jacobi method
 	test_steady_1d_transport_Jacobi();
@@ -76,6 +78,11 @@ int main() {
 	test_transient_1d_transport_Jacobi ();
 	// solves the transient problem with the Gauss-Seidel method
 	test_transient_1d_transport_GaussSeidel ();
+
+	*/
+
+	// solves the transient 2d transport problem with the Jacobi method
+	test_transient_2d_transport_Jacobi ();
 	return 0;
 }
 
@@ -321,7 +328,7 @@ void test_qnorm()
 }
 
 
-vector_t** Jacobi (
+vector_t** JacobiSolver1D (
 	vector_t *pdesol[6], vector_t *pdevec, const isolver_prms_t* prms
 )
 // possible tailored implementation of the Jacobi method
@@ -418,7 +425,7 @@ vector_t** Jacobi (
 }
 
 
-vector_t** GaussSeidel (
+vector_t** GaussSeidelSolver1D (
 	vector_t *pdesol[6], vector_t *pdevec, const isolver_prms_t* prms
 )
 // possible tailored implementation of the Gauss-Seidel method
@@ -515,6 +522,141 @@ vector_t** GaussSeidel (
 }
 
 
+vector_t** JacobiSolver2D (
+	vector_t *pdesol[7], vector_t *pdevec, const isolver_prms_t* prms
+)
+// possible tailored implementation of the Jacobi method
+{
+	// gets the transient parameter
+	double alpha = prms -> alpha;
+	// gets the tolerance and the maximum number of iterations
+	double tol = prms -> tol;
+	size_t iters = prms -> iters;
+	// gets the verbose parameter
+	bool verbose = prms -> verbose;
+
+
+	// references the components of the position vector
+	vector_t *vec_x = pdesol[0];
+	vector_t *vec_y = pdesol[1];
+	// references the (temperature) field variable
+	vector_t *vec_g = pdesol[2];
+	// references the (heat) source term vector
+	vector_t *vec_src = pdesol[3];
+	// references the guess vector
+	vector_t *vec_g0  = pdesol[4];
+	// references the error vector
+	vector_t *vec_err = pdesol[5];
+	// references the state vector
+	vector_t *vec_state = pdesol[6];
+	// references the right-hand side, finite-difference, vector
+	vector_t *vec_b = pdevec;
+
+
+	// gets the number of nodes along the x (y) axis
+	size_t nodes = vec_x -> size (vec_x);
+	// gets the size of the vector that stores the field
+	size_t size = vec_g -> size (vec_g);
+	// initializes the finite-difference vector with the source vector
+	vec_b -> copy (vec_b, vec_src);
+
+
+	// defines iterators
+	double *b   = (vec_b   -> array);
+	double *g   = (vec_g   -> array);
+	double *g0  = (vec_g0  -> array);
+	double *err = (vec_err -> array);
+	double *state = (vec_state -> array);
+
+
+	// updates the finite-difference vector with the transient vector
+	for (size_t i = 0; i != size; ++i)
+		b[i] += (alpha * g[i]);
+
+
+	// initializes the state
+	state[0] = 1.0;
+	// initializes the norm of the error vector
+	double norm = 0;
+	// gets the number of discretization intervals
+	size_t N = (nodes - 1);
+	// updates the diagonal coefficient with the transient contribution
+	double c = 1.0 / (alpha + 4.0);
+	/* uses Jacobi method to solve for the field variable */
+	for (size_t iter = 0; iter != iters; ++iter)
+	{
+
+		// initializes g(t + dt, x, y) with the right-hand side
+		for (size_t j = 1; j != N; ++j)
+		{
+			size_t blk = nodes * j;
+			for (size_t k = (blk + 1); k != (blk + N); ++k)
+				g[k] = b[k];
+		}
+
+
+		// updates g(t + dt, x, y) from sub and super diagonals
+		for (size_t j = 1; j != N; ++j)
+		{
+			size_t blk = nodes * j;
+			for (size_t k = (blk + 1); k != (blk + N); ++k)
+				g[k] += (g0[k - 1] + g0[k + 1]);
+		}
+
+
+		// updates g(t + dt, x, y) from the lower band
+		for (size_t j = 1; j != N; ++j)
+		{
+			size_t blk = nodes * j;
+			for (size_t k = (blk + 1); k != (blk + N); ++k)
+				g[k] += g0[k - nodes];
+		}
+
+
+		// updates g(t + dt, x, y) from the upper band
+		for (size_t j = 1; j != N; ++j)
+		{
+			size_t blk = nodes * j;
+			for (size_t k = (blk + 1); k != (blk + N); ++k)
+				g[k] += g0[k + nodes];
+		}
+
+
+		// completes computation by scaling g(t + dt, x, y)
+		for (size_t j = 1; j != N; ++j)
+		{
+			size_t blk = nodes * j;
+			for (size_t k = (blk + 1); k != (blk + N); ++k)
+				g[k] *= c;
+		}
+
+
+		// computes the error vector
+		for (size_t k = 0; k != size; ++k)
+			err[k] = (g[k] - g0[k]);
+
+
+		// computes the norm of the error vector
+		norm = vec_err -> qnorm (vec_err);
+		/* checks for convergence */
+		if (norm < tol)
+		{
+			state[0] = 0.0;
+			char msg [] = "Jacobi(): solution found "
+				"after %lu iters\n";
+			if (verbose) printf(msg, iter + 1);
+			break;
+		}
+
+
+		// copies the field (g0 <- g) for the next iteration
+		vec_g0 -> copy (vec_g0, vec_g);
+	}
+
+	return pdesol;
+}
+
+
 void test_steady_1d_transport_Jacobi ()
 // solves a steady one-dimensional transport problem via finite-differences
 {
@@ -590,7 +732,7 @@ void test_steady_1d_transport_Jacobi ()
 
 
 	// solves for the (temperature) field variable iteratively
-	vector_t **ret = Jacobi (pdesol, pdevec, &prms);
+	vector_t **ret = JacobiSolver1D (pdesol, pdevec, &prms);
 
 
 	/* post-processing */
@@ -718,7 +860,7 @@ void test_steady_1d_transport_GaussSeidel ()
 
 
 	// solves for the (temperature) field variable iteratively
-	vector_t **ret = GaussSeidel (pdesol, pdevec, &prms);
+	vector_t **ret = GaussSeidelSolver1D (pdesol, pdevec, &prms);
 
 
 	/* post-processing */
@@ -856,7 +998,7 @@ void test_transient_1d_transport_steady_solution_Jacobi ()
 	// solves for the (temperature) field variable iteratively
 	for (size_t i = 0; i != steps; ++i)
 	{
-		vector_t **ret = Jacobi (pdesol, pdevec, &prms);
+		vector_t **ret = JacobiSolver1D (pdesol, pdevec, &prms);
 		vector_t *vec_state = ret[5];
 		double *state = (vec_state -> array);
 		if (state[0] != 0.0)
@@ -1007,7 +1149,8 @@ void test_transient_1d_transport_steady_solution_GaussSeidel ()
 	// solves for the (temperature) field variable iteratively
 	for (size_t i = 0; i != steps; ++i)
 	{
-		vector_t **ret = GaussSeidel (pdesol, pdevec, &prms);
+		vector_t **ret = GaussSeidelSolver1D (pdesol, pdevec,
+						     &prms);
 		vector_t *vec_state = ret[5];
 		double *state = (vec_state -> array);
 		if (state[0] != 0.0)
@@ -1127,6 +1270,33 @@ void writeField (FILE *file, vector_t *vec_g, double time, size_t record)
 }
 
 
+void write2DField (
+	FILE *f, vector_t *vec_g, double time, size_t nodes, size_t record
+)
+// writes the numeric field g(t, x, y=1/2) at constant time `t' to the file
+{
+	// writes a new line for the current record unless its is the first
+	if (record != 0) fprintf(f, "\n");
+
+	// gets the number of discretization intervals
+	size_t N = (nodes - 1);
+	// gets the total number of nodes prior to y = 1/2
+	size_t blk = nodes * (N / 2);
+	// gets read-only access iterator for the numeric field g(t, x, y)
+	const double *g = vec_g -> array;
+
+	// defines the output data format
+	char fmt [] = "%18.6e";
+	// writes the time `t' at the beginning (of the record)
+	fprintf(f, fmt, time);
+	// writes the field g(t, x, y = 1/2) on the same record
+	for (size_t k = blk; k != (blk + nodes); ++k)
+		fprintf(f, fmt, g[k]);
+
+	// no need to write a new line for we are accounting for that above
+}
+
+
 void write (FILE *file, vector_t *vec_x, vector_t *vec_f, vector_t *vec_g)
 // writes the (temperature) fields with respect to position in a data file
 {
@@ -1165,6 +1335,32 @@ void export (char *name, vector_t *vec_x, vector_t *vec_f, vector_t *vec_g)
 		*/
 		printf("IO ERROR\n");
 		printf("aborts export of numeric results\n");
+	}
+}
+
+
+void exportSteady2DField (vector_t *vec_x, vector_t *vec_g)
+// exports the steady 2d (temperature) field g(x, y=1/2)
+{
+	// gets the number of nodes along the x (y) axis
+	size_t nodes = vec_x -> size (vec_x);
+	// gets the number of discretization intervals along the x (y) axis
+	size_t N = (nodes - 1);
+	// creates read-only access iterators
+	const double *x = (vec_x -> array);
+	const double *g = (vec_g -> array);
+	char pdedata [] = "steady_2d_transport_Jacobi.dat";
+	FILE *pdefile = fopen(pdedata, "w");
+	// exports the steady-state field at the middle, g(t_ss, x, y = .5)
+	if (pdefile)
+	{
+		size_t j = N / 2;
+		for (int i = 0; i != nodes; ++i)
+		{
+			size_t k = nodes * j + i;
+			fprintf(pdefile, "%18.6e %18.6e\n", x[i], g[k]);
+		}
+		fclose (pdefile);
 	}
 }
 
@@ -1256,7 +1452,7 @@ void test_transient_1d_transport_Jacobi ()
 	// solves for the (temperature) field variable iteratively
 	for (size_t i = 0; i != steps; ++i)
 	{
-		vector_t **ret = Jacobi (pdesol, pdevec, &prms);
+		vector_t **ret = JacobiSolver1D (pdesol, pdevec, &prms);
 		vector_t *vec_state = ret[5];
 		double *state = (vec_state -> array);
 		if (state[0] != 0.0)
@@ -1425,7 +1621,8 @@ void test_transient_1d_transport_GaussSeidel ()
 			++lines;
 		}
 
-		vector_t **ret = GaussSeidel (pdesol, pdevec, &prms);
+		vector_t **ret = GaussSeidelSolver1D (pdesol, pdevec,
+						     &prms);
 		vector_t *vec_state = ret[5];
 		double *state = (vec_state -> array);
 		if (state[0] != 0.0)
@@ -1487,6 +1684,163 @@ void test_transient_1d_transport_GaussSeidel ()
 	// frees the vectors from memory
 	vec_x = vector.destroy (vec_x);
 	vec_f = vector.destroy (vec_f);
+	vec_g = vector.destroy (vec_g);
+	vec_b = vector.destroy (vec_b);
+	vec_g0 = vector.destroy (vec_g0);
+	vec_src = vector.destroy (vec_src);
+	vec_err = vector.destroy (vec_err);
+	vec_state = vector.destroy (vec_state);
+
+	// closes the data file that stores the transient data
+	if (pdefile) fclose(pdefile);
+}
+
+
+void test_transient_2d_transport_Jacobi ()
+// solves a transient 2d transport problem via finite-differences
+{
+
+	/* defines the solver parameters */
+
+	// defines the transient parameter
+	double alpha = 2.0;
+	// defines the tolerance of the linear solver
+	double tol = 1.0 / ( (double) (0x400000000000) );	// ~1.4e-14
+	// defines the maximum number of iterations of the linear solver
+	size_t iters = (0x0008FFFF);	// about 500K iterations
+	// silences the linear solver
+	bool verbose = false;
+
+	// initializes the iterative solver parameters
+	isolver_prms_t const prms = {
+		.alpha = alpha, .tol = tol,
+		.iters = iters, .verbose = verbose
+	};
+
+
+	/* defines the finite-differences problem */
+
+
+	// sets the number of discretization intervals to 256
+	size_t N = (0x00000100);
+	// defines the number of nodes along the x (y) axis
+	size_t nodes = (N + 1);
+	// defines the system size (total number of nodes)
+	size_t size = nodes * nodes;
+
+
+	// defines the system domain limits
+	double x_l = 0.0, x_u = 1.0;
+	double y_l = x_l, y_u = x_u;
+	// computes the step-size along the x (y) axis
+	double dx = (x_u - x_l) / ( (double) N );
+	double dy = dx;
+	// computes the time step
+	double dt = (dx * dx) / alpha;
+
+
+	// initializes the placeholder for the solution of the PDE
+	vector_t *pdesol[7] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+	// initializes the components of the position vector
+	pdesol[0] = vector.linspace(x_l, x_u, nodes);
+	pdesol[1] = vector.linspace(y_l, y_u, nodes);
+	/*
+
+	sets the boundary conditions on the (temperature) field variable:
+
+	g(t, x_l, y) = g(t, x_u, y) = g(t, x, y_l) = g(t, x, y_u) = 0
+
+	*/
+	pdesol[2] = vector.zeros(size);
+	// initializes the (heat) source vector
+	pdesol[3] = vector.zeros(size);
+	// initializes the guess vector
+	pdesol[4] = vector.zeros(size);
+	// initializes the error vector
+	pdesol[5] = vector.zeros(size);
+	// initializes the state vector
+	pdesol[6] = vector.zeros(1);
+
+
+	// creates the finite-difference vector (right-hand side of SLE)
+	vector_t *pdevec = vector.zeros(size);
+	// creates alias for the finite-difference vector
+	vector_t *vec_b  = pdevec;
+
+
+	// references the (heat) source vector
+	vector_t *vec_source = pdesol[3];
+	// defines an iterator for the (heat) source vector
+	double *source = (vec_source -> array);
+
+	// defines the non-dimensional volumetric (heat) source term
+	double H = 1;
+	// defines the constant (heat) source vector
+	for (size_t i = 0; i != size; ++i)
+		source[i] = (dx) * (dx) * H;
+
+
+	// applies the initial condition g(t = 0, x, y) = 1
+	double *gi = (pdesol[2] -> array);
+	for (size_t j = 1; j != N; ++j)
+	{
+		for (size_t i = 1; i != N; ++i)
+			gi[j * nodes + i] = 1.0;
+	}
+
+
+	/* numeric solution */
+
+	size_t lines = 0;		// initializes line counter
+	bool pdestat = true;		// assumes a success status
+	size_t steps = (0x00010000);	// sets to ~60 thousand time steps
+	char pdedata [] = "transient_2d_transport_Jacobi.dat";
+	FILE *pdefile = fopen(pdedata, "w");
+	// solves for the (temperature) field variable iteratively
+	for (size_t i = 0; i != steps; ++i)
+	{
+		// writes g(t, x, y = 0.5) to the data file every 256 steps
+		if (pdefile && i % (0x00000100) == 0)
+		{
+			vector_t *vec_g = pdesol[2];
+			double time = ( (double) i ) * dt;
+			write2DField (pdefile, vec_g, time, nodes, lines);
+			++lines;
+		}
+
+		vector_t **ret = JacobiSolver2D (pdesol, pdevec, &prms);
+		vector_t *vec_state = ret[6];
+		double *state = (vec_state -> array);
+		if (state[0] != 0.0)
+		{
+			pdestat = false;// sets failure status
+			printf("Jacobi 2d solver failed\n");
+			printf("try again with different solver params\n");
+			break;
+		}
+	}
+
+
+	/* post-processing */
+
+
+	// references the position vector, the field variable, etc.
+	vector_t *vec_x     = pdesol[0];
+	vector_t *vec_y     = pdesol[1];
+	vector_t *vec_g     = pdesol[2];
+	vector_t *vec_src   = pdesol[3];
+	vector_t *vec_g0    = pdesol[4];
+	vector_t *vec_err   = pdesol[5];
+	vector_t *vec_state = pdesol[6];
+
+
+	// exports the steady 2D field g(t, x, y = 0.5)
+	exportSteady2DField (vec_x, vec_g);
+
+
+	// frees the vectors from memory
+	vec_x = vector.destroy (vec_x);
+	vec_y = vector.destroy (vec_y);
 	vec_g = vector.destroy (vec_g);
 	vec_b = vector.destroy (vec_b);
 	vec_g0 = vector.destroy (vec_g0);
