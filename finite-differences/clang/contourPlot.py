@@ -76,7 +76,7 @@ plt.ion()
 # creates figure and axes objects for plotting
 fig, ax = plt.subplots()
 # defines suitable normalization parameters for the colormap
-norm = mpl.colors.Normalize f.min(), f.max() )
+norm = mpl.colors.Normalize ( f.min(), f.max() )
 # selects the colormap
 cmap = mpl.cm.get_cmap('RdBu_r')
 # generates the contour plot of the steady-state field f(x, y)
