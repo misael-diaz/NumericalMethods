@@ -1,0 +1,42 @@
+#
+# source: make-inc
+# author: misael-diaz
+# date:   2021/07/20
+#
+# Synopsis:
+# Defines the include file for building the program with GNU make.
+#
+# Copyright (c) 2021 Misael Diaz-Maldonado
+#
+# This file is released under the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# clang compiler
+CC = gcc-10
+
+# includes
+INC =
+
+# options
+CCOPT = $(INC) -g -Wall -O0
+CCOPT = $(INC) -O2 -ftree-vectorize -fopt-info-missed=missed-opts.log
+CCOPT = $(INC) -O2 -ftree-vectorize -fopt-info-optimized=opts.log
+
+# libraries
+LIBS = -lm
+
+
+# sources
+TEST_VECTOR_SRC     = test.c
+
+
+# objects
+TEST_VECTOR_OBJ     = test.o
+OBJECTS = $(TEST_VECTOR_OBJ)
+
+
+# executables
+TEST_VECTOR_EXE = test-vectorization
+TESTS           = $(TEST_VECTOR_EXE)
