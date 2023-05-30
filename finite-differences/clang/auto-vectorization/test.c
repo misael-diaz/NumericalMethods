@@ -37,7 +37,7 @@
 
 #define SIZE 1024
 #define ALPHA 2.0
-#define TOLERANCE 1.4210854715202004e-14
+#define TOLERANCE 8.673617379884035e-19
 #define MAX_ITERATIONS 128
 #define SUCCESS_STATE 0
 #define FAILURE_STATE 1
@@ -45,6 +45,7 @@
 
 typedef struct {
   double* x;		// position array along the x-axis
+  double* f;		// exact solution array, f(t, x)
   double* g;		// estimate of the solution array, g(t + dt)
   double* g0;		// previous estimate of the solution array, g(t + dt)
   double* err;		// error array
@@ -143,18 +144,21 @@ workspace_t* create (size_t size)
   }
 
   workspace -> x = alloc(size);
+  workspace -> f = alloc(size);
   workspace -> g = alloc(size);
   workspace -> g0 = alloc(size);
   workspace -> err = alloc(size);
   workspace -> rhs = alloc(size);
 
   double* x = workspace -> x;
+  double* f = workspace -> f;
   double* g = workspace -> g;
   double* g0 = workspace -> g0;
   double* err = workspace -> err;
   double* rhs = workspace -> rhs;
 
   zeros(size, x);
+  zeros(size, f);
   zeros(size, g);
   zeros(size, g0);
   zeros(size, err);
@@ -175,6 +179,7 @@ workspace_t* destroy (workspace_t* workspace)
   }
 
   dealloc(workspace -> x);
+  dealloc(workspace -> f);
   dealloc(workspace -> g);
   dealloc(workspace -> g0);
   dealloc(workspace -> err);
@@ -411,6 +416,31 @@ void solver (workspace_t* workspace)
 }
 
 
+void pdesol (double t, workspace_t* workspace)	// computes the exact field f(t, x)
+{
+  size_t size = workspace -> size;
+  const double *x = workspace -> x;
+  double *f = workspace -> f;
+
+  size_t N = 256;
+  for (size_t i = 0; i != size; ++i)		// obtains transient contribution f(t, x)
+  {
+    f[i] = 0.0;
+    for (size_t n = 1; n != (N + 1); ++n)
+    {
+      double pi = M_PI;
+      double lambda = 0.5 * ( (2.0 * ( (double) n ) - 1.0) ) * pi;
+      double lambda2 = (lambda * lambda);
+      double C = ( 2.0 * (1.0 - 1.0 / lambda2) ) / lambda;
+      double An = ( (n % 2 == 0)? -C : C );
+      double Ln = lambda, Ln2 = lambda2;
+      f[i] += An * cos(Ln * x[i]) * exp(-Ln2 * t);
+    }
+
+    f[i] += 0.5 * (1.0 - x[i]) * (1.0 + x[i]);	// adds steady-state contribution f_ss(x)
+  }
+}
+
 
 // void integrator(workspace_t* workspace)
 //
@@ -426,7 +456,7 @@ void solver (workspace_t* workspace)
 
 void integrator (workspace_t* workspace)
 {
-  int steps = 0x01000000;
+  int steps = 0x00400000;
   for (int i = 0; i != steps; ++i)
   {
     solver(workspace);
@@ -437,6 +467,26 @@ void integrator (workspace_t* workspace)
       char msg[] = "Jacobi solver failed to converge to the solution after %d iterations";
       printf(msg, MAX_ITERATIONS);
       break;
+    }
+
+    int span = (steps / 16);
+    // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
+    if ( ( i != 0 ) && ( (i % span) == 0 ) )
+    {
+      double alpha = ALPHA;
+      const double* x = workspace -> x;
+      double const dx = (x[1] - x[0]);
+      double const dt = (dx * dx) / alpha;
+      double const t = ( ( (double) i ) + 1.0 ) * dt;
+      pdesol(t, workspace);
+
+      size_t const size = workspace -> size;
+      const double* f = workspace -> f;
+      const double* g = workspace -> g;
+      double* err = workspace -> err;
+      error(size, err, f, g);
+      double e = sqrt( norm(size, err) );
+      printf("approximation error (transient solution t = %.4e): %e \n", t, e);
     }
   }
 }
@@ -455,6 +505,7 @@ void Poisson ()
   // parameters:
 
   size_t size = SIZE;				// number of elements in array
+  size_t N = (size - 1);			// number of discretization nodes
 
   // memory allocations:
 
@@ -470,7 +521,9 @@ void Poisson ()
   // initializations:
 
   zeros(size, g0);				// inits the initial solution array
-  zeros(size, g);				// inits the solution array
+  ones(size, g);				// inits the solution array g(t=0, x) = 1
+  g[0] = 0.0;					// applies BC g(t, x = -1) = 0
+  g[N] = 0.0;					// applies BC g(t, x = +1) = 0
 
   double x_l = -1;				// defines x-axis lower bound
   double x_u =  1;				// defines x-axis upper bound
@@ -488,7 +541,7 @@ void Poisson ()
   // reports the approximation error
   error(size, err, g, g0);
   double e = sqrt( norm(size, err) );
-  printf("error: %e \n", e);
+  printf("approximation error (steady-state solution): %e \n", e);
 
   // memory deallocations:
 
