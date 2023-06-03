@@ -66,7 +66,7 @@ int main ()
 }
 
 
-double* alloc (size_t size)
+double* alloc (size_t const size)
 {
   double* x = malloc( size * sizeof(double) );
   return x;
@@ -86,7 +86,7 @@ double* dealloc (double* x)
 }
 
 
-void zeros (size_t size, double* x)	// numpy-like zeros
+void zeros (size_t const size, double* x)	// numpy-like zeros
 {
   for (size_t i = 0; i != size; ++i)
   {
@@ -95,7 +95,7 @@ void zeros (size_t size, double* x)	// numpy-like zeros
 }
 
 
-void ones (size_t size, double* x)	// numpy-like ones
+void ones (size_t const size, double* x)	// numpy-like ones
 {
   for (size_t i = 0; i != size; ++i)
   {
@@ -104,10 +104,10 @@ void ones (size_t size, double* x)	// numpy-like ones
 }
 
 
-void linspace (double* x, double x_i, double x_f, size_t size)	// numpy-like linspace
+void linspace (double* x, double x_i, double x_f, size_t const size)// numpy-like linspace
 {
-  double N = (size - 1);
-  double dx = (x_f - x_i) / N;
+  double const N = (size - 1);
+  double const dx = (x_f - x_i) / N;
   for (size_t i = 0; i != size; ++i)
   {
     x[i] = x_i + ( (double) i ) * dx;
@@ -115,7 +115,7 @@ void linspace (double* x, double x_i, double x_f, size_t size)	// numpy-like lin
 }
 
 
-double norm (size_t size, const double* x)	// gets the norm of the vector
+double norm (size_t const size, const double* x)	// gets the norm of the vector
 {
   double sum = 0;
   for (size_t i = 0; i != size; ++i)
@@ -127,7 +127,7 @@ double norm (size_t size, const double* x)	// gets the norm of the vector
 }
 
 
-void copy (size_t size, const double* restrict src, double* restrict dst)
+void copy (size_t const size, const double* restrict src, double* restrict dst)
 {
   for (size_t i = 0; i != size; ++i)
   {
@@ -136,7 +136,7 @@ void copy (size_t size, const double* restrict src, double* restrict dst)
 }
 
 
-workspace_t* create (size_t size)
+workspace_t* create (size_t const size)
 {
   workspace_t *workspace = malloc( sizeof(workspace_t) );
 
@@ -223,13 +223,13 @@ size_t get_state (workspace_t* workspace)
 // b		RHS array
 
 
-void init_rhs(size_t size,
+void init_rhs(size_t const size,
 	      double* restrict b,
 	      const double* restrict x,
 	      const double* restrict g)
 {
-  double alpha = ALPHA;
-  double dx = (x[1] - x[0]);
+  double const alpha = ALPHA;
+  double const dx = (x[1] - x[0]);
   // we don't need to mask this loop since we are masking the boundary nodes elsewhere
   for (size_t i = 0; i != size; ++i)
   {
@@ -251,7 +251,7 @@ void init_rhs(size_t size,
 // g		estimate of the solution array g(t + dt)
 
 
-void rhs (size_t size,
+void rhs (size_t const size,
 	  double* restrict g,
 	  const double* restrict b,
 	  const double* restrict mask)
@@ -279,7 +279,7 @@ void rhs (size_t size,
 // g		estimate of the solution array g(t + dt)
 
 
-void tridiag (size_t size,
+void tridiag (size_t const size,
 	      double* restrict g,
 	      const double* restrict g0,
 	      const double* restrict mask)
@@ -287,16 +287,15 @@ void tridiag (size_t size,
   for (size_t i = 0; i != size; ++i)
   {
     double const m = mask[i];
-    double const elem = g0[i - 1];
-    g[i] += (m == NODE)? elem : 0.0;
-
+    double const elem = (m == NODE)? g0[i - 1] : 0.0;
+    g[i] += elem;
   }
 
   for (size_t i = 0; i != size; ++i)
   {
     double const m = mask[i];
-    double const elem = g0[i + 1];
-    g[i] += (m == NODE)? elem : 0.0;
+    double const elem = (m == NODE)? g0[i + 1] : 0.0;
+    g[i] += elem;
   }
 }
 
@@ -313,12 +312,12 @@ void tridiag (size_t size,
 // g		estimate of the solution array g(t + dt)
 
 
-void __attribute__ ((noinline)) scale(size_t size,
+void __attribute__ ((noinline)) scale(size_t const size,
 				      double* restrict g,
 				      const double* restrict mask)
 {
-  double alpha = ALPHA;
-  double c = 1.0 / (alpha + 2.0);
+  double const alpha = ALPHA;
+  double const c = 1.0 / (alpha + 2.0);
   for (size_t i = 0; i != size; ++i)
   {
     double const m = mask[i];
@@ -341,7 +340,7 @@ void __attribute__ ((noinline)) scale(size_t size,
 // g		steady-state solution array g(t -> infinity)
 
 
-void exact (size_t size, double* restrict g, const double* restrict x)
+void exact (size_t const size, double* restrict g, const double* restrict x)
 {
   for (size_t i = 0; i != size; ++i)
   {
@@ -364,7 +363,7 @@ void exact (size_t size, double* restrict g, const double* restrict x)
 // e		error array, stores the elementwise differences
 
 
-void error (size_t size,
+void error (size_t const size,
 	    double* restrict e,
 	    const double* restrict v,
 	    const double* restrict w)
@@ -401,9 +400,9 @@ void solver (workspace_t* workspace)
 
   // parameters:
 
-  double tol = TOLERANCE;
-  size_t iters = MAX_ITERATIONS;
-  size_t size = workspace -> size;
+  double const tol = TOLERANCE;
+  size_t const iters = MAX_ITERATIONS;
+  size_t const size = workspace -> size;
 
   // iterators:
 
@@ -425,7 +424,7 @@ void solver (workspace_t* workspace)
   {
     // updates the solution array g(t + dt):
     rhs(size, g, b, mask);			// vectorized by gcc
-    tridiag(size, g, g0, mask);			// vectorized by gcc
+    tridiag(size, g, g0, mask);			// Not yet vectorized by gcc
     scale(size, g, mask);			// vectorized by gcc
 
     // checks for convergence:
@@ -443,24 +442,24 @@ void solver (workspace_t* workspace)
 }
 
 
-void pdesol (double t, workspace_t* workspace)	// computes the exact field f(t, x)
+void pdesol (double const t, workspace_t* workspace)// computes the exact field f(t, x)
 {
-  size_t size = workspace -> size;
+  size_t const size = workspace -> size;
   const double *x = workspace -> x;
   double *f = workspace -> f;
 
-  size_t N = 256;
+  size_t const N = 256;
   for (size_t i = 0; i != size; ++i)		// obtains transient contribution f(t, x)
   {
     f[i] = 0.0;
     for (size_t n = 1; n != (N + 1); ++n)
     {
-      double pi = M_PI;
-      double lambda = 0.5 * ( (2.0 * ( (double) n ) - 1.0) ) * pi;
-      double lambda2 = (lambda * lambda);
-      double C = ( 2.0 * (1.0 - 1.0 / lambda2) ) / lambda;
-      double An = ( (n % 2 == 0)? -C : C );
-      double Ln = lambda, Ln2 = lambda2;
+      double const pi = M_PI;
+      double const lambda = 0.5 * ( (2.0 * ( (double) n ) - 1.0) ) * pi;
+      double const lambda2 = (lambda * lambda);
+      double const C = ( 2.0 * (1.0 - 1.0 / lambda2) ) / lambda;
+      double const An = ( (n % 2 == 0)? -C : C );
+      double const Ln = lambda, Ln2 = lambda2;
       f[i] += An * cos(Ln * x[i]) * exp(-Ln2 * t);
     }
 
@@ -483,7 +482,7 @@ void pdesol (double t, workspace_t* workspace)	// computes the exact field f(t, 
 
 void integrator (workspace_t* workspace)
 {
-  int steps = 0x00400000;
+  int const steps = 0x00400000;
   for (int i = 0; i != steps; ++i)
   {
     solver(workspace);
@@ -500,7 +499,7 @@ void integrator (workspace_t* workspace)
     // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
     if ( ( i != 0 ) && ( (i % span) == 0 ) )
     {
-      double alpha = ALPHA;
+      double const alpha = ALPHA;
       const double* x = workspace -> x;
       double const dx = (x[1] - x[0]);
       double const dt = (dx * dx) / alpha;
@@ -512,7 +511,7 @@ void integrator (workspace_t* workspace)
       const double* g = workspace -> g;
       double* err = workspace -> err;
       error(size, err, f, g);
-      double e = sqrt( norm(size, err) );
+      double const e = sqrt( norm(size, err) );
       printf("approximation error (transient solution t = %.4e): %e \n", t, e);
     }
   }
@@ -531,8 +530,8 @@ void Poisson ()
 {
   // parameters:
 
-  size_t size = SIZE;				// number of elements in array
-  size_t N = (size - 1);			// number of discretization intervals
+  size_t const size = SIZE;			// number of elements in array
+  size_t const N = (size - 1);			// number of discretization intervals
 
   // memory allocations:
 
@@ -557,8 +556,8 @@ void Poisson ()
   mask[0] = 1.0;
   mask[N] = 1.0;
 
-  double x_l = -1;				// defines x-axis lower bound
-  double x_u =  1;				// defines x-axis upper bound
+  double const x_l = -1;			// defines x-axis lower bound
+  double const x_u =  1;			// defines x-axis upper bound
   linspace(x, x_l, x_u, size);			// inits the x-axis position array
 
   // solves the transient Poisson equation:
@@ -572,7 +571,7 @@ void Poisson ()
 
   // reports the approximation error
   error(size, err, g, g0);
-  double e = sqrt( norm(size, err) );
+  double const e = sqrt( norm(size, err) );
   printf("approximation error (steady-state solution): %e \n", e);
 
   // memory deallocations:
