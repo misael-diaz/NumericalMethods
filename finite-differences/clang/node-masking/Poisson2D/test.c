@@ -656,6 +656,25 @@ void export(const char* fname,
 }
 
 
+void logger (int const step, workspace_t* workspace)
+{
+  double const alpha = ALPHA;
+  const double* x = workspace -> x;
+  double const dx = (x[1] - x[0]);
+  double const dt = (dx * dx) / alpha;
+  double const t = ( ( (double) step ) + 1.0 ) * dt;
+  pdesol(t, workspace);
+
+  size_t const size = workspace -> size;
+  size_t const size2 = (size * size);
+  const double* f = workspace -> f;
+  const double* g = workspace -> g;
+  double* err = workspace -> err;
+  error(size2, err, f, g);
+  double const e = sqrt( norm(size2, err) );
+  printf("approximation error (transient solution t = %.4e): %e \n", t, e);
+}
+
 // void integrator(workspace_t* workspace)
 //
 // Synopsis:
@@ -687,21 +706,7 @@ void integrator (workspace_t* workspace)
     // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
     if ( ( i != 0 ) && ( (i % span) == 0 ) )
     {
-      double const alpha = ALPHA;
-      const double* x = workspace -> x;
-      double const dx = (x[1] - x[0]);
-      double const dt = (dx * dx) / alpha;
-      double const t = ( ( (double) i ) + 1.0 ) * dt;
-      pdesol(t, workspace);
-
-      size_t const size = workspace -> size;
-      size_t const size2 = (size * size);
-      const double* f = workspace -> f;
-      const double* g = workspace -> g;
-      double* err = workspace -> err;
-      error(size2, err, f, g);
-      double const e = sqrt( norm(size2, err) );
-      printf("approximation error (transient solution t = %.4e): %e \n", t, e);
+      logger(step, workspace);
     }
   }
 }
