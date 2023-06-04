@@ -591,7 +591,7 @@ void solver (workspace_t* workspace)
 // x		x-axis position array
 //
 // Outputs:
-// g		steady-state solution array g(t -> infinity)
+// g		steady-state solution array g(t -> infinity) (numel: size * size)
 
 
 void exact (size_t const size,
