@@ -819,6 +819,7 @@ void Poisson ()
 
   double* x = workspace -> x;
   double* y = workspace -> y;
+  double* f = workspace -> f;
   double* g = workspace -> g;
   double* g0 = workspace -> g0;
   double* err = workspace -> err;
@@ -846,13 +847,13 @@ void Poisson ()
   // post-processing:
 
   // logs the analytic and numeric solutions at steady-state
-  exact(size, g0, x, y);
-  export("analytic.txt", size, g0, x);
+  exact(size, f, x, y);
+  export("analytic.txt", size, f, x);
   export("numeric.txt", size, g, x);
 
   // logs the approximation error
-  error(numel, err, g, g0);
-  double const e = RMSE(numel, err, g0, g);
+  error(numel, err, f, g);
+  double const e = RMSE(numel, err, f, g);
   printf("approximation error (steady-state solution): %e \n", e);
 
   // memory deallocations:
