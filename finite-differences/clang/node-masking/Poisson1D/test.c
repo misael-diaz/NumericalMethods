@@ -525,7 +525,7 @@ void integrator (workspace_t* workspace)
       break;
     }
 
-    int span = (steps / 16);
+    int const span = (steps / 16);
     // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
     if ( ( step != 0 ) && ( (step % span) == 0 ) )
     {
