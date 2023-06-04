@@ -34,7 +34,7 @@
 #include <math.h>
 
 
-#define NODE 0.0
+#define iNODE 0.0
 #define SIZE 128
 #define ALPHA 2.0
 #define TOLERANCE 8.673617379884035e-19
@@ -362,7 +362,7 @@ void rhs (size_t const size,
   {
     double const m = mask[i];
     double const value = b[i];
-    double const elem = (m == NODE)? value : 0.0;
+    double const elem = (m == iNODE)? value : 0.0;
     g[i] = elem;
   }
 }
@@ -391,14 +391,14 @@ void tridiag (size_t const size,
   for (size_t i = 0; i != size2; ++i)
   {
     double const m = mask[i];
-    double const elem = (m == NODE)? g0[i - 1] : 0.0;
+    double const elem = (m == iNODE)? g0[i - 1] : 0.0;
     g[i] += elem;
   }
 
   for (size_t i = 0; i != size2; ++i)
   {
     double const m = mask[i];
-    double const elem = (m == NODE)? g0[i + 1] : 0.0;
+    double const elem = (m == iNODE)? g0[i + 1] : 0.0;
     g[i] += elem;
   }
 }
@@ -427,7 +427,7 @@ void subdiag (size_t const size,
   for (size_t i = 0; i != size2; ++i)
   {
     double const m = mask[i];
-    double const elem = (m == NODE)? g0[i - size] : 0.0;
+    double const elem = (m == iNODE)? g0[i - size] : 0.0;
     g[i] += elem;
   }
 }
@@ -442,7 +442,7 @@ void superdiag (size_t const size,
   for (size_t i = 0; i != size2; ++i)
   {
     double const m = mask[i];
-    double const elem = (m == NODE)? g0[i + size] : 0.0;
+    double const elem = (m == iNODE)? g0[i + size] : 0.0;
     g[i] += elem;
   }
 }
@@ -470,7 +470,7 @@ void __attribute__ ((noinline)) scale(size_t const size,
   for (size_t i = 0; i != size2; ++i)
   {
     double const m = mask[i];
-    double const elem = (m == NODE)? c : 1.0;
+    double const elem = (m == iNODE)? c : 1.0;
     g[i] *= elem;
   }
 }
@@ -770,3 +770,7 @@ void Poisson ()
 
   workspace = destroy(workspace);
 }
+
+
+// COMMENTS:
+// iNODE:       interior node, a nodes that do not lie at the boundary
