@@ -5,7 +5,7 @@
  * author: @misael-diaz
  *
  * Synopsis:
- * Solves the transient Poission equation iteratively with the Jacobi method
+ * Solves the transient Poisson equation iteratively with the Jacobi method
  * until the steady state is reached.
  *
  * The objective is solve the problem by masking boundary nodes. Again, it is
@@ -330,7 +330,7 @@ void __attribute__ ((noinline)) scale(size_t const size,
 // void exact(size_t size, double* g, double* x)
 //
 // Synopsis:
-// Obtains the exact steady-state solution of the Poission equation.
+// Obtains the exact steady-state solution of the Poisson equation.
 //
 // Inputs:
 // size		array size (same for both `x' and `g')
@@ -497,10 +497,10 @@ void pdesol (double const t, workspace_t* workspace)
 // rmse         scalar, the root mean squared error
 
 
-double RMSE (size_t const numel,
-      double* restrict e,
-     const double* restrict f,
-	      const double* restrict g)
+double RMSE(size_t const numel,
+	    double* restrict e,
+	    const double* restrict f,
+	    const double* restrict g)
 {
   error(numel, e, f, g);
   double const rmse = sqrt( norm(numel, e) ) / ( (double) numel );
@@ -580,7 +580,7 @@ void integrator (workspace_t* workspace)
 // void Poisson()
 //
 // Synopsis:
-// Solves the 1d transient Poission equation. The initial temperature field is zero
+// Solves the 1d transient Poisson equation. The initial temperature field is zero
 // everywhere. There is a uniform heat source throughout the domain. The temperature
 // at the system boundaries x = [-1, 1] is zero.
 
