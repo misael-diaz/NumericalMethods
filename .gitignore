@@ -1,14 +1,17 @@
 *.o
 *.mod
 *.swp
+*.txt
 *.dat
 *.log
 *.err
 *.class
 *backup*
+# directories
 *pycache*
 *output*
 *stage*
 *cache*
 # binaries
 test-bracketing
+test-vectorization
