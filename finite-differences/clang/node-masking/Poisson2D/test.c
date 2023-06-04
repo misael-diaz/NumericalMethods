@@ -469,7 +469,7 @@ void superdiag (size_t const size,
 // Scales the solution array g(t + dt) with the main diagonal coefficient.
 //
 // Inputs:
-// size		array size
+// size		number of nodes along the x [y] axis
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -587,7 +587,7 @@ void solver (workspace_t* workspace)
 // Obtains the exact steady-state solution of the Poisson equation.
 //
 // Inputs:
-// size		array size (same for both `x' and `g')
+// size		number of nodes along the x [y] axis
 // x		x-axis position array
 //
 // Outputs:
@@ -687,7 +687,7 @@ double RMSE(size_t const numel,
 //
 // Input:
 // fname	filename
-// size		size of the position array x
+// size		number of nodes along the x [y] axis
 // g		field array (number of elements: size * size)
 // x		position array
 //
