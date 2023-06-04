@@ -690,7 +690,7 @@ void logger (int const step, workspace_t* workspace)
 void integrator (workspace_t* workspace)
 {
   int const steps = 0x00010000;
-  for (int i = 0; i != steps; ++i)
+  for (int step = 0; step != steps; ++step)
   {
     solver(workspace);
 
@@ -704,7 +704,7 @@ void integrator (workspace_t* workspace)
 
     int const span = (steps / 16);
     // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
-    if ( ( i != 0 ) && ( (i % span) == 0 ) )
+    if ( ( step != 0 ) && ( (step % span) == 0 ) )
     {
       logger(step, workspace);
     }
