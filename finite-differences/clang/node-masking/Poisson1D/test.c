@@ -442,7 +442,20 @@ void solver (workspace_t* workspace)
 }
 
 
-void pdesol (double const t, workspace_t* workspace)// computes the exact field f(t, x)
+// void pdesol (double t, workspace_t* workspace)
+//
+// Synopsis:
+// Computes the analytic field array f(t, x).
+//
+// Input:
+// t		scalar, the current time
+// workspace	data structure containing the current data (field, position, error, etc.)
+//
+// Output:
+// workspace	updates the analytic field array `f'
+
+
+void pdesol (double const t, workspace_t* workspace)
 {
   size_t const size = workspace -> size;
   const double *x = workspace -> x;
@@ -468,6 +481,22 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
 }
 
 
+// double RMSE(size_t numel, double* e, double* f, double* g)
+//
+// Synopsis:
+// Computes the Root Mean Squared Error RMSE of the numeric solution.
+//
+// Inputs:
+// numel        number of elements (or array size)
+// e            error vector of size `numel' (method ignores element values on entry)
+// f            analytic field array of size `numel'
+// g            numeric field array of size `numel'
+//
+// Outputs:
+// e            error array, the elementwise difference of `f' and `g' on output
+// rmse         scalar, the root mean squared error
+
+
 double RMSE (size_t const numel,
       double* restrict e,
      const double* restrict f,
@@ -478,6 +507,19 @@ double RMSE (size_t const numel,
   return rmse;
 }
 
+
+// void logger (int step, workspace_t* workspace)
+//
+// Synopsis:
+// Logs the Root Mean Squared Error RMSE of the numeric solution.
+//
+// Inputs:
+// step         step number (or id)
+//
+// Output:
+// rmse         logs the RMSE = sqrt( sum( (f - g)**2 ) ) / N on the console, where
+//              `f' is the analytic and `g' is the numeric field array, and `N' is the
+//              array size.
 
 
 void logger (int const step, workspace_t* workspace)
