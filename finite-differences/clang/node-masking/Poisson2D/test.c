@@ -407,7 +407,7 @@ void tridiag (size_t const size,
 // void subdiag(size_t size, double* g, double* g0, double* mask)
 //
 // Synopsis:
-// Updates the solution array g(t + dt) from the tridiagonal terms of the FDEs.
+// Updates the solution array g(t + dt) from the sub-diagonal terms of the FDEs.
 //
 // Inputs:
 // size		number of nodes along the x [y] axis
