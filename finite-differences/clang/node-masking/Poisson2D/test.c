@@ -228,8 +228,8 @@ size_t get_state (workspace_t* workspace)
 
 void init_field (size_t const size, double* g)
 {
-  size_t const size2 = (size * size);
-  ones(size2, g);				// sets g(t = 0, x, y) = 1 (everywhere)
+  size_t const numel = (size * size);
+  ones(numel, g);				// sets g(t = 0, x, y) = 1 (everywhere)
 
   for (int i = 0; i != size; ++i)
   {
@@ -276,8 +276,8 @@ void init_field (size_t const size, double* g)
 
 void init_mask (size_t const size, double* mask)
 {
-  size_t const size2 = (size * size);
-  zeros(size2, mask);				// sets all nodes as interior nodes
+  size_t const numel = (size * size);
+  zeros(numel, mask);				// sets all nodes as interior nodes
 
   for (int i = 0; i != size; ++i)
   {
@@ -330,9 +330,9 @@ void init_rhs(size_t const size,
 {
   double const alpha = ALPHA;
   double const dx = (x[1] - x[0]);
-  size_t const size2 = (size * size);
+  size_t const numel = (size * size);
   // we don't need to mask this loop since we are masking the boundary nodes elsewhere
-  for (size_t i = 0; i != size2; ++i)
+  for (size_t i = 0; i != numel; ++i)
   {
     b[i] = (dx * dx + alpha * g[i]);
   }
@@ -357,8 +357,8 @@ void rhs (size_t const size,
 	  const double* restrict b,
 	  const double* restrict mask)
 {
-  size_t const size2 = (size * size);
-  for (size_t i = 0; i != size2; ++i)
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
     double const value = b[i];
@@ -387,15 +387,15 @@ void tridiag (size_t const size,
 	      const double* restrict g0,
 	      const double* restrict mask)
 {
-  size_t const size2 = (size * size);
-  for (size_t i = 0; i != size2; ++i)
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
     double const elem = (m == iNODE)? g0[i - 1] : 0.0;
     g[i] += elem;
   }
 
-  for (size_t i = 0; i != size2; ++i)
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
     double const elem = (m == iNODE)? g0[i + 1] : 0.0;
@@ -423,8 +423,8 @@ void subdiag (size_t const size,
 	      const double* restrict g0,
 	      const double* restrict mask)
 {
-  size_t const size2 = (size * size);
-  for (size_t i = 0; i != size2; ++i)
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
     double const elem = (m == iNODE)? g0[i - size] : 0.0;
@@ -438,8 +438,8 @@ void superdiag (size_t const size,
 		const double* restrict g0,
 		const double* restrict mask)
 {
-  size_t const size2 = (size * size);
-  for (size_t i = 0; i != size2; ++i)
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
     double const elem = (m == iNODE)? g0[i + size] : 0.0;
@@ -466,8 +466,8 @@ void __attribute__ ((noinline)) scale(size_t const size,
 {
   double const alpha = ALPHA;
   double const c = 1.0 / (alpha + 4.0);
-  size_t const size2 = (size * size);
-  for (size_t i = 0; i != size2; ++i)
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
     double const elem = (m == iNODE)? c : 1.0;
@@ -523,7 +523,7 @@ void solver (workspace_t* workspace)
   double const tol = TOLERANCE;
   size_t const iters = MAX_ITERATIONS;
   size_t const size = workspace -> size;
-  size_t const size2 = (size * size);
+  size_t const numel = (size * size);
 
   // iterators:
 
@@ -552,8 +552,8 @@ void solver (workspace_t* workspace)
     scale(size, g, mask);			// vectorized by gcc
 
     // checks for convergence:
-    error(size2, err, g, g0);			// vectorized by gcc
-    if (norm(size2, err) < tol)
+    error(numel, err, g, g0);			// vectorized by gcc
+    if (norm(numel, err) < tol)
     {
       set_state(workspace, SUCCESS_STATE);
       //printf("Jacobi(): solution found after %lu iters\n", i + 1);
@@ -561,7 +561,7 @@ void solver (workspace_t* workspace)
     }
 
     // updates the initial solution array g(t + dt) for the next iteration:
-    copy(size2, g, g0);				// optimized by gcc
+    copy(numel, g, g0);				// optimized by gcc
   }
 }
 
@@ -666,12 +666,12 @@ void logger (int const step, workspace_t* workspace)
   pdesol(t, workspace);
 
   size_t const size = workspace -> size;
-  size_t const size2 = (size * size);
+  size_t const numel = (size * size);
   const double* f = workspace -> f;
   const double* g = workspace -> g;
   double* err = workspace -> err;
-  error(size2, err, f, g);
-  double const e = sqrt( norm(size2, err) );
+  error(numel, err, f, g);
+  double const e = sqrt( norm(numel, err) );
   printf("approximation error (transient solution t = %.4e): %e \n", t, e);
 }
 
@@ -725,7 +725,7 @@ void Poisson ()
   // parameters:
 
   size_t const size = SIZE;			// number of elements in array
-  size_t const size2 = (size * size);
+  size_t const numel = (size * size);
 
   // memory allocations:
 
@@ -743,7 +743,7 @@ void Poisson ()
   // initializations:
 
   init_field(size, g);				// sets the initial (temperature) field
-  zeros(size2, g0);				// inits the initial solution array
+  zeros(numel, g0);				// inits the initial solution array
 
   init_mask(size, mask);			// masks boundary nodes
 
@@ -767,8 +767,8 @@ void Poisson ()
   export("numeric.txt", size, g, x);
 
   // reports the approximation error
-  error(size2, err, g, g0);
-  double const e = sqrt( norm(size2, err) );
+  error(numel, err, g, g0);
+  double const e = sqrt( norm(numel, err) );
   printf("approximation error (steady-state solution): %e \n", e);
 
   // memory deallocations:
