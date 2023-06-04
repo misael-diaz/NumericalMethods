@@ -638,6 +638,16 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
 }
 
 
+double RMSE(size_t const numel,
+	    double* restrict e,
+	    const double* restrict f,
+	    const double* restrict g)
+{
+  error(numel, e, f, g);
+  double const rmse = sqrt( norm(numel, e) ) / ( (double) numel );
+  return rmse;
+}
+
 
 void export(const char* fname,
 	    size_t const size,
@@ -670,8 +680,7 @@ void logger (int const step, workspace_t* workspace)
   const double* f = workspace -> f;
   const double* g = workspace -> g;
   double* err = workspace -> err;
-  error(numel, err, f, g);
-  double const e = sqrt( norm(numel, err) );
+  double const e = RMSE(numel, err, f, g);
   printf("approximation error (transient solution t = %.4e): %e \n", t, e);
 }
 
@@ -768,7 +777,7 @@ void Poisson ()
 
   // reports the approximation error
   error(numel, err, g, g0);
-  double const e = sqrt( norm(numel, err) );
+  double const e = RMSE(numel, err, g0, g);
   printf("approximation error (steady-state solution): %e \n", e);
 
   // memory deallocations:
