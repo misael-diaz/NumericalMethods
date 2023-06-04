@@ -527,7 +527,7 @@ void error (size_t const size,
 // workspace	data structure containing the current data (field, position, error, etc.)
 //
 // Outputs:
-// workspace	stores the data at the next time step
+// workspace	updates the fields g0 and g with the data of the next time step
 
 
 void solver (workspace_t* workspace)
