@@ -724,8 +724,8 @@ void Poisson ()
 {
   // parameters:
 
-  size_t const size = SIZE;			// number of elements in array
-  size_t const numel = (size * size);
+  size_t const size = SIZE;			// number of elements of position arrays
+  size_t const numel = (size * size);		// size of field arrays g(t, x, y)
 
   // memory allocations:
 
