@@ -483,7 +483,7 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
 void integrator (workspace_t* workspace)
 {
   int const steps = 0x00400000;
-  for (int i = 0; i != steps; ++i)
+  for (int step = 0; step != steps; ++step)
   {
     solver(workspace);
 
@@ -497,13 +497,13 @@ void integrator (workspace_t* workspace)
 
     int span = (steps / 16);
     // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
-    if ( ( i != 0 ) && ( (i % span) == 0 ) )
+    if ( ( step != 0 ) && ( (step % span) == 0 ) )
     {
       double const alpha = ALPHA;
       const double* x = workspace -> x;
       double const dx = (x[1] - x[0]);
       double const dt = (dx * dx) / alpha;
-      double const t = ( ( (double) i ) + 1.0 ) * dt;
+      double const t = ( ( (double) step ) + 1.0 ) * dt;
       pdesol(t, workspace);
 
       size_t const size = workspace -> size;
