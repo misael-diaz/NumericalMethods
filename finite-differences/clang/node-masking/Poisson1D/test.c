@@ -442,7 +442,20 @@ void solver (workspace_t* workspace)
 }
 
 
-void pdesol (double const t, workspace_t* workspace)// computes the exact field f(t, x)
+// void pdesol (double t, workspace_t* workspace)
+//
+// Synopsis:
+// Computes the analytic field array f(t, x).
+//
+// Input:
+// t		scalar, the current time
+// workspace	data structure containing the current data (field, position, error, etc.)
+//
+// Output:
+// workspace	updates the analytic field array `f'
+
+
+void pdesol (double const t, workspace_t* workspace)
 {
   size_t const size = workspace -> size;
   const double *x = workspace -> x;
@@ -468,6 +481,65 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
 }
 
 
+// double RMSE(size_t numel, double* e, double* f, double* g)
+//
+// Synopsis:
+// Computes the Root Mean Squared Error RMSE of the numeric solution.
+//
+// Inputs:
+// numel        number of elements (or array size)
+// e            error vector of size `numel' (method ignores element values on entry)
+// f            analytic field array of size `numel'
+// g            numeric field array of size `numel'
+//
+// Outputs:
+// e            error array, the elementwise difference of `f' and `g' on output
+// rmse         scalar, the root mean squared error
+
+
+double RMSE (size_t const numel,
+      double* restrict e,
+     const double* restrict f,
+	      const double* restrict g)
+{
+  error(numel, e, f, g);
+  double const rmse = sqrt( norm(numel, e) ) / ( (double) numel );
+  return rmse;
+}
+
+
+// void logger (int step, workspace_t* workspace)
+//
+// Synopsis:
+// Logs the Root Mean Squared Error RMSE of the numeric solution.
+//
+// Inputs:
+// step         step number (or id)
+//
+// Output:
+// rmse         logs the RMSE = sqrt( sum( (f - g)**2 ) ) / N on the console, where
+//              `f' is the analytic and `g' is the numeric field array, and `N' is the
+//              array size.
+
+
+void logger (int const step, workspace_t* workspace)
+{
+  double const alpha = ALPHA;
+  const double* x = workspace -> x;
+  double const dx = (x[1] - x[0]);
+  double const dt = (dx * dx) / alpha;
+  double const t = ( ( (double) step ) + 1.0 ) * dt;
+  pdesol(t, workspace);
+
+  size_t const size = workspace -> size;
+  const double* f = workspace -> f;
+  const double* g = workspace -> g;
+  double* err = workspace -> err;
+  double const e = RMSE(size, err, f, g);
+  printf("approximation error (transient solution t = %.4e): %e \n", t, e);
+}
+
+
 // void integrator(workspace_t* workspace)
 //
 // Synopsis:
@@ -483,7 +555,7 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
 void integrator (workspace_t* workspace)
 {
   int const steps = 0x00400000;
-  for (int i = 0; i != steps; ++i)
+  for (int step = 0; step != steps; ++step)
   {
     solver(workspace);
 
@@ -495,24 +567,11 @@ void integrator (workspace_t* workspace)
       break;
     }
 
-    int span = (steps / 16);
+    int const span = (steps / 16);
     // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
-    if ( ( i != 0 ) && ( (i % span) == 0 ) )
+    if ( ( step != 0 ) && ( (step % span) == 0 ) )
     {
-      double const alpha = ALPHA;
-      const double* x = workspace -> x;
-      double const dx = (x[1] - x[0]);
-      double const dt = (dx * dx) / alpha;
-      double const t = ( ( (double) i ) + 1.0 ) * dt;
-      pdesol(t, workspace);
-
-      size_t const size = workspace -> size;
-      const double* f = workspace -> f;
-      const double* g = workspace -> g;
-      double* err = workspace -> err;
-      error(size, err, f, g);
-      double const e = sqrt( norm(size, err) );
-      printf("approximation error (transient solution t = %.4e): %e \n", t, e);
+      logger(step, workspace);
     }
   }
 }
@@ -540,6 +599,7 @@ void Poisson ()
   // iterators:
 
   double* x = workspace -> x;
+  double* f = workspace -> f;
   double* g = workspace -> g;
   double* g0 = workspace -> g0;
   double* err = workspace -> err;
@@ -567,11 +627,10 @@ void Poisson ()
   // post-processing:
 
   // gets the exact solution at steady-state
-  exact(size, g0, x);
+  exact(size, f, x);
 
   // reports the approximation error
-  error(size, err, g, g0);
-  double const e = sqrt( norm(size, err) );
+  double const e = RMSE(size, err, f, g);
   printf("approximation error (steady-state solution): %e \n", e);
 
   // memory deallocations:
