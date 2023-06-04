@@ -638,6 +638,22 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
 }
 
 
+// double RMSE(size_t numel, double* e, double* f, double* g)
+//
+// Synopsis:
+// Computes the Root Mean Squared Error RMSE of the numeric solution.
+//
+// Inputs:
+// numel        number of elements (or array size)
+// e            error vector of size `numel' (method ignores element values on entry)
+// f            analytic field array of size `numel'
+// g            numeric field array of size `numel'
+//
+// Outputs:
+// e            error array, the elementwise difference of `f' and `g' on output
+// rmse         scalar, the root mean squared error
+
+
 double RMSE(size_t const numel,
 	    double* restrict e,
 	    const double* restrict f,
