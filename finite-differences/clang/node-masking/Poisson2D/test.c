@@ -682,6 +682,20 @@ void export(const char* fname,
 }
 
 
+// void logger (int step, workspace_t* workspace)
+//
+// Synopsis:
+// Logs the Root Mean Squared Error RMSE of the numeric solution.
+//
+// Inputs:
+// step         step number (or id)
+//
+// Output:
+// rmse         logs the RMSE = sqrt( sum( (f - g)**2 ) ) / N on the console, where
+//              `f' is the analytic and `g' is the numeric field array, and `N' is the
+//              array size.
+
+
 void logger (int const step, workspace_t* workspace)
 {
   double const alpha = ALPHA;
