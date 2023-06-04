@@ -233,29 +233,29 @@ void init_field (size_t const size, double* g)
 
   for (int i = 0; i != size; ++i)
   {
-    int j = 0;
-    int k = (i + size * j);
+    int const j = 0;
+    int const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x, y = 0) = 0
   }
 
   for (int i = 0; i != size; ++i)
   {
-    int j = (size - 1);
-    int k = (i + size * j);
+    int const j = (size - 1);
+    int const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x, y = 1) = 0
   }
 
   for (int j = 0; j != size; ++j)
   {
-    int i = 0;
-    int k = (i + size * j);
+    int const i = 0;
+    int const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x = 0, y) = 0
   }
 
   for (int j = 0; j != size; ++j)
   {
-    int i = (size - 1);
-    int k = (i + size * j);
+    int const i = (size - 1);
+    int const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x = 1, y) = 0
   }
 }
@@ -683,11 +683,11 @@ void integrator (workspace_t* workspace)
       break;
     }
 
-    int span = (steps / 16);
+    int const span = (steps / 16);
     // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
     if ( ( i != 0 ) && ( (i % span) == 0 ) )
     {
-      double alpha = ALPHA;
+      double const alpha = ALPHA;
       const double* x = workspace -> x;
       double const dx = (x[1] - x[0]);
       double const dt = (dx * dx) / alpha;
@@ -700,7 +700,7 @@ void integrator (workspace_t* workspace)
       const double* g = workspace -> g;
       double* err = workspace -> err;
       error(size2, err, f, g);
-      double e = sqrt( norm(size2, err) );
+      double const e = sqrt( norm(size2, err) );
       printf("approximation error (transient solution t = %.4e): %e \n", t, e);
     }
   }
@@ -763,7 +763,7 @@ void Poisson ()
 
   // reports the approximation error
   error(size2, err, g, g0);
-  double e = sqrt( norm(size2, err) );
+  double const e = sqrt( norm(size2, err) );
   printf("approximation error (steady-state solution): %e \n", e);
 
   // memory deallocations:
