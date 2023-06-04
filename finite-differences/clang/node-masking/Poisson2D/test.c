@@ -217,7 +217,8 @@ size_t get_state (workspace_t* workspace)
 // void init_field (size_t size, double* g)
 //
 // Synopsis:
-// Sets the initial (temperature) field g(t = 0, x, y).
+// Sets the initial (temperature) field g(t = 0, x, y). Fills with ones at the interior
+// nodes and with zeros at the boundary nodes.
 //
 // Input:
 // size		number of nodes along the x [y] axis
