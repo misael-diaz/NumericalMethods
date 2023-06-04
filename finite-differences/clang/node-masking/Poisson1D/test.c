@@ -497,10 +497,10 @@ void pdesol (double const t, workspace_t* workspace)
 // rmse         scalar, the root mean squared error
 
 
-double RMSE (size_t const numel,
-      double* restrict e,
-     const double* restrict f,
-	      const double* restrict g)
+double RMSE(size_t const numel,
+	    double* restrict e,
+	    const double* restrict f,
+	    const double* restrict g)
 {
   error(numel, e, f, g);
   double const rmse = sqrt( norm(numel, e) ) / ( (double) numel );
