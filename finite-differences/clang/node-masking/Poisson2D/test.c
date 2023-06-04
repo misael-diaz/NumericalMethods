@@ -434,6 +434,20 @@ void subdiag (size_t const size,
 }
 
 
+// void superdiag(size_t size, double* g, double* g0, double* mask)
+//
+// Synopsis:
+// Updates the solution array g(t + dt) from the super-diagonal terms of the FDEs.
+//
+// Inputs:
+// size		number of nodes along the x [y] axis
+// g0		previous estimate of the solution array g(t + dt)
+// mask		mask array (1 for boundaries and 0 for interior nodes)
+//
+// Outputs:
+// g		estimate of the solution array g(t + dt)
+
+
 void superdiag (size_t const size,
 		double* restrict g,
 		const double* restrict g0,
