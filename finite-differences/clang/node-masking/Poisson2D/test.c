@@ -665,6 +665,21 @@ double RMSE(size_t const numel,
 }
 
 
+// void export (char* fname, size_t size, double* g, double* x)
+//
+// Synopsis:
+// Exports the field g(t, x, y = 0.5) array to a plain text file.
+//
+// Input:
+// fname	filename
+// size		size of the position array x
+// g		field array (number of elements: size * size)
+// x		position array
+//
+// Output:
+// [x, g]	writes the field array g(t, x, y = 0.5) as a function of position x
+
+
 void export(const char* fname,
 	    size_t const size,
 	    const double* restrict g,
