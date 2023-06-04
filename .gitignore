@@ -1,0 +1,14 @@
+*.o
+*.mod
+*.swp
+*.dat
+*.log
+*.err
+*.class
+*backup*
+*pycache*
+*output*
+*stage*
+*cache*
+# binaries
+test-bracketing
