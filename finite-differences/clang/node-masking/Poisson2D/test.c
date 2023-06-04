@@ -620,6 +620,19 @@ void exact (size_t const size,
 }
 
 
+// void pdesol (double t, workspace_t* workspace)
+//
+// Synopsis:
+// Computes the analytic field array f(t, x, y).
+//
+// Input:
+// t            scalar, the current time
+// workspace    data structure containing the current data (field, position, error, etc.)
+//
+// Output:
+// workspace    updates the analytic field array `f'
+
+
 void pdesol (double const t, workspace_t* workspace)// computes the exact field f(t, x, y)
 {
   double* f = workspace -> f;
