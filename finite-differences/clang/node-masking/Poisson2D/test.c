@@ -5,7 +5,7 @@
  * author: @misael-diaz
  *
  * Synopsis:
- * Solves the 2d transient Poission equation iteratively with the Jacobi method
+ * Solves the 2d transient Poisson equation iteratively with the Jacobi method
  * until the steady state is reached.
  *
  * The objective is solve the problem by masking boundary nodes.
@@ -29,18 +29,20 @@
  */
 
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
 
-#define NODE 0.0
+#define iNODE 0.0
 #define SIZE 128
 #define ALPHA 2.0
 #define TOLERANCE 8.673617379884035e-19
 #define MAX_ITERATIONS 128
 #define SUCCESS_STATE 0
 #define FAILURE_STATE 1
+#define VERBOSE false
 
 
 typedef struct {
@@ -217,7 +219,8 @@ size_t get_state (workspace_t* workspace)
 // void init_field (size_t size, double* g)
 //
 // Synopsis:
-// Sets the initial (temperature) field g(t = 0, x, y).
+// Sets the initial (temperature) field g(t = 0, x, y). Fills with ones at the interior
+// nodes and with zeros at the boundary nodes.
 //
 // Input:
 // size		number of nodes along the x [y] axis
@@ -228,34 +231,34 @@ size_t get_state (workspace_t* workspace)
 
 void init_field (size_t const size, double* g)
 {
-  size_t const size2 = (size * size);
-  ones(size2, g);				// sets g(t = 0, x, y) = 1 (everywhere)
+  size_t const numel = (size * size);
+  ones(numel, g);				// sets g(t = 0, x, y) = 1 (everywhere)
 
   for (int i = 0; i != size; ++i)
   {
-    int j = 0;
-    int k = (i + size * j);
+    int const j = 0;
+    int const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x, y = 0) = 0
   }
 
   for (int i = 0; i != size; ++i)
   {
-    int j = (size - 1);
-    int k = (i + size * j);
+    int const j = (size - 1);
+    int const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x, y = 1) = 0
   }
 
   for (int j = 0; j != size; ++j)
   {
-    int i = 0;
-    int k = (i + size * j);
+    int const i = 0;
+    int const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x = 0, y) = 0
   }
 
   for (int j = 0; j != size; ++j)
   {
-    int i = (size - 1);
-    int k = (i + size * j);
+    int const i = (size - 1);
+    int const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x = 1, y) = 0
   }
 }
@@ -276,8 +279,8 @@ void init_field (size_t const size, double* g)
 
 void init_mask (size_t const size, double* mask)
 {
-  size_t const size2 = (size * size);
-  zeros(size2, mask);				// sets all nodes as interior nodes
+  size_t const numel = (size * size);
+  zeros(numel, mask);				// sets all nodes as interior nodes
 
   for (int i = 0; i != size; ++i)
   {
@@ -330,9 +333,9 @@ void init_rhs(size_t const size,
 {
   double const alpha = ALPHA;
   double const dx = (x[1] - x[0]);
-  size_t const size2 = (size * size);
+  size_t const numel = (size * size);
   // we don't need to mask this loop since we are masking the boundary nodes elsewhere
-  for (size_t i = 0; i != size2; ++i)
+  for (size_t i = 0; i != numel; ++i)
   {
     b[i] = (dx * dx + alpha * g[i]);
   }
@@ -357,12 +360,12 @@ void rhs (size_t const size,
 	  const double* restrict b,
 	  const double* restrict mask)
 {
-  size_t const size2 = (size * size);
-  for (size_t i = 0; i != size2; ++i)
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
     double const value = b[i];
-    double const elem = (m == NODE)? value : 0.0;
+    double const elem = (m == iNODE)? value : 0.0;
     g[i] = elem;
   }
 }
@@ -387,18 +390,18 @@ void tridiag (size_t const size,
 	      const double* restrict g0,
 	      const double* restrict mask)
 {
-  size_t const size2 = (size * size);
-  for (size_t i = 0; i != size2; ++i)
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
-    double const elem = (m == NODE)? g0[i - 1] : 0.0;
+    double const elem = (m == iNODE)? g0[i - 1] : 0.0;
     g[i] += elem;
   }
 
-  for (size_t i = 0; i != size2; ++i)
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
-    double const elem = (m == NODE)? g0[i + 1] : 0.0;
+    double const elem = (m == iNODE)? g0[i + 1] : 0.0;
     g[i] += elem;
   }
 }
@@ -407,7 +410,7 @@ void tridiag (size_t const size,
 // void subdiag(size_t size, double* g, double* g0, double* mask)
 //
 // Synopsis:
-// Updates the solution array g(t + dt) from the tridiagonal terms of the FDEs.
+// Updates the solution array g(t + dt) from the sub-diagonal terms of the FDEs.
 //
 // Inputs:
 // size		number of nodes along the x [y] axis
@@ -423,14 +426,28 @@ void subdiag (size_t const size,
 	      const double* restrict g0,
 	      const double* restrict mask)
 {
-  size_t const size2 = (size * size);
-  for (size_t i = 0; i != size2; ++i)
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
-    double const elem = (m == NODE)? g0[i - size] : 0.0;
+    double const elem = (m == iNODE)? g0[i - size] : 0.0;
     g[i] += elem;
   }
 }
+
+
+// void superdiag(size_t size, double* g, double* g0, double* mask)
+//
+// Synopsis:
+// Updates the solution array g(t + dt) from the super-diagonal terms of the FDEs.
+//
+// Inputs:
+// size		number of nodes along the x [y] axis
+// g0		previous estimate of the solution array g(t + dt)
+// mask		mask array (1 for boundaries and 0 for interior nodes)
+//
+// Outputs:
+// g		estimate of the solution array g(t + dt)
 
 
 void superdiag (size_t const size,
@@ -438,11 +455,11 @@ void superdiag (size_t const size,
 		const double* restrict g0,
 		const double* restrict mask)
 {
-  size_t const size2 = (size * size);
-  for (size_t i = 0; i != size2; ++i)
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
-    double const elem = (m == NODE)? g0[i + size] : 0.0;
+    double const elem = (m == iNODE)? g0[i + size] : 0.0;
     g[i] += elem;
   }
 }
@@ -454,7 +471,7 @@ void superdiag (size_t const size,
 // Scales the solution array g(t + dt) with the main diagonal coefficient.
 //
 // Inputs:
-// size		array size
+// size		number of nodes along the x [y] axis
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -466,11 +483,11 @@ void __attribute__ ((noinline)) scale(size_t const size,
 {
   double const alpha = ALPHA;
   double const c = 1.0 / (alpha + 4.0);
-  size_t const size2 = (size * size);
-  for (size_t i = 0; i != size2; ++i)
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
   {
     double const m = mask[i];
-    double const elem = (m == NODE)? c : 1.0;
+    double const elem = (m == iNODE)? c : 1.0;
     g[i] *= elem;
   }
 }
@@ -512,7 +529,7 @@ void error (size_t const size,
 // workspace	data structure containing the current data (field, position, error, etc.)
 //
 // Outputs:
-// workspace	stores the data at the next time step
+// workspace	updates the fields g0 and g with the data of the next time step
 
 
 void solver (workspace_t* workspace)
@@ -523,7 +540,7 @@ void solver (workspace_t* workspace)
   double const tol = TOLERANCE;
   size_t const iters = MAX_ITERATIONS;
   size_t const size = workspace -> size;
-  size_t const size2 = (size * size);
+  size_t const numel = (size * size);
 
   // iterators:
 
@@ -552,16 +569,16 @@ void solver (workspace_t* workspace)
     scale(size, g, mask);			// vectorized by gcc
 
     // checks for convergence:
-    error(size2, err, g, g0);			// vectorized by gcc
-    if (norm(size2, err) < tol)
+    error(numel, err, g, g0);			// vectorized by gcc
+    if (norm(numel, err) < tol)
     {
       set_state(workspace, SUCCESS_STATE);
-      //printf("Jacobi(): solution found after %lu iters\n", i + 1);
+      if (VERBOSE) printf("Jacobi(): solution found after %lu iters\n", i + 1);
       break;
     }
 
     // updates the initial solution array g(t + dt) for the next iteration:
-    copy(size2, g, g0);				// optimized by gcc
+    copy(numel, g, g0);				// optimized by gcc
   }
 }
 
@@ -569,14 +586,14 @@ void solver (workspace_t* workspace)
 // void exact(size_t size, double* g, double* x)
 //
 // Synopsis:
-// Obtains the exact steady-state solution of the Poission equation.
+// Obtains the exact steady-state solution of the Poisson equation.
 //
 // Inputs:
-// size		array size (same for both `x' and `g')
+// size		number of nodes along the x [y] axis
 // x		x-axis position array
 //
 // Outputs:
-// g		steady-state solution array g(t -> infinity)
+// g		steady-state solution array g(t -> infinity) (numel: size * size)
 
 
 void exact (size_t const size,
@@ -603,6 +620,19 @@ void exact (size_t const size,
     }
   }
 }
+
+
+// void pdesol (double t, workspace_t* workspace)
+//
+// Synopsis:
+// Computes the analytic field array f(t, x, y).
+//
+// Input:
+// t            scalar, the current time
+// workspace    data structure containing the current data (field, position, error, etc.)
+//
+// Output:
+// workspace    updates the analytic field array `f'
 
 
 void pdesol (double const t, workspace_t* workspace)// computes the exact field f(t, x, y)
@@ -638,6 +668,47 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
 }
 
 
+// double RMSE(size_t numel, double* e, double* f, double* g)
+//
+// Synopsis:
+// Computes the Root Mean Squared Error RMSE of the numeric solution.
+//
+// Inputs:
+// numel        number of elements (or array size)
+// e            error vector of size `numel' (method ignores element values on entry)
+// f            analytic field array of size `numel'
+// g            numeric field array of size `numel'
+//
+// Outputs:
+// e            error array, the elementwise difference of `f' and `g' on output
+// rmse         scalar, the root mean squared error
+
+
+double RMSE(size_t const numel,
+	    double* restrict e,
+	    const double* restrict f,
+	    const double* restrict g)
+{
+  error(numel, e, f, g);
+  double const rmse = sqrt( norm(numel, e) ) / ( (double) numel );
+  return rmse;
+}
+
+
+// void export (char* fname, size_t size, double* g, double* x)
+//
+// Synopsis:
+// Exports the field g(t, x, y = 0.5) array to a plain text file.
+//
+// Input:
+// fname	filename
+// size		number of nodes along the x [y] axis
+// g		field array (number of elements: size * size)
+// x		position array
+//
+// Output:
+// [x, g]	writes the field array g(t, x, y = 0.5) as a function of position x
+
 
 void export(const char* fname,
 	    size_t const size,
@@ -656,6 +727,38 @@ void export(const char* fname,
 }
 
 
+// void logger (int step, workspace_t* workspace)
+//
+// Synopsis:
+// Logs the Root Mean Squared Error RMSE of the numeric solution.
+//
+// Inputs:
+// step         step number (or id)
+//
+// Output:
+// rmse         logs the RMSE = sqrt( sum( (f - g)**2 ) ) / N on the console, where
+//              `f' is the analytic and `g' is the numeric field array, and `N' is the
+//              array size.
+
+
+void logger (int const step, workspace_t* workspace)
+{
+  double const alpha = ALPHA;
+  const double* x = workspace -> x;
+  double const dx = (x[1] - x[0]);
+  double const dt = (dx * dx) / alpha;
+  double const t = ( ( (double) step ) + 1.0 ) * dt;
+  pdesol(t, workspace);
+
+  size_t const size = workspace -> size;
+  size_t const numel = (size * size);
+  const double* f = workspace -> f;
+  const double* g = workspace -> g;
+  double* err = workspace -> err;
+  double const e = RMSE(numel, err, f, g);
+  printf("approximation error (transient solution t = %.4e): %e \n", t, e);
+}
+
 // void integrator(workspace_t* workspace)
 //
 // Synopsis:
@@ -671,7 +774,7 @@ void export(const char* fname,
 void integrator (workspace_t* workspace)
 {
   int const steps = 0x00010000;
-  for (int i = 0; i != steps; ++i)
+  for (int step = 0; step != steps; ++step)
   {
     solver(workspace);
 
@@ -683,25 +786,11 @@ void integrator (workspace_t* workspace)
       break;
     }
 
-    int span = (steps / 16);
+    int const span = (steps / 16);
     // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
-    if ( ( i != 0 ) && ( (i % span) == 0 ) )
+    if ( ( step != 0 ) && ( (step % span) == 0 ) )
     {
-      double alpha = ALPHA;
-      const double* x = workspace -> x;
-      double const dx = (x[1] - x[0]);
-      double const dt = (dx * dx) / alpha;
-      double const t = ( ( (double) i ) + 1.0 ) * dt;
-      pdesol(t, workspace);
-
-      size_t const size = workspace -> size;
-      size_t const size2 = (size * size);
-      const double* f = workspace -> f;
-      const double* g = workspace -> g;
-      double* err = workspace -> err;
-      error(size2, err, f, g);
-      double e = sqrt( norm(size2, err) );
-      printf("approximation error (transient solution t = %.4e): %e \n", t, e);
+      logger(step, workspace);
     }
   }
 }
@@ -710,17 +799,17 @@ void integrator (workspace_t* workspace)
 // void Poisson()
 //
 // Synopsis:
-// Solves the 1d transient Poission equation. The initial temperature field is zero
-// everywhere. There is a uniform heat source throughout the domain. The temperature
-// at the system boundaries x = [-1, 1] is zero.
+// Solves the 2d transient Poisson equation. The initial temperature field is one at the
+// interior nodes and zero at the boundaries. There is a uniform heat source throughout
+// the domain.
 
 
 void Poisson ()
 {
   // parameters:
 
-  size_t const size = SIZE;			// number of elements in array
-  size_t const size2 = (size * size);
+  size_t const size = SIZE;			// number of elements of position arrays
+  size_t const numel = (size * size);		// size of field arrays g(t, x, y)
 
   // memory allocations:
 
@@ -738,7 +827,7 @@ void Poisson ()
   // initializations:
 
   init_field(size, g);				// sets the initial (temperature) field
-  zeros(size2, g0);				// inits the initial solution array
+  zeros(numel, g0);				// inits the initial solution array
 
   init_mask(size, mask);			// masks boundary nodes
 
@@ -756,17 +845,21 @@ void Poisson ()
 
   // post-processing:
 
-  // gets the exact solution at steady-state
+  // logs the analytic and numeric solutions at steady-state
   exact(size, g0, x, y);
   export("analytic.txt", size, g0, x);
   export("numeric.txt", size, g, x);
 
-  // reports the approximation error
-  error(size2, err, g, g0);
-  double e = sqrt( norm(size2, err) );
+  // logs the approximation error
+  error(numel, err, g, g0);
+  double const e = RMSE(numel, err, g0, g);
   printf("approximation error (steady-state solution): %e \n", e);
 
   // memory deallocations:
 
   workspace = destroy(workspace);
 }
+
+
+// COMMENTS:
+// iNODE:       interior node, a nodes that do not lie at the boundary
