@@ -797,9 +797,9 @@ void integrator (workspace_t* workspace)
 // void Poisson()
 //
 // Synopsis:
-// Solves the 1d transient Poisson equation. The initial temperature field is zero
-// everywhere. There is a uniform heat source throughout the domain. The temperature
-// at the system boundaries x = [-1, 1] is zero.
+// Solves the 2d transient Poisson equation. The initial temperature field is one at the
+// interior nodes and zero at the boundaries. There is a uniform heat source throughout
+// the domain.
 
 
 void Poisson ()
