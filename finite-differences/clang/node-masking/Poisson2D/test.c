@@ -29,6 +29,7 @@
  */
 
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -41,6 +42,7 @@
 #define MAX_ITERATIONS 128
 #define SUCCESS_STATE 0
 #define FAILURE_STATE 1
+#define VERBOSE false
 
 
 typedef struct {
@@ -571,7 +573,7 @@ void solver (workspace_t* workspace)
     if (norm(numel, err) < tol)
     {
       set_state(workspace, SUCCESS_STATE);
-      //printf("Jacobi(): solution found after %lu iters\n", i + 1);
+      if (VERBOSE) printf("Jacobi(): solution found after %lu iters\n", i + 1);
       break;
     }
 
