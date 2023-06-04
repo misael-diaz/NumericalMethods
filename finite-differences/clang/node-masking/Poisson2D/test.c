@@ -843,12 +843,12 @@ void Poisson ()
 
   // post-processing:
 
-  // gets the exact solution at steady-state
+  // logs the analytic and numeric solutions at steady-state
   exact(size, g0, x, y);
   export("analytic.txt", size, g0, x);
   export("numeric.txt", size, g, x);
 
-  // reports the approximation error
+  // logs the approximation error
   error(numel, err, g, g0);
   double const e = RMSE(numel, err, g0, g);
   printf("approximation error (steady-state solution): %e \n", e);
