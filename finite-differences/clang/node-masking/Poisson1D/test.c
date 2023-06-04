@@ -557,6 +557,7 @@ void Poisson ()
   // iterators:
 
   double* x = workspace -> x;
+  double* f = workspace -> f;
   double* g = workspace -> g;
   double* g0 = workspace -> g0;
   double* err = workspace -> err;
@@ -584,10 +585,10 @@ void Poisson ()
   // post-processing:
 
   // gets the exact solution at steady-state
-  exact(size, g0, x);
+  exact(size, f, x);
 
   // reports the approximation error
-  double const e = RMSE(size, err, g0, g);
+  double const e = RMSE(size, err, f, g);
   printf("approximation error (steady-state solution): %e \n", e);
 
   // memory deallocations:
