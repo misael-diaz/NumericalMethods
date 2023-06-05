@@ -1020,7 +1020,7 @@ void Poisson ()
   double* f = workspace -> f;
   double* g = workspace -> g;
   double* g0 = workspace -> g0;
-  double* err = workspace -> err;
+//double* err = workspace -> err;
   double* mask = workspace -> mask;
 
   // initializations:
