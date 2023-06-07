@@ -8,10 +8,9 @@
  * Solves the transient Poisson equation iteratively with the Jacobi method
  * until the steady state is reached.
  *
- * The objective is solve the problem by masking boundary nodes. Again, it is
- * important to check which loops GCC vectorizes. The code has been written to
- * keep the vectorization that was obtained without masking. I placed inline
- * comments to indicate which loops were vectorized, as in the previous code.
+ * Uses bitmasking to obtain loops that can be auto-vectorized by GCC.
+ * I have placed inline comments (in the solver() method) to indicate which loops
+ * have been auto-vectorized.
  *
  *
  * Copyright (c) 2023 Misael Diaz-Maldonado
