@@ -5,13 +5,12 @@
  * author: @misael-diaz
  *
  * Synopsis:
- * Solves the transient Poisson equation iteratively with the Jacobi method
+ * Solves the transient 1d Poisson equation iteratively with the Jacobi method
  * until the steady state is reached.
  *
- * The objective is solve the problem by masking boundary nodes. Again, it is
- * important to check which loops GCC vectorizes. The code has been written to
- * keep the vectorization that was obtained without masking. I placed inline
- * comments to indicate which loops were vectorized, as in the previous code.
+ * Uses bitmasking to obtain loops that can be auto-vectorized by GCC.
+ * I have placed inline comments (in the solver() method) to indicate which loops
+ * have been auto-vectorized.
  *
  *
  * Copyright (c) 2023 Misael Diaz-Maldonado
@@ -30,18 +29,30 @@
  */
 
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
 
-#define NODE 0.0
 #define SIZE 1024
 #define ALPHA 2.0
+#define iNODE 0xffffffffffffffff
 #define TOLERANCE 8.673617379884035e-19
 #define MAX_ITERATIONS 128
 #define SUCCESS_STATE 0
 #define FAILURE_STATE 1
+
+
+// We use the union for rewriting loops with nested if-else conditionals into loops that
+// GCC can auto-vectorize. Note that the nested if-else conditionals are simple enough to
+// be replaced with bitwise operations. We would not need to use the union if we were
+// dealing with integers instead of floating-point numbers.
+typedef union
+{
+  uint64_t bin;		// bit pattern of the floating-point data
+  double data;		// floating-point data
+} alias_t;
 
 
 typedef struct {
@@ -209,6 +220,23 @@ size_t get_state (workspace_t* workspace)
 }
 
 
+// initializes the bitmask so that boundary node data is not overwritten
+void init_mask (size_t const size, double* mask)
+{
+  size_t const N = (size - 1);
+  alias_t* masks = mask;
+  // masks the interior nodes
+  for (size_t i = 0; i != size; ++i)
+  {
+    masks[i].bin = iNODE;
+  }
+
+  // masks the boundary nodes
+  masks[0].bin = 0;
+  masks[N].bin = 0;
+}
+
+
 // void init_rhs (size_t size, double* b, double* x, double* g)
 //
 // Synopsis:
@@ -246,6 +274,7 @@ void init_rhs(size_t const size,
 // Inputs:
 // size		array size (same for both `g' and `b')
 // b		RHS array
+// mask         bitmask for avoiding overwrites of boundary nodes
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -256,6 +285,15 @@ void rhs (size_t const size,
 	  const double* restrict b,
 	  const double* restrict mask)
 {
+  alias_t* dst = g;
+  const alias_t* values = b;
+  const alias_t* masks = mask;
+  for (size_t i = 0; i != size; ++i)
+  {
+    dst[i].bin = (masks[i].bin & values[i].bin);
+  }
+
+  /*
   for (size_t i = 0; i != size; ++i)
   {
     double const m = mask[i];
@@ -263,6 +301,7 @@ void rhs (size_t const size,
     double const elem = (m == NODE)? value : 0.0;
     g[i] = elem;
   }
+  */
 }
 
 
@@ -274,16 +313,52 @@ void rhs (size_t const size,
 // Inputs:
 // size		array size (same for both `g' and `g0')
 // g0		previous estimate of the solution array g(t + dt)
+// tmp          array temporary, method ignores its elements on entry
+// mask         bitmask for avoiding overwrites of boundary nodes
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
+// tmp          array temporary, the caller ignores its elements as well
 
 
 void tridiag (size_t const size,
 	      double* restrict g,
+	      double* restrict tmp,
 	      const double* restrict g0,
 	      const double* restrict mask)
 {
+  alias_t* t = tmp;
+  const alias_t* values = g0;
+  const alias_t* masks = mask;
+
+  // clears array temporary of whatever it may contain, especially at boundary nodes
+  zeros(size, tmp);
+
+  // we avoid the invalid read, for there is no previous node at i = 0
+  for (size_t i = 1; i != size; ++i)
+  {
+    t[i].bin = (masks[i].bin & values[i - 1].bin);
+  }
+
+  // updates the field with the lower tridiagonal data
+  for (size_t i = 0; i != size; ++i)
+  {
+    g[i] += tmp[i];
+  }
+
+  // we avoid the invalid read, for there is no next node at i = (size - 1)
+  for (size_t i = 0; i != (size - 1); ++i)
+  {
+    t[i].bin = (masks[i].bin & values[i + 1].bin);
+  }
+
+  // updates the field with the upper tridiagonal data
+  for (size_t i = 0; i != size; ++i)
+  {
+    g[i] += tmp[i];
+  }
+
+  /*
   for (size_t i = 0; i != size; ++i)
   {
     double const m = mask[i];
@@ -297,6 +372,7 @@ void tridiag (size_t const size,
     double const elem = (m == NODE)? g0[i + 1] : 0.0;
     g[i] += elem;
   }
+  */
 }
 
 
@@ -307,23 +383,46 @@ void tridiag (size_t const size,
 //
 // Inputs:
 // size		array size
+// tmp          array temporary, method ignores its elements on entry
+// mask         bitmask for avoiding overwrites of boundary nodes
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
+// tmp          array temporary, the caller ignores its elements as well
 
 
 void __attribute__ ((noinline)) scale(size_t const size,
 				      double* restrict g,
+				      double* restrict tmp,
 				      const double* restrict mask)
 {
+  alias_t* t = tmp;
+  const alias_t* masks = mask;
   double const alpha = ALPHA;
   double const c = 1.0 / (alpha + 2.0);
+  alias_t const values = { .data = c };
+  // since the field at the boundaries is zero we do not need to assign ones to an
+  // array temporary (via t[i] = ~masks[i] & values[i], with values[:] = 1) to preserve
+  // the values of the boundary nodes (of course we have to add the temporaries prior
+  // to scaling the field (last loop)
+  for (size_t i = 0; i != size; ++i)
+  {
+    t[i].bin = (masks[i].bin & values.bin);
+  }
+
+  for (size_t i = 0; i != size; ++i)
+  {
+    g[i] *= tmp[i];
+  }
+
+  /*
   for (size_t i = 0; i != size; ++i)
   {
     double const m = mask[i];
     double const elem = (m == NODE)? c : 1.0;
     g[i] *= elem;
   }
+  */
 }
 
 
@@ -410,6 +509,7 @@ void solver (workspace_t* workspace)
   double* b = workspace -> rhs;
   double* g = workspace -> g;
   double* g0 = workspace -> g0;
+  double* tmp = workspace -> f;
   double* err = workspace -> err;
   const double* mask = workspace -> mask;
 
@@ -424,8 +524,8 @@ void solver (workspace_t* workspace)
   {
     // updates the solution array g(t + dt):
     rhs(size, g, b, mask);			// vectorized by gcc
-    tridiag(size, g, g0, mask);			// Not yet vectorized by gcc
-    scale(size, g, mask);			// vectorized by gcc
+    tridiag(size, g, tmp, g0, mask);		// vectorized by gcc
+    scale(size, g, tmp,  mask);			// vectorized by gcc
 
     // checks for convergence:
     error(size, err, g, g0);			// vectorized by gcc
@@ -612,9 +712,7 @@ void Poisson ()
   g[0] = 0.0;					// applies BC g(t, x = -1) = 0
   g[N] = 0.0;					// applies BC g(t, x = +1) = 0
 
-  zeros(size, mask);
-  mask[0] = 1.0;
-  mask[N] = 1.0;
+  init_mask(size, mask);
 
   double const x_l = -1;			// defines x-axis lower bound
   double const x_u =  1;			// defines x-axis upper bound
