@@ -5,7 +5,7 @@
  * author: @misael-diaz
  *
  * Synopsis:
- * Solves the transient Poisson equation iteratively with the Jacobi method
+ * Solves the transient 1d Poisson equation iteratively with the Jacobi method
  * until the steady state is reached.
  *
  * Uses bitmasking to obtain loops that can be auto-vectorized by GCC.
