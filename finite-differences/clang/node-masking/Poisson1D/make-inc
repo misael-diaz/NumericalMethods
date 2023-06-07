@@ -21,8 +21,8 @@ INC =
 
 # options
 CCOPT = $(INC) -g -Wall -O0
-CCOPT = $(INC) -O2 -ftree-vectorize -fopt-info-missed=missed-opts.log
-CCOPT = $(INC) -O2 -ftree-vectorize -fopt-info-optimized=opts.log
+CCOPT = $(INC) -Wno-incompatible-pointer-types -O2 -ftree-vectorize -fopt-info-missed=missed-opts.log
+CCOPT = $(INC) -Wno-incompatible-pointer-types -O2 -ftree-vectorize -fopt-info-optimized=opts.log
 
 # libraries
 LIBS = -lm
