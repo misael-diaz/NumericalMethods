@@ -734,12 +734,12 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
   const double* x = workspace -> x;
   const double* y = workspace -> y;
   size_t const size = workspace -> size;
+  size_t const numel = (size * size);
+  size_t const N = 64;
 
   init_X(size, X, x);
   init_Y(size, Y, y);
 
-  size_t const N = 64;
-  size_t const numel = (size * size);
   for (size_t k = 0; k != numel; ++k)
   {
     F[k] = 0.0;
