@@ -26,6 +26,7 @@
  */
 
 
+#include <stdint.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -33,15 +34,22 @@
 #include <math.h>
 
 
-#define iNODE 0.0
 #define SIZE 128
 #define ALPHA 2.0
+#define iNODE 0xffffffffffffffff
 #define TOLERANCE 8.673617379884035e-19
 #define MAX_ITERATIONS 128
 #define SUCCESS_STATE 0
 #define FAILURE_STATE 1
 #define VERBOSE false
 #define NUM_THREADS 4
+
+
+typedef union
+{
+  uint64_t bin;		// binary pattern of the double precision floating-point data
+  double data;		// double precision floating-point data
+} alias_t;
 
 
 typedef struct
@@ -53,7 +61,7 @@ typedef struct
   double* g0;		// previous estimate of the solution array, g(t + dt, x, y)
   double* err;		// error array
   double* rhs;		// Right Hand Side RHS array of the PDE
-  double* mask;		// mask array, one if a boundary node zero otherwise
+  double* mask;		// bitmask is zero at boundary nodes and `iNODE' at interior ones
   size_t size;		// array size
   size_t state;		// solver state
 } workspace_t;
@@ -99,9 +107,9 @@ double* dealloc (double* x)
 }
 
 
-void zeros (size_t const size, double* x)	// numpy-like zeros
+void zeros (size_t const beg, size_t const end, double* x)	// numpy-like zeros
 {
-  for (size_t i = 0; i != size; ++i)
+  for (size_t i = beg; i != end; ++i)
   {
     x[i] = 0.0;
   }
@@ -198,6 +206,13 @@ sharedspace_t* create (size_t const size)
     return NULL;
   }
 
+  size_t const chunk = (numel / NUM_THREADS);
+  if (chunk <= size)
+  {
+    printf("too many threads to distribute the load among threads uniformly\n");
+    return NULL;
+  }
+
   workspace_t *workspace = malloc( sizeof(workspace_t) );
   if (workspace == NULL)
   {
@@ -243,14 +258,14 @@ sharedspace_t* create (size_t const size)
   double* rhs = workspace -> rhs;
   double* mask = workspace -> mask;
 
-  zeros(size, x);
-  zeros(size, y);
-  zeros(numel, f);
-  zeros(numel, g);
-  zeros(numel, g0);
-  zeros(numel, err);
-  zeros(numel, rhs);
-  zeros(numel, mask);
+  zeros(0, size, x);
+  zeros(0, size, y);
+  zeros(0, numel, f);
+  zeros(0, numel, g);
+  zeros(0, numel, g0);
+  zeros(0, numel, err);
+  zeros(0, numel, rhs);
+  zeros(0, numel, mask);
 
   workspace -> size = size;
   workspace -> state = FAILURE_STATE;
@@ -258,7 +273,6 @@ sharedspace_t* create (size_t const size)
   sharedspace_t* space = spaces;
   for (size_t tid = 0; tid != NUM_THREADS; ++tid)
   {
-    size_t const chunk = (numel / NUM_THREADS);
     space -> tid = tid;
     space -> beg = tid * chunk;
     space -> end = (tid + 1) * chunk;
@@ -340,31 +354,31 @@ void init_field (size_t const size, double* g)
   size_t const numel = (size * size);
   ones(numel, g);				// sets g(t = 0, x, y) = 1 (everywhere)
 
-  for (int i = 0; i != size; ++i)
+  for (size_t i = 0; i != size; ++i)
   {
-    int const j = 0;
-    int const k = (i + size * j);
+    size_t const j = 0;
+    size_t const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x, y = 0) = 0
   }
 
-  for (int i = 0; i != size; ++i)
+  for (size_t i = 0; i != size; ++i)
   {
-    int const j = (size - 1);
-    int const k = (i + size * j);
+    size_t const j = (size - 1);
+    size_t const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x, y = 1) = 0
   }
 
-  for (int j = 0; j != size; ++j)
+  for (size_t j = 0; j != size; ++j)
   {
-    int const i = 0;
-    int const k = (i + size * j);
+    size_t const i = 0;
+    size_t const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x = 0, y) = 0
   }
 
-  for (int j = 0; j != size; ++j)
+  for (size_t j = 0; j != size; ++j)
   {
-    int const i = (size - 1);
-    int const k = (i + size * j);
+    size_t const i = (size - 1);
+    size_t const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x = 1, y) = 0
   }
 }
@@ -375,7 +389,8 @@ void init_field (size_t const size, double* g)
 // Synopsis:
 // Serial Method.
 // Initializes node mask.
-// The mask is zero for interior nodes and one for boundary nodes.
+// The mask is equal to zero at boundary nodes and equal to `iNODE' at interior nodes.
+// This is so that boundary node data is kept constant while updating all the nodes.
 //
 // Input:
 // size		number of nodes along the x [y] axis
@@ -386,35 +401,39 @@ void init_field (size_t const size, double* g)
 
 void init_mask (size_t const size, double* mask)
 {
+  alias_t* masks = mask;
   size_t const numel = (size * size);
-  zeros(numel, mask);				// sets all nodes as interior nodes
-
-  for (int i = 0; i != size; ++i)
+  for (size_t i = 0; i != numel; ++i)
   {
-    int const j = 0;
-    int const k = (i + size * j);
-    mask[k] = 1.0;				// sets nodes at y = 0 as boundary nodes
+    masks[i].bin = iNODE;			// sets all nodes as interior nodes
   }
 
-  for (int i = 0; i != size; ++i)
+  for (size_t i = 0; i != size; ++i)
   {
-    int const j = (size - 1);
-    int const k = (i + size * j);
-    mask[k] = 1.0;				// sets nodes at y = 1 as boundary nodes
+    size_t const j = 0;
+    size_t const k = (i + size * j);
+    mask[k] = 0.0;				// sets nodes at y = 0 as boundary nodes
   }
 
-  for (int j = 0; j != size; ++j)
+  for (size_t i = 0; i != size; ++i)
   {
-    int const i = 0;
-    int const k = (i + size * j);
-    mask[k] = 1.0;				// sets nodes at x = 0 as boundary nodes
+    size_t const j = (size - 1);
+    size_t const k = (i + size * j);
+    mask[k] = 0.0;				// sets nodes at y = 1 as boundary nodes
   }
 
-  for (int j = 0; j != size; ++j)
+  for (size_t j = 0; j != size; ++j)
   {
-    int const i = (size - 1);
-    int const k = (i + size * j);
-    mask[k] = 1.0;				// sets nodes at x = 1 as boundary nodes
+    size_t const i = 0;
+    size_t const k = (i + size * j);
+    mask[k] = 0.0;				// sets nodes at x = 0 as boundary nodes
+  }
+
+  for (size_t j = 0; j != size; ++j)
+  {
+    size_t const i = (size - 1);
+    size_t const k = (i + size * j);
+    mask[k] = 0.0;				// sets nodes at x = 1 as boundary nodes
   }
 }
 
@@ -450,7 +469,7 @@ void init_rhs(size_t const beg,
 }
 
 
-// void rhs(size_t beg, size_t end, double* g, double* b)
+// void rhs(size_t beg, size_t end, double* g, double* b, double* mask)
 //
 // Synopsis:
 // thread-safe
@@ -460,6 +479,7 @@ void init_rhs(size_t const beg,
 // beg		beginning of the data slice assigned to thread
 // end		ending of the data slice assigned to thread (exclusive)
 // b		RHS array
+// mask         bitmask for protecting boundary node data
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -471,17 +491,18 @@ void rhs (size_t const beg,
 	  const double* restrict b,
 	  const double* restrict mask)
 {
+  alias_t* dst = g;
+  const alias_t* values = b;
+  const alias_t* masks = mask;
   for (size_t i = beg; i != end; ++i)
   {
-    double const m = mask[i];
-    double const value = b[i];
-    double const elem = (m == iNODE)? value : 0.0;
-    g[i] = elem;
+    dst[i].bin = (masks[i].bin & values[i].bin);
   }
 }
 
 
-// void tridiag(size_t beg, size_t end, double* g, double* g0, double* mask)
+// void tridiag(size_t beg, size_t end, size_t size, double* g, double* tmp, double* g0,
+//              double* mask)
 //
 // Synopsis:
 // Updates the solution array g(t + dt) from the tridiagonal terms of the FDEs.
@@ -489,8 +510,10 @@ void rhs (size_t const beg,
 // Inputs:
 // beg		beginning of the data slice assigned to thread
 // end		ending of the data slice assigned to thread (exclusive)
+// size		number of nodes along the x [y] axis
 // g0		previous estimate of the solution array g(t + dt)
-// mask		mask array (1 for boundaries and 0 for interior nodes)
+// tmp          array temporary for storing intermediate computations
+// mask         bitmask for protecting boundary node data
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -498,27 +521,65 @@ void rhs (size_t const beg,
 
 void tridiag (size_t const beg,
 	      size_t const end,
+	      size_t const size,
 	      double* restrict g,
+	      double* restrict tmp,
 	      const double* restrict g0,
 	      const double* restrict mask)
 {
-  for (size_t i = beg; i != end; ++i)
+  alias_t* t = tmp;
+  const alias_t* values = g0;
+  const alias_t* masks = mask;
+
+  zeros(beg, end, tmp);
+
+  if (beg == 0)
   {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i - 1] : 0.0;
-    g[i] += elem;
+    for (size_t i = 1; i != end; ++i)
+    {
+      t[i].bin = (masks[i].bin & values[i - 1].bin);
+    }
+  }
+  else
+  {
+    for (size_t i = beg; i != end; ++i)
+    {
+      t[i].bin = (masks[i].bin & values[i - 1].bin);
+    }
   }
 
   for (size_t i = beg; i != end; ++i)
   {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i + 1] : 0.0;
-    g[i] += elem;
+    g[i] += tmp[i];
+  }
+
+  zeros(beg, end, tmp);
+
+  size_t const numel = (size * size);
+  if (end == numel)
+  {
+    for (size_t i = beg; i != (end - 1); ++i)
+    {
+      t[i].bin = (masks[i].bin & values[i + 1].bin);
+    }
+  }
+  else
+  {
+    for (size_t i = beg; i != end; ++i)
+    {
+      t[i].bin = (masks[i].bin & values[i + 1].bin);
+    }
+  }
+
+  for (size_t i = beg; i != end; ++i)
+  {
+    g[i] += tmp[i];
   }
 }
 
 
-// void subdiag(size_t beg, size_t end, size_t size, double* g, double* g0, double* mask)
+// void subdiag(size_t beg, size_t end, size_t size, double* g, double* tmp, double* g0,
+//              double* mask)
 //
 // Synopsis:
 // Updates the solution array g(t + dt) from the sub-diagonal terms of the FDEs.
@@ -528,7 +589,8 @@ void tridiag (size_t const beg,
 // end		ending of the data slice assigned to thread (exclusive)
 // size		number of nodes along the x [y] axis
 // g0		previous estimate of the solution array g(t + dt)
-// mask		mask array (1 for boundaries and 0 for interior nodes)
+// tmp          array temporary for storing intermediate computations
+// mask         bitmask for protecting boundary node data
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -538,19 +600,41 @@ void subdiag (size_t const beg,
 	      size_t const end,
 	      size_t const size,
 	      double* restrict g,
+	      double* restrict tmp,
 	      const double* restrict g0,
 	      const double* restrict mask)
 {
+  alias_t* t = tmp;
+  const alias_t* values = g0;
+  const alias_t* masks = mask;
+
+  zeros(beg, end, tmp);
+
+  // prevents invalid reads:
+  if (beg < size)
+  {
+    for (size_t i = size; i != end; ++i)
+    {
+      t[i].bin = (masks[i].bin & values[i - size].bin);
+    }
+  }
+  else
+  {
+    for (size_t i = beg; i != end; ++i)
+    {
+      t[i].bin = (masks[i].bin & values[i - size].bin);
+    }
+  }
+
   for (size_t i = beg; i != end; ++i)
   {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i - size] : 0.0;
-    g[i] += elem;
+    g[i] += tmp[i];
   }
 }
 
 
-// void superdiag(size_t beg, size_t end, size_t sz, double* g, double* g0, double* mask)
+// void superdiag(size_t beg, size_t end, size_t size, double* g, double* tmp, double* g0,
+//                double* mask)
 //
 // Synopsis:
 // thread-safe
@@ -561,7 +645,8 @@ void subdiag (size_t const beg,
 // end		ending of the data slice assigned to thread (exclusive)
 // size		number of nodes along the x [y] axis
 // g0		previous estimate of the solution array g(t + dt)
-// mask		mask array (1 for boundaries and 0 for interior nodes)
+// tmp          array temporary for storing intermediate computations
+// mask         bitmask for protecting boundary node data
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -571,19 +656,41 @@ void superdiag (size_t const beg,
 		size_t const end,
 		size_t const size,
 		double* restrict g,
+		double* restrict tmp,
 		const double* restrict g0,
 		const double* restrict mask)
 {
+  alias_t* t = tmp;
+  const alias_t* values = g0;
+  const alias_t* masks = mask;
+
+  zeros(beg, end, tmp);
+
+  // prevents invalid reads:
+  size_t const numel = (size * size);
+  if ( (end + size) > numel )
+  {
+    for (size_t i = beg; i != (end - size); ++i)
+    {
+      t[i].bin = (masks[i].bin & values[i + size].bin);
+    }
+  }
+  else
+  {
+    for (size_t i = beg; i != end; ++i)
+    {
+      t[i].bin = (masks[i].bin & values[i + size].bin);
+    }
+  }
+
   for (size_t i = beg; i != end; ++i)
   {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i + size] : 0.0;
-    g[i] += elem;
+    g[i] += tmp[i];
   }
 }
 
 
-// void scale (size_t beg, size_t end, double* g)
+// void scale (size_t beg, size_t end, double* g, double* tmp, double* mask)
 //
 // Synopsis:
 // Scales the solution array g(t + dt) with the main diagonal coefficient.
@@ -591,6 +698,8 @@ void superdiag (size_t const beg,
 // Inputs:
 // beg		beginning of the data slice assigned to thread
 // end		ending of the data slice assigned to thread (exclusive)
+// tmp          array temporary for storing intermediate computations
+// mask         bitmask for protecting boundary node data
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -599,15 +708,23 @@ void superdiag (size_t const beg,
 void __attribute__ ((noinline)) scale(size_t const beg,
 				      size_t const end,
 				      double* restrict g,
+				      double* restrict tmp,
 				      const double* restrict mask)
 {
+  alias_t* t = tmp;
+  const alias_t* masks = mask;
   double const alpha = ALPHA;
   double const c = 1.0 / (alpha + 4.0);
+  alias_t const values = { .data = c };
+
   for (size_t i = beg; i != end; ++i)
   {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? c : 1.0;
-    g[i] *= elem;
+    t[i].bin = (masks[i].bin & values.bin);
+  }
+
+  for (size_t i = beg; i != end; ++i)
+  {
+    g[i] *= tmp[i];
   }
 }
 
@@ -704,10 +821,10 @@ void* isolver (void* v_sharedspace)
   {
     // updates the solution array g(t + dt):
     rhs(beg, end, g, b, mask);			// vectorized by gcc
-    tridiag(beg, end, g, g0, mask);		// Not yet vectorized by gcc
-    subdiag(beg, end, size, g, g0, mask);	// Not yet vectorized by gcc
-    superdiag(beg, end, size, g, g0, mask);	// Not yet vectorized by gcc
-    scale(beg, end, g, mask);			// vectorized by gcc
+    tridiag(beg, end, size, g, tmp, g0, mask);	// vectorized by gcc
+    subdiag(beg, end, size, g, tmp, g0, mask);	// vectorized by gcc
+    superdiag(beg, end, size, g, tmp, g0, mask);// vectorized by gcc
+    scale(beg, end, g, tmp, mask);		// vectorized by gcc
 
     // computes the error array:
     pthread_barrier_wait(barrier);
@@ -782,7 +899,35 @@ void exact (size_t const size,
 }
 
 
-// void pdesol (double t, workspace_t* workspace)
+void init_X(size_t const beg,
+	    size_t const end,
+	    size_t const size,
+	    double* restrict X,
+	    const double* restrict x)
+{
+  for (size_t k = beg; k != end; ++k)
+  {
+    size_t i = (k % size);
+    X[k] = x[i];
+  }
+}
+
+
+void init_Y(size_t const beg,
+	    size_t const end,
+	    size_t const size,
+	    double* restrict Y,
+	    const double* restrict y)
+{
+  for (size_t k = beg; k != end; ++k)
+  {
+    size_t i = (k / size);
+    Y[k] = y[i];
+  }
+}
+
+
+// void pdesol (size_t beg, size_t end, double t, workspace_t* workspace)
 //
 // Synopsis:
 // serial
@@ -796,33 +941,36 @@ void exact (size_t const size,
 // workspace    updates the analytic field array `f'
 
 
-void pdesol (double const t, workspace_t* workspace)// computes the exact field f(t, x, y)
+void pdesol (size_t const beg, size_t const end, double const t, workspace_t* workspace)
 {
-  double* f = workspace -> f;
+  double* F = workspace -> f;
+  double* X = workspace -> rhs;
+  double* Y = workspace -> err;
   const double* x = workspace -> x;
   const double* y = workspace -> y;
   size_t const size = workspace -> size;
-  for (size_t j = 0; j != size; ++j)
+  size_t const numel = (size * size);
+  size_t const N = 64;
+
+  init_X(beg, end, size, X, x);
+  init_Y(beg, end, size, Y, y);
+
+  for (size_t k = beg; k != end; ++k)
   {
-    for (size_t i = 0; i != size; ++i)
+    F[k] = 0.0;
+    for (size_t m = 1; m != (N + 1); m += 2)
     {
-      size_t const N = 64;
-      size_t const k = (i + size * j);
-      f[k] = 0.0;
-      for (size_t m = 1; m != (N + 1); m += 2)
+      for (size_t n = 1; n != (N + 1); n += 2)
       {
-	for (size_t n = 1; n != (N + 1); n += 2)
-	{
-	  double const pi = M_PI;
-	  double const ln = ( (double) n ) * pi;
-	  double const lm = ( (double) m ) * pi;
-	  double const lnm = ( (ln * ln) + (lm * lm) );
-	  double const An = (2.0 / ln);
-	  double const Am = (2.0 / lm);
-	  double const Anm = 2.0 * (An * Am);
-	  double const Bnm = ( (1.0 / lnm) + (1.0 - 1.0 / lnm) * exp(-lnm * t) );
-	  f[k] += ( 2.0 * Anm * Bnm * sin(ln * x[i]) * sin(lm * y[j]) );
-	}
+	double const pi = M_PI;
+	double const ln = ( (double) n ) * pi;
+	double const lm = ( (double) m ) * pi;
+	double const lnm = ( (ln * ln) + (lm * lm) );
+	double const An = (2.0 / ln);
+	double const Am = (2.0 / lm);
+	double const Anm = 2.0 * (An * Am);
+	double const Bnm = ( (1.0 / lnm) + (1.0 - 1.0 / lnm) * exp(-lnm * t) );
+	F[k] += ( 2.0 * Anm * Bnm * sin(ln * X[k]) * sin(lm * Y[k]) );
       }
     }
   }
@@ -882,8 +1030,8 @@ void export(const char* fname,
   FILE* file = fopen(fname, "w");
   for (size_t i = 0; i != size; ++i)
   {
-    int const j = (size / 2);
-    int const k = (i + size * j);
+    size_t const j = (size / 2);
+    size_t const k = (i + size * j);
     fprintf(file, "%.12e %.12e\n", x[i], g[k]);
   }
 
@@ -891,7 +1039,7 @@ void export(const char* fname,
 }
 
 
-// void logger (tid, int step, workspace_t* workspace)
+// void logger (size_t tid, size_t beg, size_t end, int step, workspace_t* workspace)
 //
 // Synopsis:
 // thread-safe (only the master thread completes the task)
@@ -906,26 +1054,41 @@ void export(const char* fname,
 //              array size.
 
 
-void logger(size_t const tid,
-	    size_t const step,
-	    size_t const count,
-	    workspace_t* workspace)
+void logger(size_t const step, size_t const count, sharedspace_t* space)
 {
+  size_t const tid = space -> tid;
+  size_t const beg = space -> beg;
+  size_t const end = space -> end;
+  workspace_t* workspace = space -> workspace;
+  pthread_barrier_t* barrier = space -> barrier;
+
+  double const alpha = ALPHA;
+  const double* x = workspace -> x;
+  double const dx = (x[1] - x[0]);
+  double const dt = (dx * dx) / alpha;
+  double const t = ( ( (double) step ) + 1.0 ) * dt;
+
+  pthread_barrier_wait(barrier);
+
+  pdesol(beg, end, t, workspace);
+
+  pthread_barrier_wait(barrier);
+
+  size_t const size = workspace -> size;
+  size_t const numel = (size * size);
+  const double* f = workspace -> f;
+  const double* g = workspace -> g;
+  double* tmp = workspace -> rhs;
+  double* err = workspace -> err;
+
+  error(beg, end, err, f, g);
+  norm1(tid, beg, end, tmp, err);
+
+  pthread_barrier_wait(barrier);
+
+  double const e = sqrt( norm2(beg, end, tmp) ) / ( (double) numel );
   if (tid == 0)
   {
-    double const alpha = ALPHA;
-    const double* x = workspace -> x;
-    double const dx = (x[1] - x[0]);
-    double const dt = (dx * dx) / alpha;
-    double const t = ( ( (double) step ) + 1.0 ) * dt;
-    pdesol(t, workspace);
-
-    size_t const size = workspace -> size;
-    size_t const numel = (size * size);
-    const double* f = workspace -> f;
-    const double* g = workspace -> g;
-    double* err = workspace -> err;
-    double const e = RMSE(numel, err, f, g);
     printf("approximation error (transient solution t = %.4e): %e \n", t, e);
 
     char fname[80];
@@ -953,10 +1116,10 @@ void logger(size_t const tid,
 void* integrator (void* v_space)
 {
   sharedspace_t* space = v_space;
+  size_t const tid = space -> tid;
   workspace_t* workspace = space -> workspace;
   pthread_barrier_t* barrier = space -> barrier;
   size_t count = 0;
-  size_t const tid = space -> tid;
   size_t const steps = 0x00001000;
   for (size_t step = 0; step != steps; ++step)
   {
@@ -983,7 +1146,7 @@ void* integrator (void* v_space)
     // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
     if ( ( step != 0 ) && ( (step % span) == 0 ) )
     {
-      logger(tid, step, count, workspace);
+      logger(step, count, space);
       ++count;
     }
   }
@@ -1026,7 +1189,7 @@ void Poisson ()
   // initializations:
 
   init_field(size, g);				// sets the initial (temperature) field
-  zeros(numel, g0);				// inits the initial solution array
+  zeros(0, numel, g0);				// inits the initial solution array
 
   init_mask(size, mask);			// masks boundary nodes
 
