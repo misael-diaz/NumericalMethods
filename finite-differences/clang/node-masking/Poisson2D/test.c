@@ -118,6 +118,24 @@ void ones (size_t const size, double* x)	// numpy-like ones
 }
 
 
+void add (size_t const size, double* restrict dst, const double* restrict src)
+{
+  for (size_t i = 0; i != size; ++i)
+  {
+    dst[i] += src[i];
+  }
+}
+
+
+void mult (size_t const size, double* restrict dst, const double* restrict src)
+{
+  for (size_t i = 0; i != size; ++i)
+  {
+    dst[i] *= src[i];
+  }
+}
+
+
 void linspace (double* x, double x_i, double x_f, size_t const size)// numpy-like linspace
 {
   double const N = (size - 1);
@@ -422,20 +440,26 @@ void tridiag (size_t const size,
     t[i].bin = (masks[i].bin & values[i - 1].bin);
   }
 
+  add(numel, g, tmp);
+  /*
   for (size_t i = 0; i != numel; ++i)
   {
     g[i] += tmp[i];
   }
+  */
 
   for (size_t i = 0; i != (numel - 1); ++i)
   {
     t[i].bin = (masks[i].bin & values[i + 1].bin);
   }
 
+  add(numel, g, tmp);
+  /*
   for (size_t i = 0; i != numel; ++i)
   {
     g[i] += tmp[i];
   }
+  */
 }
 
 
@@ -472,10 +496,13 @@ void subdiag (size_t const size,
     t[i].bin = (masks[i].bin & values[i - size].bin);
   }
 
+  add(numel, g, tmp);
+  /*
   for (size_t i = 0; i != numel; ++i)
   {
     g[i] += tmp[i];
   }
+  */
 }
 
 
@@ -512,10 +539,13 @@ void superdiag (size_t const size,
     t[i].bin = (masks[i].bin & values[i + size].bin);
   }
 
+  add(numel, g, tmp);
+  /*
   for (size_t i = 0; i != numel; ++i)
   {
     g[i] += tmp[i];
   }
+  */
 }
 
 
@@ -550,10 +580,13 @@ void __attribute__ ((noinline)) scale(size_t const size,
     t[i].bin = (masks[i].bin & values.bin);
   }
 
+  mult(numel, g, tmp);
+  /*
   for (size_t i = 0; i != numel; ++i)
   {
     g[i] *= tmp[i];
   }
+  */
 }
 
 
