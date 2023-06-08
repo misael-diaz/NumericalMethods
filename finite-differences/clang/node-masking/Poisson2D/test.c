@@ -441,12 +441,6 @@ void tridiag (size_t const size,
   }
 
   add(numel, g, tmp);
-  /*
-  for (size_t i = 0; i != numel; ++i)
-  {
-    g[i] += tmp[i];
-  }
-  */
 
   for (size_t i = 0; i != (numel - 1); ++i)
   {
@@ -454,12 +448,6 @@ void tridiag (size_t const size,
   }
 
   add(numel, g, tmp);
-  /*
-  for (size_t i = 0; i != numel; ++i)
-  {
-    g[i] += tmp[i];
-  }
-  */
 }
 
 
@@ -497,12 +485,6 @@ void subdiag (size_t const size,
   }
 
   add(numel, g, tmp);
-  /*
-  for (size_t i = 0; i != numel; ++i)
-  {
-    g[i] += tmp[i];
-  }
-  */
 }
 
 
@@ -540,12 +522,6 @@ void superdiag (size_t const size,
   }
 
   add(numel, g, tmp);
-  /*
-  for (size_t i = 0; i != numel; ++i)
-  {
-    g[i] += tmp[i];
-  }
-  */
 }
 
 
@@ -581,12 +557,6 @@ void __attribute__ ((noinline)) scale(size_t const size,
   }
 
   mult(numel, g, tmp);
-  /*
-  for (size_t i = 0; i != numel; ++i)
-  {
-    g[i] *= tmp[i];
-  }
-  */
 }
 
 
