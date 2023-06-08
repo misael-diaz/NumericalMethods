@@ -498,16 +498,6 @@ void rhs (size_t const beg,
   {
     dst[i].bin = (masks[i].bin & values[i].bin);
   }
-
-  /*
-  for (size_t i = beg; i != end; ++i)
-  {
-    double const m = mask[i];
-    double const value = b[i];
-    double const elem = (m == iNODE)? value : 0.0;
-    g[i] = elem;
-  }
-  */
 }
 
 
@@ -585,22 +575,6 @@ void tridiag (size_t const beg,
   {
     g[i] += tmp[i];
   }
-
-  /*
-  for (size_t i = beg; i != end; ++i)
-  {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i - 1] : 0.0;
-    g[i] += elem;
-  }
-
-  for (size_t i = beg; i != end; ++i)
-  {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i + 1] : 0.0;
-    g[i] += elem;
-  }
-  */
 }
 
 
@@ -656,15 +630,6 @@ void subdiag (size_t const beg,
   {
     g[i] += tmp[i];
   }
-
-  /*
-  for (size_t i = beg; i != end; ++i)
-  {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i - size] : 0.0;
-    g[i] += elem;
-  }
-  */
 }
 
 
@@ -722,15 +687,6 @@ void superdiag (size_t const beg,
   {
     g[i] += tmp[i];
   }
-
-  /*
-  for (size_t i = beg; i != end; ++i)
-  {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i + size] : 0.0;
-    g[i] += elem;
-  }
-  */
 }
 
 
@@ -770,17 +726,6 @@ void __attribute__ ((noinline)) scale(size_t const beg,
   {
     g[i] *= tmp[i];
   }
-
-  /*
-  double const alpha = ALPHA;
-  double const c = 1.0 / (alpha + 4.0);
-  for (size_t i = beg; i != end; ++i)
-  {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? c : 1.0;
-    g[i] *= elem;
-  }
-  */
 }
 
 
