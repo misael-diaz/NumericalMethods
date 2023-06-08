@@ -8,9 +8,12 @@
  * Solves the 2d transient Poisson equation iteratively with the Jacobi method
  * until the steady state is reached.
  *
- * The objective is solve the problem by masking boundary nodes.
+ * The objective is solve the problem by masking boundary nodes, for this simplifies
+ * the programming and allows for solving the Poisson equation even for systems with
+ * complicated geometries.
  *
- * Vectorized code by GCC is indicated in the source.
+ * Vectorized code by GCC is indicated in the source. We use a bitmask to express loops
+ * with simple nested if-else conditionals into loops that GCC can auto-vectorize.
  *
  *
  * Copyright (c) 2023 Misael Diaz-Maldonado
@@ -29,20 +32,29 @@
  */
 
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
 
-#define iNODE 0.0
 #define SIZE 128
 #define ALPHA 2.0
+#define iNODE 0xffffffffffffffff
 #define TOLERANCE 8.673617379884035e-19
 #define MAX_ITERATIONS 128
 #define SUCCESS_STATE 0
 #define FAILURE_STATE 1
 #define VERBOSE false
+
+
+// we use this for auto-vectorization of loops with simple nested conditionals
+typedef union
+{
+  uint64_t bin;		// bit pattern of the floating point data
+  double data;		// floating point data
+} alias_t;
 
 
 typedef struct {
@@ -53,7 +65,7 @@ typedef struct {
   double* g0;		// previous estimate of the solution array, g(t + dt, x, y)
   double* err;		// error array
   double* rhs;		// Right Hand Side RHS array of the PDE
-  double* mask;		// mask array, one if a boundary node zero otherwise
+  double* mask;		// bitmask is zero at boundary nodes and `iNODE' at interior ones
   size_t size;		// array size
   size_t state;		// solver state
 } workspace_t;
@@ -268,7 +280,8 @@ void init_field (size_t const size, double* g)
 //
 // Synopsis:
 // Initializes node mask.
-// The mask is zero for interior nodes and one for boundary nodes.
+// The mask is equal to zero at boundary nodes and equal to `iNODE' at interior nodes.
+// This is so that boundary node data is kept constant while updating all the nodes.
 //
 // Input:
 // size		number of nodes along the x [y] axis
@@ -279,35 +292,39 @@ void init_field (size_t const size, double* g)
 
 void init_mask (size_t const size, double* mask)
 {
+  alias_t* m = mask;
   size_t const numel = (size * size);
-  zeros(numel, mask);				// sets all nodes as interior nodes
+  for (size_t i = 0; i != numel; ++i)
+  {
+    m[i].bin = iNODE;				// sets all nodes as interior nodes
+  }
 
   for (int i = 0; i != size; ++i)
   {
     int const j = 0;
     int const k = (i + size * j);
-    mask[k] = 1.0;				// sets nodes at y = 0 as boundary nodes
+    mask[k] = 0.0;				// sets nodes at y = 0 as boundary nodes
   }
 
   for (int i = 0; i != size; ++i)
   {
     int const j = (size - 1);
     int const k = (i + size * j);
-    mask[k] = 1.0;				// sets nodes at y = 1 as boundary nodes
+    mask[k] = 0.0;				// sets nodes at y = 1 as boundary nodes
   }
 
   for (int j = 0; j != size; ++j)
   {
     int const i = 0;
     int const k = (i + size * j);
-    mask[k] = 1.0;				// sets nodes at x = 0 as boundary nodes
+    mask[k] = 0.0;				// sets nodes at x = 0 as boundary nodes
   }
 
   for (int j = 0; j != size; ++j)
   {
     int const i = (size - 1);
     int const k = (i + size * j);
-    mask[k] = 1.0;				// sets nodes at x = 1 as boundary nodes
+    mask[k] = 0.0;				// sets nodes at x = 1 as boundary nodes
   }
 }
 
@@ -350,6 +367,7 @@ void init_rhs(size_t const size,
 // Inputs:
 // size		number of nodes along the x [y] axis
 // b		RHS array
+// mask		bitmask for protecting boundary node data
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -360,6 +378,15 @@ void rhs (size_t const size,
 	  const double* restrict b,
 	  const double* restrict mask)
 {
+  alias_t* dst = g;
+  const alias_t* values = b;
+  const alias_t* masks = mask;
+  size_t const numel = (size * size);
+  for (size_t i = 0; i != numel; ++i)
+  {
+    dst[i].bin = (masks[i].bin & values[i].bin);
+  }
+  /*
   size_t const numel = (size * size);
   for (size_t i = 0; i != numel; ++i)
   {
@@ -368,6 +395,7 @@ void rhs (size_t const size,
     double const elem = (m == iNODE)? value : 0.0;
     g[i] = elem;
   }
+  */
 }
 
 
@@ -379,7 +407,8 @@ void rhs (size_t const size,
 // Inputs:
 // size		number of nodes along the x [y] axis
 // g0		previous estimate of the solution array g(t + dt)
-// mask		mask array (1 for boundaries and 0 for interior nodes)
+// tmp		array temporary for storing intermediate computations
+// mask		bitmask for protecting boundary node data
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -387,9 +416,38 @@ void rhs (size_t const size,
 
 void tridiag (size_t const size,
 	      double* restrict g,
+	      double* restrict tmp,
 	      const double* restrict g0,
 	      const double* restrict mask)
 {
+  alias_t* t = tmp;
+  const alias_t* values = g0;
+  const alias_t* masks = mask;
+  size_t const numel = (size * size);
+
+  zeros(numel, tmp);
+
+  for (size_t i = 1; i != numel; ++i)
+  {
+    t[i].bin = (masks[i].bin & values[i - 1].bin);
+  }
+
+  for (size_t i = 0; i != numel; ++i)
+  {
+    g[i] += tmp[i];
+  }
+
+  for (size_t i = 0; i != (numel - 1); ++i)
+  {
+    t[i].bin = (masks[i].bin & values[i + 1].bin);
+  }
+
+  for (size_t i = 0; i != numel; ++i)
+  {
+    g[i] += tmp[i];
+  }
+
+  /*
   size_t const numel = (size * size);
   for (size_t i = 0; i != numel; ++i)
   {
@@ -404,6 +462,7 @@ void tridiag (size_t const size,
     double const elem = (m == iNODE)? g0[i + 1] : 0.0;
     g[i] += elem;
   }
+  */
 }
 
 
@@ -415,7 +474,8 @@ void tridiag (size_t const size,
 // Inputs:
 // size		number of nodes along the x [y] axis
 // g0		previous estimate of the solution array g(t + dt)
-// mask		mask array (1 for boundaries and 0 for interior nodes)
+// tmp		array temporary for storing intermediate computations
+// mask		bitmask for protecting boundary node data
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -423,9 +483,28 @@ void tridiag (size_t const size,
 
 void subdiag (size_t const size,
 	      double* restrict g,
+	      double* restrict tmp,
 	      const double* restrict g0,
 	      const double* restrict mask)
 {
+  alias_t* t = tmp;
+  const alias_t* values = g0;
+  const alias_t* masks = mask;
+  size_t const numel = (size * size);
+
+  zeros(numel, tmp);
+
+  for (size_t i = size; i != numel; ++i)
+  {
+    t[i].bin = (masks[i].bin & values[i - size].bin);
+  }
+
+  for (size_t i = 0; i != numel; ++i)
+  {
+    g[i] += tmp[i];
+  }
+
+  /*
   size_t const numel = (size * size);
   for (size_t i = 0; i != numel; ++i)
   {
@@ -433,6 +512,7 @@ void subdiag (size_t const size,
     double const elem = (m == iNODE)? g0[i - size] : 0.0;
     g[i] += elem;
   }
+  */
 }
 
 
@@ -444,7 +524,8 @@ void subdiag (size_t const size,
 // Inputs:
 // size		number of nodes along the x [y] axis
 // g0		previous estimate of the solution array g(t + dt)
-// mask		mask array (1 for boundaries and 0 for interior nodes)
+// tmp		array temporary for storing intermediate computations
+// mask		bitmask for protecting boundary node data
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -452,9 +533,28 @@ void subdiag (size_t const size,
 
 void superdiag (size_t const size,
 		double* restrict g,
+		double* restrict tmp,
 		const double* restrict g0,
 		const double* restrict mask)
 {
+  alias_t* t = tmp;
+  const alias_t* values = g0;
+  const alias_t* masks = mask;
+  size_t const numel = (size * size);
+
+  zeros(numel, tmp);
+
+  for (size_t i = 0; i != (numel - size); ++i)
+  {
+    t[i].bin = (masks[i].bin & values[i + size].bin);
+  }
+
+  for (size_t i = 0; i != numel; ++i)
+  {
+    g[i] += tmp[i];
+  }
+
+  /*
   size_t const numel = (size * size);
   for (size_t i = 0; i != numel; ++i)
   {
@@ -462,6 +562,7 @@ void superdiag (size_t const size,
     double const elem = (m == iNODE)? g0[i + size] : 0.0;
     g[i] += elem;
   }
+  */
 }
 
 
@@ -472,6 +573,8 @@ void superdiag (size_t const size,
 //
 // Inputs:
 // size		number of nodes along the x [y] axis
+// tmp		array temporary for storing intermediate computations
+// mask		bitmask for protecting boundary node data
 //
 // Outputs:
 // g		estimate of the solution array g(t + dt)
@@ -479,8 +582,27 @@ void superdiag (size_t const size,
 
 void __attribute__ ((noinline)) scale(size_t const size,
 				      double* restrict g,
+				      double* restrict tmp,
 				      const double* restrict mask)
 {
+  alias_t* t = tmp;
+  const alias_t* masks = mask;
+  double const alpha = ALPHA;
+  double const c = 1.0 / (alpha + 4.0);
+  alias_t const values = { .data = c };
+  size_t const numel = (size * size);
+
+  for (size_t i = 0; i != numel; ++i)
+  {
+    t[i].bin = (masks[i].bin & values.bin);
+  }
+
+  for (size_t i = 0; i != numel; ++i)
+  {
+    g[i] *= tmp[i];
+  }
+
+  /*
   double const alpha = ALPHA;
   double const c = 1.0 / (alpha + 4.0);
   size_t const numel = (size * size);
@@ -490,6 +612,7 @@ void __attribute__ ((noinline)) scale(size_t const size,
     double const elem = (m == iNODE)? c : 1.0;
     g[i] *= elem;
   }
+  */
 }
 
 
@@ -550,6 +673,7 @@ void solver (workspace_t* workspace)
   double* g = workspace -> g;
   double* g0 = workspace -> g0;
   double* err = workspace -> err;
+  double* tmp = workspace -> f;
   const double* mask = workspace -> mask;
 
   // initializations:
@@ -563,10 +687,10 @@ void solver (workspace_t* workspace)
   {
     // updates the solution array g(t + dt):
     rhs(size, g, b, mask);			// vectorized by gcc
-    tridiag(size, g, g0, mask);			// Not yet vectorized by gcc
-    subdiag(size, g, g0, mask);			// Not yet vectorized by gcc
-    superdiag(size, g, g0, mask);		// Not yet vectorized by gcc
-    scale(size, g, mask);			// vectorized by gcc
+    tridiag(size, g, tmp, g0, mask);		// vectorized by gcc
+    subdiag(size, g, tmp, g0, mask);		// vectorized by gcc
+    superdiag(size, g, tmp, g0, mask);		// vectorized by gcc
+    scale(size, g, tmp, mask);			// vectorized by gcc
 
     // checks for convergence:
     error(numel, err, g, g0);			// vectorized by gcc
@@ -641,29 +765,32 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
   const double* x = workspace -> x;
   const double* y = workspace -> y;
   size_t const size = workspace -> size;
-  for (size_t j = 0; j != size; ++j)
+
+  size_t i = 0;
+  size_t j = 0;
+  size_t const N = 64;
+  size_t const numel = (size * size);
+  for (size_t k = 0; k != numel; ++k)
   {
-    for (size_t i = 0; i != size; ++i)
+    f[k] = 0.0;
+    for (size_t m = 1; m != (N + 1); m += 2)
     {
-      size_t const N = 64;
-      size_t const k = (i + size * j);
-      f[k] = 0.0;
-      for (size_t m = 1; m != (N + 1); m += 2)
+      for (size_t n = 1; n != (N + 1); n += 2)
       {
-	for (size_t n = 1; n != (N + 1); n += 2)
-	{
-	  double const pi = M_PI;
-	  double const ln = ( (double) n ) * pi;
-	  double const lm = ( (double) m ) * pi;
-	  double const lnm = ( (ln * ln) + (lm * lm) );
-	  double const An = (2.0 / ln);
-	  double const Am = (2.0 / lm);
-	  double const Anm = 2.0 * (An * Am);
-	  double const Bnm = ( (1.0 / lnm) + (1.0 - 1.0 / lnm) * exp(-lnm * t) );
-	  f[k] += ( 2.0 * Anm * Bnm * sin(ln * x[i]) * sin(lm * y[j]) );
-	}
+	double const pi = M_PI;
+	double const ln = ( (double) n ) * pi;
+	double const lm = ( (double) m ) * pi;
+	double const lnm = ( (ln * ln) + (lm * lm) );
+	double const An = (2.0 / ln);
+	double const Am = (2.0 / lm);
+	double const Anm = 2.0 * (An * Am);
+	double const Bnm = ( (1.0 / lnm) + (1.0 - 1.0 / lnm) * exp(-lnm * t) );
+	f[k] += ( 2.0 * Anm * Bnm * sin(ln * x[i]) * sin(lm * y[j]) );
       }
     }
+    ++i;
+    j += ( (i % size == 0)? 1 : 0);
+    i = ( (i % size == 0)? 0 : i);
   }
 }
 
