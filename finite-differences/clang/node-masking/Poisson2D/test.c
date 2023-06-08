@@ -264,31 +264,31 @@ void init_field (size_t const size, double* g)
   size_t const numel = (size * size);
   ones(numel, g);				// sets g(t = 0, x, y) = 1 (everywhere)
 
-  for (int i = 0; i != size; ++i)
+  for (size_t i = 0; i != size; ++i)
   {
-    int const j = 0;
-    int const k = (i + size * j);
+    size_t const j = 0;
+    size_t const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x, y = 0) = 0
   }
 
-  for (int i = 0; i != size; ++i)
+  for (size_t i = 0; i != size; ++i)
   {
-    int const j = (size - 1);
-    int const k = (i + size * j);
+    size_t const j = (size - 1);
+    size_t const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x, y = 1) = 0
   }
 
-  for (int j = 0; j != size; ++j)
+  for (size_t j = 0; j != size; ++j)
   {
-    int const i = 0;
-    int const k = (i + size * j);
+    size_t const i = 0;
+    size_t const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x = 0, y) = 0
   }
 
-  for (int j = 0; j != size; ++j)
+  for (size_t j = 0; j != size; ++j)
   {
-    int const i = (size - 1);
-    int const k = (i + size * j);
+    size_t const i = (size - 1);
+    size_t const k = (i + size * j);
     g[k] = 0.0;					// sets g(t = 0, x = 1, y) = 0
   }
 }
@@ -317,31 +317,31 @@ void init_mask (size_t const size, double* mask)
     m[i].bin = iNODE;				// sets all nodes as interior nodes
   }
 
-  for (int i = 0; i != size; ++i)
+  for (size_t i = 0; i != size; ++i)
   {
-    int const j = 0;
-    int const k = (i + size * j);
+    size_t const j = 0;
+    size_t const k = (i + size * j);
     mask[k] = 0.0;				// sets nodes at y = 0 as boundary nodes
   }
 
-  for (int i = 0; i != size; ++i)
+  for (size_t i = 0; i != size; ++i)
   {
-    int const j = (size - 1);
-    int const k = (i + size * j);
+    size_t const j = (size - 1);
+    size_t const k = (i + size * j);
     mask[k] = 0.0;				// sets nodes at y = 1 as boundary nodes
   }
 
-  for (int j = 0; j != size; ++j)
+  for (size_t j = 0; j != size; ++j)
   {
-    int const i = 0;
-    int const k = (i + size * j);
+    size_t const i = 0;
+    size_t const k = (i + size * j);
     mask[k] = 0.0;				// sets nodes at x = 0 as boundary nodes
   }
 
-  for (int j = 0; j != size; ++j)
+  for (size_t j = 0; j != size; ++j)
   {
-    int const i = (size - 1);
-    int const k = (i + size * j);
+    size_t const i = (size - 1);
+    size_t const k = (i + size * j);
     mask[k] = 0.0;				// sets nodes at x = 1 as boundary nodes
   }
 }
@@ -815,8 +815,8 @@ void export(const char* fname,
   FILE* file = fopen(fname, "w");
   for (size_t i = 0; i != size; ++i)
   {
-    int const j = (size / 2);
-    int const k = (i + size * j);
+    size_t const j = (size / 2);
+    size_t const k = (i + size * j);
     fprintf(file, "%.12e %.12e\n", x[i], g[k]);
   }
 
