@@ -765,29 +765,32 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
   const double* x = workspace -> x;
   const double* y = workspace -> y;
   size_t const size = workspace -> size;
-  for (size_t j = 0; j != size; ++j)
+
+  size_t i = 0;
+  size_t j = 0;
+  size_t const N = 64;
+  size_t const numel = (size * size);
+  for (size_t k = 0; k != numel; ++k)
   {
-    for (size_t i = 0; i != size; ++i)
+    f[k] = 0.0;
+    for (size_t m = 1; m != (N + 1); m += 2)
     {
-      size_t const N = 64;
-      size_t const k = (i + size * j);
-      f[k] = 0.0;
-      for (size_t m = 1; m != (N + 1); m += 2)
+      for (size_t n = 1; n != (N + 1); n += 2)
       {
-	for (size_t n = 1; n != (N + 1); n += 2)
-	{
-	  double const pi = M_PI;
-	  double const ln = ( (double) n ) * pi;
-	  double const lm = ( (double) m ) * pi;
-	  double const lnm = ( (ln * ln) + (lm * lm) );
-	  double const An = (2.0 / ln);
-	  double const Am = (2.0 / lm);
-	  double const Anm = 2.0 * (An * Am);
-	  double const Bnm = ( (1.0 / lnm) + (1.0 - 1.0 / lnm) * exp(-lnm * t) );
-	  f[k] += ( 2.0 * Anm * Bnm * sin(ln * x[i]) * sin(lm * y[j]) );
-	}
+	double const pi = M_PI;
+	double const ln = ( (double) n ) * pi;
+	double const lm = ( (double) m ) * pi;
+	double const lnm = ( (ln * ln) + (lm * lm) );
+	double const An = (2.0 / ln);
+	double const Am = (2.0 / lm);
+	double const Anm = 2.0 * (An * Am);
+	double const Bnm = ( (1.0 / lnm) + (1.0 - 1.0 / lnm) * exp(-lnm * t) );
+	f[k] += ( 2.0 * Anm * Bnm * sin(ln * x[i]) * sin(lm * y[j]) );
       }
     }
+    ++i;
+    j += ( (i % size == 0)? 1 : 0);
+    i = ( (i % size == 0)? 0 : i);
   }
 }
 
