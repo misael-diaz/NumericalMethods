@@ -668,7 +668,7 @@ void solver (workspace_t* workspace)
   // iterators:
 
   double* x = workspace -> x;
-  double* y = workspace -> y;
+//double* y = workspace -> y;
   double* b = workspace -> rhs;
   double* g = workspace -> g;
   double* g0 = workspace -> g0;
