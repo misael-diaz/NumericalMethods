@@ -118,6 +118,24 @@ void ones (size_t const size, double* x)	// numpy-like ones
 }
 
 
+void add (size_t const size, double* restrict dst, const double* restrict src)
+{
+  for (size_t i = 0; i != size; ++i)
+  {
+    dst[i] += src[i];
+  }
+}
+
+
+void mult (size_t const size, double* restrict dst, const double* restrict src)
+{
+  for (size_t i = 0; i != size; ++i)
+  {
+    dst[i] *= src[i];
+  }
+}
+
+
 void linspace (double* x, double x_i, double x_f, size_t const size)// numpy-like linspace
 {
   double const N = (size - 1);
@@ -386,16 +404,6 @@ void rhs (size_t const size,
   {
     dst[i].bin = (masks[i].bin & values[i].bin);
   }
-  /*
-  size_t const numel = (size * size);
-  for (size_t i = 0; i != numel; ++i)
-  {
-    double const m = mask[i];
-    double const value = b[i];
-    double const elem = (m == iNODE)? value : 0.0;
-    g[i] = elem;
-  }
-  */
 }
 
 
@@ -432,37 +440,14 @@ void tridiag (size_t const size,
     t[i].bin = (masks[i].bin & values[i - 1].bin);
   }
 
-  for (size_t i = 0; i != numel; ++i)
-  {
-    g[i] += tmp[i];
-  }
+  add(numel, g, tmp);
 
   for (size_t i = 0; i != (numel - 1); ++i)
   {
     t[i].bin = (masks[i].bin & values[i + 1].bin);
   }
 
-  for (size_t i = 0; i != numel; ++i)
-  {
-    g[i] += tmp[i];
-  }
-
-  /*
-  size_t const numel = (size * size);
-  for (size_t i = 0; i != numel; ++i)
-  {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i - 1] : 0.0;
-    g[i] += elem;
-  }
-
-  for (size_t i = 0; i != numel; ++i)
-  {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i + 1] : 0.0;
-    g[i] += elem;
-  }
-  */
+  add(numel, g, tmp);
 }
 
 
@@ -499,20 +484,7 @@ void subdiag (size_t const size,
     t[i].bin = (masks[i].bin & values[i - size].bin);
   }
 
-  for (size_t i = 0; i != numel; ++i)
-  {
-    g[i] += tmp[i];
-  }
-
-  /*
-  size_t const numel = (size * size);
-  for (size_t i = 0; i != numel; ++i)
-  {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i - size] : 0.0;
-    g[i] += elem;
-  }
-  */
+  add(numel, g, tmp);
 }
 
 
@@ -549,20 +521,7 @@ void superdiag (size_t const size,
     t[i].bin = (masks[i].bin & values[i + size].bin);
   }
 
-  for (size_t i = 0; i != numel; ++i)
-  {
-    g[i] += tmp[i];
-  }
-
-  /*
-  size_t const numel = (size * size);
-  for (size_t i = 0; i != numel; ++i)
-  {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? g0[i + size] : 0.0;
-    g[i] += elem;
-  }
-  */
+  add(numel, g, tmp);
 }
 
 
@@ -597,22 +556,7 @@ void __attribute__ ((noinline)) scale(size_t const size,
     t[i].bin = (masks[i].bin & values.bin);
   }
 
-  for (size_t i = 0; i != numel; ++i)
-  {
-    g[i] *= tmp[i];
-  }
-
-  /*
-  double const alpha = ALPHA;
-  double const c = 1.0 / (alpha + 4.0);
-  size_t const numel = (size * size);
-  for (size_t i = 0; i != numel; ++i)
-  {
-    double const m = mask[i];
-    double const elem = (m == iNODE)? c : 1.0;
-    g[i] *= elem;
-  }
-  */
+  mult(numel, g, tmp);
 }
 
 
@@ -668,7 +612,7 @@ void solver (workspace_t* workspace)
   // iterators:
 
   double* x = workspace -> x;
-  double* y = workspace -> y;
+//double* y = workspace -> y;
   double* b = workspace -> rhs;
   double* g = workspace -> g;
   double* g0 = workspace -> g0;
@@ -746,6 +690,32 @@ void exact (size_t const size,
 }
 
 
+void init_X (size_t const size, double* restrict X, const double* restrict x)
+{
+  for (size_t j = 0; j != size; ++j)
+  {
+    for (size_t i = 0; i != size; ++i)
+    {
+      size_t k = (i + j * size);
+      X[k] = x[i];
+    }
+  }
+}
+
+
+void init_Y (size_t const size, double* restrict Y, const double* restrict y)
+{
+  for (size_t i = 0; i != size; ++i)
+  {
+    for (size_t j = 0; j != size; ++j)
+    {
+      size_t k = (j + i * size);
+      Y[k] = y[i];
+    }
+  }
+}
+
+
 // void pdesol (double t, workspace_t* workspace)
 //
 // Synopsis:
@@ -761,18 +731,21 @@ void exact (size_t const size,
 
 void pdesol (double const t, workspace_t* workspace)// computes the exact field f(t, x, y)
 {
-  double* f = workspace -> f;
+  double* F = workspace -> f;
+  double* X = workspace -> rhs;
+  double* Y = workspace -> err;
   const double* x = workspace -> x;
   const double* y = workspace -> y;
   size_t const size = workspace -> size;
-
-  size_t i = 0;
-  size_t j = 0;
-  size_t const N = 64;
   size_t const numel = (size * size);
+  size_t const N = 64;
+
+  init_X(size, X, x);
+  init_Y(size, Y, y);
+
   for (size_t k = 0; k != numel; ++k)
   {
-    f[k] = 0.0;
+    F[k] = 0.0;
     for (size_t m = 1; m != (N + 1); m += 2)
     {
       for (size_t n = 1; n != (N + 1); n += 2)
@@ -785,12 +758,9 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
 	double const Am = (2.0 / lm);
 	double const Anm = 2.0 * (An * Am);
 	double const Bnm = ( (1.0 / lnm) + (1.0 - 1.0 / lnm) * exp(-lnm * t) );
-	f[k] += ( 2.0 * Anm * Bnm * sin(ln * x[i]) * sin(lm * y[j]) );
+	F[k] += ( 2.0 * Anm * Bnm * sin(ln * X[k]) * sin(lm * Y[k]) );
       }
     }
-    ++i;
-    j += ( (i % size == 0)? 1 : 0);
-    i = ( (i % size == 0)? 0 : i);
   }
 }
 
