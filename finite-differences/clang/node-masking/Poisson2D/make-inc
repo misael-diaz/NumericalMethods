@@ -14,7 +14,7 @@
 #
 
 # clang compiler
-CC = gcc-10
+CC = gcc
 
 # includes
 INC =
