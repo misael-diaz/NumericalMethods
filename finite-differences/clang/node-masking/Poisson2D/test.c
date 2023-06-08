@@ -687,6 +687,32 @@ void exact (size_t const size,
 }
 
 
+void init_X (size_t const size, double* restrict X, const double* restrict x)
+{
+  for (size_t j = 0; j != size; ++j)
+  {
+    for (size_t i = 0; i != size; ++i)
+    {
+      size_t k = (i + j * size);
+      X[k] = x[i];
+    }
+  }
+}
+
+
+void init_Y (size_t const size, double* restrict Y, const double* restrict y)
+{
+  for (size_t i = 0; i != size; ++i)
+  {
+    for (size_t j = 0; j != size; ++j)
+    {
+      size_t k = (j + i * size);
+      Y[k] = y[i];
+    }
+  }
+}
+
+
 // void pdesol (double t, workspace_t* workspace)
 //
 // Synopsis:
@@ -702,18 +728,21 @@ void exact (size_t const size,
 
 void pdesol (double const t, workspace_t* workspace)// computes the exact field f(t, x, y)
 {
-  double* f = workspace -> f;
+  double* F = workspace -> f;
+  double* X = workspace -> rhs;
+  double* Y = workspace -> err;
   const double* x = workspace -> x;
   const double* y = workspace -> y;
   size_t const size = workspace -> size;
 
-  size_t i = 0;
-  size_t j = 0;
+  init_X(size, X, x);
+  init_Y(size, Y, y);
+
   size_t const N = 64;
   size_t const numel = (size * size);
   for (size_t k = 0; k != numel; ++k)
   {
-    f[k] = 0.0;
+    F[k] = 0.0;
     for (size_t m = 1; m != (N + 1); m += 2)
     {
       for (size_t n = 1; n != (N + 1); n += 2)
@@ -726,12 +755,9 @@ void pdesol (double const t, workspace_t* workspace)// computes the exact field 
 	double const Am = (2.0 / lm);
 	double const Anm = 2.0 * (An * Am);
 	double const Bnm = ( (1.0 / lnm) + (1.0 - 1.0 / lnm) * exp(-lnm * t) );
-	f[k] += ( 2.0 * Anm * Bnm * sin(ln * x[i]) * sin(lm * y[j]) );
+	F[k] += ( 2.0 * Anm * Bnm * sin(ln * X[k]) * sin(lm * Y[k]) );
       }
     }
-    ++i;
-    j += ( (i % size == 0)? 1 : 0);
-    i = ( (i % size == 0)? 0 : i);
   }
 }
 
