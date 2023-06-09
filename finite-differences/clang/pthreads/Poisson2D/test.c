@@ -42,6 +42,7 @@
 #define SUCCESS_STATE 0
 #define FAILURE_STATE 1
 #define VERBOSE false
+#define LOG true
 #define NUM_THREADS 4
 
 
@@ -1151,12 +1152,15 @@ void* integrator (void* v_space)
       break;
     }
 
-    size_t const span = (steps / 4);
-    // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
-    if ( ( step != 0 ) && ( (step % span) == 0 ) )
+    if (LOG)
     {
-      logger(step, count, space);
-      ++count;
+      size_t const span = (steps / 4);
+      // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
+      if ( ( step != 0 ) && ( (step % span) == 0 ) )
+      {
+	logger(step, count, space);
+	++count;
+      }
     }
   }
 
