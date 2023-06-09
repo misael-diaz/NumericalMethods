@@ -42,6 +42,7 @@
 #define SUCCESS_STATE 0
 #define FAILURE_STATE 1
 #define VERBOSE false
+#define LOG true
 #define NUM_THREADS 4
 
 
@@ -181,6 +182,30 @@ double norm2 (size_t const beg, size_t const end, const double* err)
   }
 
   return sum;
+}
+
+
+void add (size_t const beg,
+	  size_t const end,
+	  double* restrict dst,
+	  const double* restrict src)
+{
+  for (size_t i = beg; i != end; ++i)
+  {
+    dst[i] += src[i];
+  }
+}
+
+
+void mult(size_t const beg,
+	  size_t const end,
+	  double* restrict dst,
+	  const double* restrict src)
+{
+  for (size_t i = beg; i != end; ++i)
+  {
+    dst[i] *= src[i];
+  }
 }
 
 
@@ -548,10 +573,7 @@ void tridiag (size_t const beg,
     }
   }
 
-  for (size_t i = beg; i != end; ++i)
-  {
-    g[i] += tmp[i];
-  }
+  add(beg, end, g, tmp);
 
   zeros(beg, end, tmp);
 
@@ -571,10 +593,7 @@ void tridiag (size_t const beg,
     }
   }
 
-  for (size_t i = beg; i != end; ++i)
-  {
-    g[i] += tmp[i];
-  }
+  add(beg, end, g, tmp);
 }
 
 
@@ -626,10 +645,7 @@ void subdiag (size_t const beg,
     }
   }
 
-  for (size_t i = beg; i != end; ++i)
-  {
-    g[i] += tmp[i];
-  }
+  add(beg, end, g, tmp);
 }
 
 
@@ -683,10 +699,7 @@ void superdiag (size_t const beg,
     }
   }
 
-  for (size_t i = beg; i != end; ++i)
-  {
-    g[i] += tmp[i];
-  }
+  add(beg, end, g, tmp);
 }
 
 
@@ -722,10 +735,7 @@ void __attribute__ ((noinline)) scale(size_t const beg,
     t[i].bin = (masks[i].bin & values.bin);
   }
 
-  for (size_t i = beg; i != end; ++i)
-  {
-    g[i] *= tmp[i];
-  }
+  mult(beg, end, g, tmp);
 }
 
 
@@ -1142,12 +1152,15 @@ void* integrator (void* v_space)
       break;
     }
 
-    size_t const span = (steps / 4);
-    // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
-    if ( ( step != 0 ) && ( (step % span) == 0 ) )
+    if (LOG)
     {
-      logger(step, count, space);
-      ++count;
+      size_t const span = (steps / 4);
+      // logs error of exact f(t+dt, x) and numeric solution g(t+dt, x) every `span' steps
+      if ( ( step != 0 ) && ( (step % span) == 0 ) )
+      {
+	logger(step, count, space);
+	++count;
+      }
     }
   }
 
