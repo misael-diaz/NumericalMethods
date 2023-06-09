@@ -184,6 +184,30 @@ double norm2 (size_t const beg, size_t const end, const double* err)
 }
 
 
+void add (size_t const beg,
+	  size_t const end,
+	  double* restrict dst,
+	  const double* restrict src)
+{
+  for (size_t i = beg; i != end; ++i)
+  {
+    dst[i] += src[i];
+  }
+}
+
+
+void mult(size_t const beg,
+	  size_t const end,
+	  double* restrict dst,
+	  const double* restrict src)
+{
+  for (size_t i = beg; i != end; ++i)
+  {
+    dst[i] *= src[i];
+  }
+}
+
+
 // thread-safe copy method
 void copy(size_t const beg,
 	  size_t const end,
@@ -548,10 +572,7 @@ void tridiag (size_t const beg,
     }
   }
 
-  for (size_t i = beg; i != end; ++i)
-  {
-    g[i] += tmp[i];
-  }
+  add(beg, end, g, tmp);
 
   zeros(beg, end, tmp);
 
@@ -571,10 +592,7 @@ void tridiag (size_t const beg,
     }
   }
 
-  for (size_t i = beg; i != end; ++i)
-  {
-    g[i] += tmp[i];
-  }
+  add(beg, end, g, tmp);
 }
 
 
@@ -626,10 +644,7 @@ void subdiag (size_t const beg,
     }
   }
 
-  for (size_t i = beg; i != end; ++i)
-  {
-    g[i] += tmp[i];
-  }
+  add(beg, end, g, tmp);
 }
 
 
@@ -683,10 +698,7 @@ void superdiag (size_t const beg,
     }
   }
 
-  for (size_t i = beg; i != end; ++i)
-  {
-    g[i] += tmp[i];
-  }
+  add(beg, end, g, tmp);
 }
 
 
@@ -722,10 +734,7 @@ void __attribute__ ((noinline)) scale(size_t const beg,
     t[i].bin = (masks[i].bin & values.bin);
   }
 
-  for (size_t i = beg; i != end; ++i)
-  {
-    g[i] *= tmp[i];
-  }
+  mult(beg, end, g, tmp);
 }
 
 
